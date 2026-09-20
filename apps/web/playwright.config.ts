@@ -1,0 +1,32 @@
+import { defineConfig, devices } from '@playwright/test'
+
+const port = Number(process.env.E2E_PORT ?? 3100)
+if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+  throw new Error('E2E_PORT must be an integer between 1024 and 65535')
+}
+const baseURL = `http://127.0.0.1:${port}`
+
+export default defineConfig({
+  testDir: './test/e2e',
+  forbidOnly: Boolean(process.env.CI),
+  retries: process.env.CI ? 1 : 0,
+  reporter: [['list'], ['html', { open: 'never' }]],
+  use: { baseURL, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  webServer: {
+    command: 'node .output/server/index.mjs',
+    url: `${baseURL}/api/health`,
+    env: { NITRO_HOST: '127.0.0.1', NITRO_PORT: String(port) },
+    reuseExistingServer: false,
+    timeout: 30_000,
+  },
+  projects: [
+    {
+      name: 'desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+  ],
+})

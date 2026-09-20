@@ -1,0 +1,36 @@
+{
+  "name": "bouvet-team-photobooth",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=24.11.0 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @bouvet-team-photobooth/web dev",
+    "prepare": "pnpm --filter @bouvet-team-photobooth/web prepare",
+    "build": "pnpm --filter @bouvet-team-photobooth/web build",
+    "start": "pnpm --filter @bouvet-team-photobooth/web start",
+    "lint": "pnpm lint:code && pnpm lint:markdown",
+    "lint:code": "eslint . --max-warnings 0",
+    "lint:markdown": "markdownlint-cli2",
+    "lint:fix": "pnpm lint:code --fix && pnpm lint:markdown --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm --filter @bouvet-team-photobooth/contracts typecheck && pnpm --filter @bouvet-team-photobooth/web typecheck",
+    "test": "pnpm --filter @bouvet-team-photobooth/web test && node --test scripts/check-harness.test.mjs",
+    "test:watch": "pnpm --filter @bouvet-team-photobooth/web test:watch",
+    "test:e2e": "pnpm build && pnpm --filter @bouvet-team-photobooth/web test:e2e",
+    "check:harness": "node scripts/check-harness.mjs",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm check:harness"
+  },
+  "devDependencies": {
+    "eslint": "10.11.0",
+    "markdownlint-cli2": "0.23.2",
+    "marked": "18.0.13",
+    "minimatch": "10.2.6",
+    "prettier": "3.9.8",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  }
+}

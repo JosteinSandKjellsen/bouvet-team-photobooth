@@ -1,0 +1,35 @@
+{
+  "name": "@bouvet-team-photobooth/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1",
+    "prepare": "nuxt prepare",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@bouvet-team-photobooth/contracts": "workspace:*",
+    "@lucide/vue": "1.47.0",
+    "nuxt": "4.5.2",
+    "vue": "3.5.43",
+    "vue-router": "5.3.1"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "1.17.0",
+    "@nuxt/test-utils": "4.3.2",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.13.6",
+    "@vue/test-utils": "2.5.1",
+    "eslint": "10.11.0",
+    "happy-dom": "20.14.5",
+    "typescript": "5.9.3",
+    "vitest": "5.0.1",
+    "vue-tsc": "3.3.11"
+  }
+}
