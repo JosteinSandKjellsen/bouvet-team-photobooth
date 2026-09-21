@@ -18,7 +18,8 @@ describe('ThemeGrid', () => {
     })
 
     const wasteland = wrapper.get('button')
-    expect(wasteland.text()).toContain('Ødemark etter katastrofen')
+    expect(wasteland.text()).toContain('Grensepatruljen')
+    expect(wasteland.text()).toContain('Spaceboys')
     await wasteland.trigger('click')
 
     expect(wrapper.emitted('select')).toEqual([['wasteland']])

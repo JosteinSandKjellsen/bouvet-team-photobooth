@@ -55,28 +55,34 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 
 <style scoped>
 .page-shell {
-  width: min(1180px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
-  padding: var(--space-7) var(--page-gutter);
+  padding: var(--space-5) var(--page-gutter) var(--space-7);
 }
 .intro {
-  max-width: 720px;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  column-gap: var(--space-7);
   margin-bottom: var(--space-6);
 }
 .eyebrow {
+  grid-column: 1 / -1;
   margin: 0 0 var(--space-2);
   color: var(--color-action-primary);
+  font-size: 15px;
   font-weight: 700;
+  text-transform: uppercase;
 }
 h1 {
   margin: 0;
-  font-size: 48px;
+  font-size: 52px;
   line-height: 1.12;
 }
 .intro > p:last-child {
-  margin: var(--space-4) 0 0;
+  align-self: center;
+  margin: 0;
   color: var(--color-muted-text);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.5;
 }
 .message {
@@ -97,6 +103,10 @@ a {
   color: var(--color-text);
 }
 @media (max-width: 700px) {
+  .intro {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-4);
+  }
   .page-shell {
     padding-top: var(--space-6);
   }

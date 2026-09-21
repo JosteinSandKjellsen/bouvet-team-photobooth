@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Bouvet geometric top-right decoration</title>
+  <desc id="desc">Transparent decorative pattern made from circular arcs, construction lines and colored nodes.</desc>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <circle cx="1450" cy="-70" r="420" stroke="#EE2950" stroke-width="2.5" opacity="0.28"/>
+    <circle cx="1450" cy="-70" r="285" stroke="#F29AAF" stroke-width="2" opacity="0.48"/>
+    <circle cx="1390" cy="450" r="520" stroke="#F29AAF" stroke-width="2.5" opacity="0.50"/>
+    <circle cx="1595" cy="735" r="365" stroke="#EE2950" stroke-width="2" opacity="0.34"/>
+    <path d="M820 0C915 172 1096 290 1308 316C1425 331 1526 306 1600 258" stroke="#F6B8C6" stroke-width="2" opacity="0.66"/>
+    <path d="M805 518H1600" stroke="#F29AAF" stroke-width="2" opacity="0.52"/>
+    <path d="M1180 0V846" stroke="#F29AAF" stroke-width="2" opacity="0.44"/>
+    <path d="M1490 0V1000" stroke="#EE2950" stroke-width="2.5" opacity="0.36"/>
+    <path d="M1320 518V1000" stroke="#F6B8C6" stroke-width="2" opacity="0.58"/>
+    <path d="M1490 210H1600" stroke="#F2A15D" stroke-width="2" opacity="0.72"/>
+    <path d="M1490 348H1600" stroke="#F29AAF" stroke-width="2" opacity="0.44"/>
+  </g>
+
+  <g>
+    <circle cx="1020" cy="202" r="8" fill="#F6B8C6" opacity="0.92"/>
+    <circle cx="1110" cy="286" r="7" fill="#EE2950" opacity="0.85"/>
+    <circle cx="1180" cy="316" r="9" fill="#F29AAF"/>
+    <circle cx="1280" cy="518" r="7" fill="#F6B8C6"/>
+    <circle cx="1390" cy="518" r="10" fill="#EE2950"/>
+    <circle cx="1490" cy="210" r="8" fill="#F2A15D"/>
+    <circle cx="1490" cy="518" r="10" fill="#F29AAF"/>
+    <circle cx="1535" cy="624" r="7" fill="#EE2950" opacity="0.9"/>
+    <circle cx="1435" cy="702" r="6" fill="#F6B8C6"/>
+    <circle cx="1320" cy="764" r="8" fill="#F2A15D"/>
+    <circle cx="1252" cy="644" r="6" fill="#EE2950" opacity="0.82"/>
+    <circle cx="1160" cy="470" r="6" fill="#F29AAF"/>
+    <circle cx="1555" cy="860" r="13" fill="#EE2950"/>
+    <circle cx="1450" cy="912" r="7" fill="#F6B8C6"/>
+  </g>
+</svg>

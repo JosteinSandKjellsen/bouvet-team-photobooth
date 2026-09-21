@@ -33,9 +33,12 @@ pnpm dev
 ```
 
 Open <http://127.0.0.1:3000>. Use `pnpm dev --port 3001` if that port is occupied.
-The current M1 theme-selection shell requires no environment variables or
-credentials. `GET /api/health` returns `{"status":"ok"}`: process liveness,
-not database or provider readiness.
+For a custom port, invoke Nuxt directly instead:
+`pnpm --filter @bouvet-team-photobooth/web exec nuxt dev --host 127.0.0.1 --port 3001`.
+Nested script forwarding treats `pnpm dev -- --port 3001` as a Nuxt project-path
+argument rather than a port option. The current M1 theme-selection shell requires
+no environment variables or credentials. `GET /api/health` returns
+`{"status":"ok"}`: process liveness, not database or provider readiness.
 
 pnpm 12 settings, including engine enforcement and the dependency build-script
 allowlist, live in [pnpm-workspace.yaml](../pnpm-workspace.yaml), not `.npmrc`.

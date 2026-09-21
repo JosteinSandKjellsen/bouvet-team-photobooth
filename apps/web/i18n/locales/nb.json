@@ -11,8 +11,8 @@
     }
   },
   "themeSelection": {
-    "title": "Hvilket univers passer teamet deres?",
-    "description": "Velg et fiktivt univers for teambildet.",
+    "title": "Hvilket team passer dere?",
+    "description": "I Bouvet jobber vi i team med forskjellige fag, styrker og personligheter. Velg teammiljøet deres, så sender vi dere på oppdrag.",
     "overviewLink": "Se teambilder fra arrangementet",
     "loadError": "Universene kunne ikke lastes inn.",
     "empty": "Ingen universer er tilgjengelige akkurat nå."
@@ -62,40 +62,49 @@
   },
   "themes": {
     "wasteland": {
-      "name": "Ødemark etter katastrofen",
-      "description": "Et robust team i et vilt landskap."
+      "name": "Grensepatruljen",
+      "label": "Spaceboys",
+      "description": "Når bakloggene er like stor som galaksen."
     },
     "treehouse": {
-      "name": "Fantasiby i trekronene",
-      "description": "Et lyst lag høyt over bakken."
+      "name": "Tretopplauget",
+      "label": "Treetopp realm",
+      "description": "Pair programming, potions og perfekt flyt."
     },
     "blockWorld": {
-      "name": "Klossverden",
-      "description": "Et lag bygget av store ideer."
+      "name": "Blokkbyggerne",
+      "label": "Block world",
+      "description": "Bryter problemet ned til alt passer sammen."
     },
     "spaceCowboys": {
-      "name": "Romcowboyer",
-      "description": "Et stjernelag på vei mot nye galakser."
+      "name": "Siste sprint",
+      "label": "After the fall",
+      "description": "Arver systemet ingen andre tør å deploye."
     },
     "lifeSimulation": {
-      "name": "Livssimulering",
-      "description": "Et fargerikt nabolag med deres egen stil."
+      "name": "Livssimulatorene",
+      "label": "Life mode",
+      "description": "Full kontroll på work-life. I teorien."
     },
     "mechPilots": {
-      "name": "Mekapiloter",
-      "description": "Et team klart for teknologiske eventyr."
+      "name": "Mech-pilotene",
+      "label": "Mech pilots",
+      "description": "Automatisert. Også kaffepausen."
     },
     "kidsOnBikes": {
-      "name": "Sykkelgjeng på 1980-tallet",
-      "description": "Et modig lag på et mystisk oppdrag."
+      "name": "Signalgjengerne",
+      "label": "Dead signal",
+      "description": "Finner feilen. Selv i en annen dimensjon."
     },
     "redCarpet": {
-      "name": "Rød løper",
-      "description": "Et team klart for rampelyset."
+      "name": "Produksjonsklare",
+      "label": "Production ready",
+      "description": "Når teamet er klart for premiere."
     },
     "samurai": {
-      "name": "Samurai",
-      "description": "Et fokusert team med elegant styrke."
+      "name": "Samurai-lauget",
+      "label": "Ink & steel",
+      "description": "Planlegger rolig. Leverer skarpt."
     }
   }
 }
