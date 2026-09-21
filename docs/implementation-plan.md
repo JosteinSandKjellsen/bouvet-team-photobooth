@@ -14,14 +14,14 @@ calls in that milestone. Later milestones require a separately selected scope.
 
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
-guidance. M0 documentation/harness alignment and M1 product shell/themes are
-complete; M2 remains unselected.
+guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
+local capture/review are complete; M3 remains unselected.
 
 Suggested next-session request:
 
 > Read docs/implementation-plan.md and docs/product-experience-playbook.md,
-> then select M2 before implementing camera capture. Do not add session,
-> provider, persistence, or real-photo behavior without selecting its milestone.
+> then select M3 before implementing sessions, source storage or jobs. Do not
+> add provider or persistence behavior without selecting its milestone.
 
 ## Confirmed Product Decisions
 
@@ -334,7 +334,7 @@ and the retained health API contract. The theme artwork is source-controlled,
 abstract original SVG artwork; approved Bouvet logo artwork has not been
 provided, so the existing textual brand treatment remains.
 
-### M2: Local Capture And Review
+### M2: Local Capture And Review (Complete 2026-09-21)
 
 **Depends on:** M1. May proceed alongside M3 after shared contracts are agreed.
 
@@ -348,6 +348,14 @@ real-photo privacy gate is approved.
 and repeated clicks, safe cancellation/hidden-tab/track-end/unmount behavior,
 crop/mirror parity, track/object-URL cleanup and no upload before approval.
 Use fake-clock/media component tests and a browser capture journey.
+
+**Verification:** `pnpm check` and `pnpm test:e2e` passed on macOS under Node
+24.15.0. The local-only capture route requires an explicit camera action, uses a
+deadline-based three-second countdown, supports JPEG/PNG/WebP fallback and keeps
+bounded normalized blobs in memory. It does not create a session, upload a
+source, call a provider or persist a picture. Component tests cover fake media,
+countdown timing/cancellation and stream cleanup; the production browser suite
+uses Chromium fake media for desktop and mobile capture/review/approval.
 
 ### M3: Sessions, Source Storage And Jobs
 

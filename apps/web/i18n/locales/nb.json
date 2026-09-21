@@ -21,9 +21,36 @@
   },
   "capture": {
     "title": "{theme}",
-    "notReady": "Kameradelen er ikke klar ennå.",
-    "notReadyDescription": "Velg et annet univers eller kom tilbake senere.",
-    "invalidTheme": "Dette universet finnes ikke."
+    "invalidTheme": "Dette universet finnes ikke.",
+    "ready": {
+      "title": "Gjør dere klare til bildet",
+      "description": "Plasser hele teamet i bildet. Bildet blir bare liggende på denne enheten til dere velger å bruke det.",
+      "mediaPlaceholder": "Kameraet er ikke aktivert.",
+      "activateCamera": "Aktiver kamera",
+      "chooseFile": "Velg bilde fra enheten",
+      "requestingPermission": "Venter på tilgang til kameraet.",
+      "processingImage": "Gjør klart bildet.",
+      "takePhoto": "Ta bilde",
+      "switchCamera": "Bytt kamera"
+    },
+    "countdown": {
+      "cancel": "Avbryt nedtelling"
+    },
+    "review": {
+      "previewAlt": "Forhåndsvisning av valgt teambilde",
+      "retake": "Ta bildet igjen",
+      "usePicture": "Bruk bildet",
+      "locallyApproved": "Bildet er godkjent. Det blir ikke lastet opp før neste del av løsningen er klar."
+    },
+    "errors": {
+      "cameraInUse": "Kameraet er i bruk av en annen app. Lukk den og prøv igjen.",
+      "cameraUnavailable": "Kameraet er ikke tilgjengelig akkurat nå. Prøv igjen eller velg et bilde fra enheten.",
+      "imageTooLarge": "Bildet er for stort til å brukes. Velg et mindre bilde.",
+      "invalidImage": "Bildet kunne ikke klargjøres. Velg et annet bilde.",
+      "permissionDenied": "Vi fikk ikke tilgang til kameraet. Tillat tilgang eller velg et bilde fra enheten.",
+      "unsupportedFile": "Velg en JPG-, PNG- eller WebP-fil.",
+      "unsupportedMedia": "Denne nettleseren kan ikke bruke kameraet her. Velg et bilde fra enheten."
+    }
   },
   "photo": {
     "title": "Teambilde",

@@ -46,7 +46,10 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   await continueButton.click()
   await expect(page).toHaveURL('/capture/wasteland')
   await expect(
-    page.getByRole('heading', { name: 'Kameradelen er ikke klar ennå.' }),
+    page.getByRole('heading', { name: 'Gjør dere klare til bildet' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Aktiver kamera' }),
   ).toBeVisible()
   await page.goto('/capture/unknown')
   await expect(
@@ -62,4 +65,32 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
     path: testInfo.outputPath('themes.png'),
     fullPage: true,
   })
+})
+
+test('captures and approves a local image without uploading it', async ({
+  page,
+}) => {
+  const mutationRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.method() !== 'GET') {
+      mutationRequests.push(`${request.method()} ${request.url()}`)
+    }
+  })
+
+  await page.goto('/capture/samurai')
+  await page.getByRole('button', { name: 'Aktiver kamera' }).click()
+  await expect(page.locator('video')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Ta bilde' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Ta bilde' }).click()
+  await expect(
+    page.getByRole('button', { name: 'Ta bildet igjen' }),
+  ).toBeVisible({ timeout: 5_000 })
+  await page.getByRole('button', { name: 'Bruk bildet' }).click()
+
+  await expect(
+    page.getByText(
+      'Bildet er godkjent. Det blir ikke lastet opp før neste del av løsningen er klar.',
+    ),
+  ).toBeVisible()
+  expect(mutationRequests).toEqual([])
 })
