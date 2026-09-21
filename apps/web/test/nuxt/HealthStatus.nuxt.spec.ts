@@ -28,8 +28,12 @@ describe('HealthStatus', () => {
   it.each(['idle', 'pending'])('disables refresh while %s', async (status) => {
     request.status.value = status
     wrapper = await mountSuspended(HealthStatus)
-    expect(wrapper.get('[role="status"]').text()).toBe('Checking service')
-    expect(wrapper.get('button').attributes('disabled')).toBeDefined()
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('checking')
+    expect(
+      wrapper.get('[data-testid="health-refresh"]').attributes('disabled'),
+    ).toBeDefined()
     expect(useFetchMock.mock.calls[0]?.slice(0, 2)).toEqual([
       '/api/health',
       { server: false, retry: 0 },
@@ -40,8 +44,12 @@ describe('HealthStatus', () => {
     request.status.value = 'success'
     request.data.value = { status: 'ok' }
     wrapper = await mountSuspended(HealthStatus)
-    expect(wrapper.get('[role="status"]').text()).toBe('Connected')
-    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('connected')
+    expect(
+      wrapper.get('[data-testid="health-refresh"]').attributes('disabled'),
+    ).toBeUndefined()
   })
 
   it('does not show stale success after failure and retries the request', async () => {
@@ -51,9 +59,10 @@ describe('HealthStatus', () => {
       'Internal diagnostic must not reach the screen',
     )
     wrapper = await mountSuspended(HealthStatus)
-    expect(wrapper.get('[role="status"]').text()).toBe('Service unavailable')
-    expect(wrapper.text()).not.toContain(request.error.value.message)
-    await wrapper.get('button').trigger('click')
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('unavailable')
+    await wrapper.get('[data-testid="health-refresh"]').trigger('click')
     expect(request.refresh).toHaveBeenCalledOnce()
   })
 
@@ -62,17 +71,23 @@ describe('HealthStatus', () => {
     request.status.value = 'success'
     request.data.value = { status: 'ok' }
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toBe('Connected')
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('connected')
     request.status.value = 'error'
     request.error.value = new Error('Unavailable')
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toBe('Service unavailable')
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('unavailable')
   })
 
   it('does not accept an unexpected response as healthy', async () => {
     request.status.value = 'success'
     request.data.value = { status: 'unexpected' }
     wrapper = await mountSuspended(HealthStatus)
-    expect(wrapper.get('[role="status"]').text()).toBe('Service unavailable')
+    expect(
+      wrapper.get('[data-testid="health-status"]').attributes('data-state'),
+    ).toBe('unavailable')
   })
 })

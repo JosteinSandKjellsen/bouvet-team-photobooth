@@ -33,6 +33,10 @@ const label = computed(() =>
       <code>GET /api/health</code>
     </div>
     <p
+      data-testid="health-status"
+      :data-state="
+        checking ? 'checking' : connected ? 'connected' : 'unavailable'
+      "
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -43,7 +47,12 @@ const label = computed(() =>
       <CircleAlert v-else :size="20" aria-hidden="true" />
       <span>{{ label }}</span>
     </p>
-    <button type="button" :disabled="checking" @click="refresh()">
+    <button
+      data-testid="health-refresh"
+      type="button"
+      :disabled="checking"
+      @click="refresh()"
+    >
       <RefreshCw :size="16" aria-hidden="true" />
       {{
         checking

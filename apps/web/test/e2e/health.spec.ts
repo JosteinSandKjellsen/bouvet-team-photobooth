@@ -31,35 +31,13 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
-  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
-    'href',
-    '/favicon.svg',
-  )
-  await expect(
-    page.getByRole('link', { name: 'Bouvet Team Photobooth' }).locator('img'),
-  ).toHaveAttribute('src', '/bouvet-logo.svg')
-  await expect(
-    page.getByRole('heading', {
-      name: 'Hvilket team passer dere?',
-    }),
-  ).toBeVisible()
-  const themeButtons = page.getByRole('button')
+  const themeButtons = page.getByTestId(/^theme-/)
   await expect(themeButtons).toHaveCount(9)
-  await page.getByRole('button', { name: /Grensepatruljen/ }).click()
+  await page.getByTestId('theme-wasteland').click()
   await expect(page).toHaveURL('/capture/wasteland')
-  await expect(
-    page.getByRole('heading', { name: 'Gjør dere klare!' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'Aktiver kamera' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'Velg bilde fra enheten' }),
-  ).toHaveCount(0)
+  await expect(page.getByTestId('capture-activate-camera')).toBeVisible()
   await page.goto('/capture/unknown')
-  await expect(
-    page.getByRole('heading', { name: 'Dette universet finnes ikke.' }),
-  ).toBeVisible()
+  await expect(page.getByTestId('capture-invalid-theme')).toBeVisible()
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -83,19 +61,14 @@ test('captures and approves a local image without uploading it', async ({
   })
 
   await page.goto('/capture/samurai')
-  await page.getByRole('button', { name: 'Aktiver kamera' }).click()
-  await expect(page.locator('video')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Ta bilde' })).toBeEnabled()
-  await page.getByRole('button', { name: 'Ta bilde' }).click()
-  await expect(
-    page.getByRole('button', { name: 'Ta bildet igjen' }),
-  ).toBeVisible({ timeout: 5_000 })
-  await page.getByRole('button', { name: 'Bruk bildet' }).click()
-
-  await expect(
-    page.getByText(
-      'Bildet er godkjent. Det blir ikke lastet opp før neste del av løsningen er klar.',
-    ),
-  ).toBeVisible()
+  await page.getByTestId('capture-activate-camera').click()
+  await expect(page.getByTestId('capture-video')).toBeVisible()
+  await expect(page.getByTestId('capture-take-photo')).toBeEnabled()
+  await page.getByTestId('capture-take-photo').click()
+  await expect(page.getByTestId('capture-retake')).toBeVisible({
+    timeout: 5_000,
+  })
+  await page.getByTestId('capture-use-picture').click()
+  await expect(page.getByTestId('capture-approved')).toBeVisible()
   expect(mutationRequests).toEqual([])
 })

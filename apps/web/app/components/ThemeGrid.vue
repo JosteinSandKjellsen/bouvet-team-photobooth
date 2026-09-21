@@ -20,6 +20,7 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
     <button
       v-for="theme in themes"
       :key="theme.id"
+      :data-testid="`theme-${theme.id}`"
       type="button"
       class="theme-card"
       @click="emit('select', theme.id)"

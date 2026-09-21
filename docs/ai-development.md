@@ -51,6 +51,9 @@ and source URLs do not prove provider erasure.
   use for a requested API-backed feature, from contract through regression tests.
 - [diagnose-and-fix](../.github/skills/diagnose-and-fix/SKILL.md): use for a failure
   with a reproducible observation and a small discriminating check.
+- [testing-user-flows](../.github/skills/testing-user-flows/SKILL.md): use when
+  adding or updating component and browser behavior coverage without coupling
+  tests to visitor-facing copy.
 - [verify-change](../.github/skills/verify-change/SKILL.md): use before handoff or
   review to run the applicable gates and report actual evidence.
 - [compound-session](../.github/skills/compound-session/SKILL.md): use after a

@@ -12,14 +12,12 @@ let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined
 afterEach(() => wrapper?.unmount())
 
 describe('ThemeGrid', () => {
-  it('exposes Norwegian theme buttons and emits the clicked theme', async () => {
+  it('emits the selected theme', async () => {
     wrapper = await mountSuspended(ThemeGrid, {
       props: { themes },
     })
 
-    const wasteland = wrapper.get('button')
-    expect(wasteland.text()).toContain('Grensepatruljen')
-    expect(wasteland.text()).toContain('Spaceboys')
+    const wasteland = wrapper.get('[data-testid="theme-wasteland"]')
     await wasteland.trigger('click')
 
     expect(wrapper.emitted('select')).toEqual([['wasteland']])

@@ -15,6 +15,13 @@ applyTo: 'apps/web/test/**,apps/web/vitest.config.ts,apps/web/playwright.config.
   `pnpm build` immediately before invoking Playwright directly.
 - Use the real API for happy paths; intercept only failure scenarios. Cover
   error recovery, keyboard access and desktop/mobile overflow. Do not use sleeps.
+- Test business behavior and user flows, not authored copy, translations, branding
+  or other static presentation. Assert state changes, navigation, enabled/disabled
+  controls, emitted events, request effects and API contracts instead.
+- Never use visible text, accessible names or text-content assertions to identify
+  an element under test. Add a unique, stable `data-testid` only to the specific
+  action or observable state that a test needs, then select it with the test ID.
+  Do not add test IDs to untested presentation or use test IDs as styling hooks.
 - Read the [product experience playbook](../../docs/product-experience-playbook.md)
   and [implementation plan](../../docs/implementation-plan.md) before adding
   milestone tests; do not test a deferred feature as though it were implemented.

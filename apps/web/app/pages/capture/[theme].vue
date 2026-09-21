@@ -111,6 +111,7 @@ onBeforeUnmount(() => {
         >
           <video
             ref="videoElement"
+            data-testid="capture-video"
             autoplay
             muted
             playsinline
@@ -137,6 +138,7 @@ onBeforeUnmount(() => {
             v-if="
               camera.state.value === 'idle' || camera.state.value === 'error'
             "
+            data-testid="capture-activate-camera"
             type="button"
             @click="startCamera"
           >
@@ -173,6 +175,7 @@ onBeforeUnmount(() => {
           </button>
           <template v-else>
             <button
+              data-testid="capture-take-photo"
               type="button"
               :disabled="!videoReady"
               @click="startCountdown"
@@ -193,21 +196,37 @@ onBeforeUnmount(() => {
           v-else-if="camera.state.value === 'previewing' && !locallyApproved"
           class="actions review-actions"
         >
-          <button class="secondary-button" type="button" @click="retake">
+          <button
+            class="secondary-button"
+            data-testid="capture-retake"
+            type="button"
+            @click="retake"
+          >
             <RotateCcw :size="20" aria-hidden="true" />
             {{ t('capture.review.retake') }}
           </button>
-          <button type="button" @click="approvePicture">
+          <button
+            data-testid="capture-use-picture"
+            type="button"
+            @click="approvePicture"
+          >
             {{ t('capture.review.usePicture') }}
           </button>
         </div>
-        <p v-else-if="locallyApproved" class="approval" role="status">
+        <p
+          v-else-if="locallyApproved"
+          class="approval"
+          data-testid="capture-approved"
+          role="status"
+        >
           {{ t('capture.review.locallyApproved') }}
         </p>
       </section>
     </template>
     <template v-else>
-      <h1>{{ t('capture.invalidTheme') }}</h1>
+      <h1 data-testid="capture-invalid-theme">
+        {{ t('capture.invalidTheme') }}
+      </h1>
     </template>
     <NuxtLink to="/">{{ t('common.actions.backToThemes') }}</NuxtLink>
   </main>
