@@ -28,6 +28,13 @@ export default defineNuxtConfig({
     head: {
       title: 'Bouvet Team Photobooth',
       htmlAttrs: { lang: 'nb-NO' },
+      link: [
+        {
+          rel: 'icon',
+          type: 'image/svg+xml',
+          href: '/favicon.svg',
+        },
+      ],
       meta: [
         {
           name: 'description',

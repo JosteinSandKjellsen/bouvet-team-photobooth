@@ -31,6 +31,13 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+    'href',
+    '/favicon.svg',
+  )
+  await expect(
+    page.getByRole('link', { name: 'Bouvet Team Photobooth' }).locator('img'),
+  ).toHaveAttribute('src', '/bouvet-logo.svg')
   await expect(
     page.getByRole('heading', {
       name: 'Hvilket univers passer teamet deres?',

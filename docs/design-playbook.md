@@ -90,9 +90,9 @@ should be made once and checked across its consumers.
 | ------------ | -------------------------------------------------------- | --------------------------------------------------------------------- |
 | Brand accent | `#EE2950`                                                | Selection markers, large accents and decorative details.              |
 | Action red   | `#C9143B`                                                | Filled buttons with white normal-size labels; verify actual contrast. |
-| Canvas       | `#F7F5F2`                                                | Warm light page background, not a saturated beige theme.              |
+| Canvas       | `#FCF8F3`                                                | Warm light page background, not a saturated beige theme.              |
 | Surface      | `#FFFFFF`                                                | Theme details and QR/action tool.                                     |
-| Text         | `#171717`                                                | Headings, body text and outlined actions.                             |
+| Text         | `#11133C`                                                | Headings, body text and outlined actions.                             |
 | Muted text   | `#62605E`                                                | Supporting copy and secondary metadata.                               |
 | Divider      | `#D8D3D0`                                                | Decorative separators, not the sole control/focus boundary.           |
 | Spacing      | `4, 8, 12, 16, 24, 32, 48` px                            | Consistent gaps and padding.                                          |
@@ -106,9 +106,8 @@ rendered contrast, including focus, selection, outlined borders and errors.
 
 ### Typography
 
-Use an approved, licensed Bouvet font when supplied. Until then, retain the
-existing `Avenir Next`, `Trebuchet MS`, sans-serif stack rather than adding an
-unverified external font. Do not claim the screenshot font has been identified.
+Use `Inter`, sans-serif as the application font stack. Do not claim the screenshot
+font has been identified.
 
 - Start with body text at `18px` on kiosk and `16px` on phone, line height at least
   `1.4`. Supporting metadata must remain readable, not screenshot-sized fine print.

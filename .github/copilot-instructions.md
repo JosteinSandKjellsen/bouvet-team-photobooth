@@ -75,6 +75,13 @@ Run commands from the repository root with the pinned pnpm version. Bootstrap
 with `pnpm install --frozen-lockfile` and `pnpm prepare`. Nuxt's generated types
 and lint config must exist before checks. The demo requires no credentials.
 
+At the start of a terminal session, check `node --version`. If it is not Node 24,
+select Node 24 once through an installed version manager before running checks.
+Do not prefix every individual check with `npx --package=node@24.15.0`: it starts
+a temporary cached runtime but does not change the parent shell. When no version
+manager is available, report the mismatch and use that fallback only for an
+essential check or a consolidated relevant gate.
+
 - `pnpm dev`: local Nuxt frontend and Nitro backend.
 - `pnpm typecheck`: strict contracts, app, server, test and config types.
 - `pnpm format:check`: Prettier formatting, including all maintained Markdown.

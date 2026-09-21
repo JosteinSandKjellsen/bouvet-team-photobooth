@@ -1,12 +1,8 @@
-<script setup lang="ts">
-import { Camera } from '@lucide/vue'
-</script>
-
 <template>
   <div class="application">
     <header class="masthead">
       <NuxtLink class="brand" to="/" aria-label="Bouvet Team Photobooth">
-        <Camera :size="24" aria-hidden="true" /><span>Bouvet</span>
+        <img class="brand-logo" src="/bouvet-logo.svg" alt="" />
       </NuxtLink>
       <span class="app-name">Team Photobooth</span>
     </header>
@@ -42,14 +38,11 @@ input {
 .brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text);
-  text-decoration: none;
+  line-height: 0;
 }
-.brand svg {
-  color: var(--color-action-primary);
+.brand-logo {
+  width: 167px;
+  height: 41px;
 }
 .app-name {
   font-size: 15px;

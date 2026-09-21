@@ -1,15 +1,15 @@
 :root {
   color-scheme: light;
-  font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;
+  font-family: Inter, sans-serif;
   font-synthesis: none;
   letter-spacing: 0;
-  color: #171717;
-  background: #f7f5f2;
+  color: #11133c;
+  background: #fcf8f3;
   --color-brand-accent: #ee2950;
   --color-action-primary: #c9143b;
-  --color-canvas: #f7f5f2;
+  --color-canvas: #fcf8f3;
   --color-surface: #ffffff;
-  --color-text: #171717;
+  --color-text: #11133c;
   --color-muted-text: #62605e;
   --color-divider: #d8d3d0;
   --color-focus: #1e5f74;

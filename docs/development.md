@@ -17,6 +17,12 @@ arguments. Install the pinned package manager if necessary:
 npm install --global pnpm@12.5.1
 ```
 
+Check `node --version` once after selecting the runtime. A command such as
+`npx --package=node@24.15.0 -- node --version` is a temporary fallback, not a
+runtime switch: it uses npm's cache when available but leaves the parent shell
+on its previous Node version. Prefer a version manager over repeating that
+wrapper around individual checks.
+
 Run from the repository root. These commands work in PowerShell, Command Prompt
 and POSIX shells:
 
