@@ -63,16 +63,6 @@ function cancelCountdownOnHiddenTab() {
   }
 }
 
-function selectFile(event: Event) {
-  const input = event.target as HTMLInputElement
-  const [file] = Array.from(input.files ?? [])
-  if (file) {
-    locallyApproved.value = false
-    void camera.selectFile(file)
-  }
-  input.value = ''
-}
-
 function retake() {
   locallyApproved.value = false
   camera.reset()
@@ -97,7 +87,11 @@ onBeforeUnmount(() => {
   <main class="capture-page">
     <template v-if="selectedTheme">
       <section class="intro" aria-labelledby="capture-heading">
-        <p class="eyebrow">{{ t(themeMessages[selectedTheme.id].name) }}</p>
+        <p class="eyebrow">
+          {{ t(themeMessages[selectedTheme.id].name) }}
+          <span aria-hidden="true">&middot;</span>
+          {{ t(themeMessages[selectedTheme.id].label) }}
+        </p>
         <h1 id="capture-heading">{{ t('capture.ready.title') }}</h1>
         <p>{{ t('capture.ready.description') }}</p>
       </section>
@@ -139,6 +133,15 @@ onBeforeUnmount(() => {
                 : t('capture.ready.mediaPlaceholder')
             }}
           </p>
+          <button
+            v-if="
+              camera.state.value === 'idle' || camera.state.value === 'error'
+            "
+            type="button"
+            @click="startCamera"
+          >
+            {{ t('capture.ready.activateCamera') }}
+          </button>
         </div>
 
         <p v-if="camera.error.value" class="error" role="alert">
@@ -146,23 +149,7 @@ onBeforeUnmount(() => {
         </p>
 
         <div
-          v-if="camera.state.value === 'idle' || camera.state.value === 'error'"
-          class="actions"
-        >
-          <button type="button" @click="startCamera">
-            {{ t('capture.ready.activateCamera') }}
-          </button>
-          <label class="file-action">
-            {{ t('capture.ready.chooseFile') }}
-            <input
-              accept="image/jpeg,image/png,image/webp"
-              type="file"
-              @change="selectFile"
-            />
-          </label>
-        </div>
-        <div
-          v-else-if="
+          v-if="
             camera.state.value === 'requestingPermission' ||
             camera.state.value === 'compressing'
           "
@@ -228,21 +215,25 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .capture-page {
-  width: min(980px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
-  padding: var(--space-7) var(--page-gutter);
+  padding: 0 var(--page-gutter) var(--space-7);
 }
 .intro {
-  max-width: 720px;
-  margin-bottom: var(--space-6);
+  max-width: 820px;
+  margin-bottom: var(--space-4);
 }
 .eyebrow {
-  margin: 0 0 var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
   color: var(--color-action-primary);
   font-weight: 700;
+  text-transform: uppercase;
 }
 h1 {
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-1);
   font-size: 48px;
   line-height: 1.12;
 }
@@ -253,14 +244,15 @@ h1 {
   line-height: 1.5;
 }
 .capture-workspace {
-  max-width: 820px;
+  max-width: 100%;
 }
 .media-frame {
   position: relative;
   display: grid;
-  min-height: min(56vw, 460px);
+  aspect-ratio: 5 / 2;
   place-items: center;
   overflow: hidden;
+  border: 1px solid var(--color-divider);
   border-radius: var(--card-radius);
   background: var(--color-text);
 }
@@ -271,6 +263,7 @@ img {
   object-fit: contain;
 }
 .empty-media {
+  align-content: center;
   gap: var(--space-3);
   background: var(--color-surface);
   color: var(--color-muted-text);
@@ -286,8 +279,8 @@ img {
   margin: 0;
   place-items: center;
   border-radius: 50%;
-  background: rgb(23 23 23 / 75%);
-  color: var(--color-surface);
+  background: rgb(255 255 255 / 75%);
+  color: var(--color-action-primary);
   font-size: 72px;
   font-weight: 700;
 }
@@ -297,8 +290,7 @@ img {
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
-button,
-.file-action {
+button {
   display: inline-flex;
   min-height: var(--control-height);
   align-items: center;
@@ -318,20 +310,13 @@ button:disabled {
   color: var(--color-muted-text);
   cursor: not-allowed;
 }
-.secondary-button,
-.file-action {
+.secondary-button {
   background: var(--color-surface);
   color: var(--color-text);
 }
 .icon-button {
   width: var(--control-height);
   padding: 0;
-}
-.file-action input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
 }
 .error {
   margin: var(--space-4) 0 0;
@@ -348,14 +333,11 @@ a {
   color: var(--color-text);
 }
 @media (max-width: 700px) {
-  .capture-page {
-    padding-top: var(--space-6);
-  }
   h1 {
     font-size: 36px;
   }
   .media-frame {
-    min-height: min(70vw, 420px);
+    aspect-ratio: 4 / 3;
   }
 }
 @media (max-width: 480px) {

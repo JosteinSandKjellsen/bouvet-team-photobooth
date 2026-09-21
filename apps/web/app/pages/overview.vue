@@ -16,7 +16,7 @@ const { t } = useI18n()
 .placeholder-page {
   width: min(840px, 100%);
   margin: 0 auto;
-  padding: var(--space-7) var(--page-gutter);
+  padding: 0 var(--page-gutter) var(--space-7);
 }
 h1 {
   margin: 0 0 var(--space-4);

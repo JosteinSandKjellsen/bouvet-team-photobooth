@@ -21,11 +21,10 @@
     "title": "{theme}",
     "invalidTheme": "Dette universet finnes ikke.",
     "ready": {
-      "title": "Gjør dere klare til bildet",
-      "description": "Plasser hele teamet i bildet. Bildet blir bare liggende på denne enheten til dere velger å bruke det.",
+      "title": "Gjør dere klare!",
+      "description": "Se mot kameraet. Bildet tas om ...",
       "mediaPlaceholder": "Kameraet er ikke aktivert.",
       "activateCamera": "Aktiver kamera",
-      "chooseFile": "Velg bilde fra enheten",
       "requestingPermission": "Venter på tilgang til kameraet.",
       "processingImage": "Gjør klart bildet.",
       "takePhoto": "Ta bilde",
@@ -42,12 +41,10 @@
     },
     "errors": {
       "cameraInUse": "Kameraet er i bruk av en annen app. Lukk den og prøv igjen.",
-      "cameraUnavailable": "Kameraet er ikke tilgjengelig akkurat nå. Prøv igjen eller velg et bilde fra enheten.",
-      "imageTooLarge": "Bildet er for stort til å brukes. Velg et mindre bilde.",
-      "invalidImage": "Bildet kunne ikke klargjøres. Velg et annet bilde.",
-      "permissionDenied": "Vi fikk ikke tilgang til kameraet. Tillat tilgang eller velg et bilde fra enheten.",
-      "unsupportedFile": "Velg en JPG-, PNG- eller WebP-fil.",
-      "unsupportedMedia": "Denne nettleseren kan ikke bruke kameraet her. Velg et bilde fra enheten."
+      "cameraUnavailable": "Kameraet er ikke tilgjengelig akkurat nå. Prøv igjen.",
+      "imageTooLarge": "Bildet kunne ikke klargjøres. Prøv igjen.",
+      "permissionDenied": "Vi fikk ikke tilgang til kameraet. Tillat tilgang i nettleseren og prøv igjen.",
+      "unsupportedMedia": "Denne nettleseren kan ikke bruke kameraet her."
     }
   },
   "photo": {
@@ -63,7 +60,7 @@
   "themes": {
     "wasteland": {
       "name": "Grensepatruljen",
-      "label": "Spaceboys",
+      "label": "Space cowboys",
       "description": "Når bakloggene er like stor som galaksen."
     },
     "treehouse": {

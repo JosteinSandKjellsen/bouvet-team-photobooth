@@ -1,9 +1,5 @@
 import { computed, ref } from 'vue'
 
-const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
-const MAX_DECODED_PIXELS = 24_000_000
-const MAX_DIMENSION = 8_192
-const MAX_INBOUND_BYTES = 20 * 1024 * 1024
 const MAX_PROCESSED_DIMENSION = 1_600
 const TARGET_BYTES = 4_000_000
 
@@ -12,8 +8,6 @@ export type CameraError =
   | 'cameraUnavailable'
   | 'imageTooLarge'
   | 'permissionDenied'
-  | 'invalidImage'
-  | 'unsupportedFile'
   | 'unsupportedMedia'
 
 export type CameraState =
@@ -80,21 +74,6 @@ async function encodeJpeg(canvas: HTMLCanvasElement) {
   }
 
   return null
-}
-
-async function decodeImage(file: File) {
-  const objectUrl = URL.createObjectURL(file)
-  try {
-    const image = new Image()
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve()
-      image.onerror = () => reject(new Error('Image decoding failed'))
-      image.src = objectUrl
-    })
-    return image
-  } finally {
-    URL.revokeObjectURL(objectUrl)
-  }
 }
 
 export function useLocalCameraCapture() {
@@ -254,63 +233,6 @@ export function useLocalCameraCapture() {
     return true
   }
 
-  async function selectFile(file: File) {
-    if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
-      error.value = 'unsupportedFile'
-      state.value = 'error'
-      return false
-    }
-    if (file.size > MAX_INBOUND_BYTES) {
-      error.value = 'imageTooLarge'
-      state.value = 'error'
-      return false
-    }
-
-    state.value = 'compressing'
-    try {
-      const image = await decodeImage(file)
-      if (
-        image.naturalWidth === 0 ||
-        image.naturalHeight === 0 ||
-        image.naturalWidth > MAX_DIMENSION ||
-        image.naturalHeight > MAX_DIMENSION ||
-        image.naturalWidth * image.naturalHeight > MAX_DECODED_PIXELS
-      ) {
-        error.value = 'imageTooLarge'
-        state.value = 'error'
-        return false
-      }
-
-      const dimensions = getProcessedDimensions(
-        image.naturalWidth,
-        image.naturalHeight,
-      )
-      const canvas = createCanvas(dimensions.width, dimensions.height)
-      const context = canvas.getContext('2d')
-      if (!context) {
-        error.value = 'invalidImage'
-        state.value = 'error'
-        return false
-      }
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
-      const blob = await encodeJpeg(canvas)
-      if (!blob) {
-        error.value = 'imageTooLarge'
-        state.value = 'error'
-        return false
-      }
-
-      stopStream()
-      error.value = null
-      usePreview(blob)
-      return true
-    } catch {
-      error.value = 'invalidImage'
-      state.value = 'error'
-      return false
-    }
-  }
-
   return {
     activate,
     capture,
@@ -320,7 +242,6 @@ export function useLocalCameraCapture() {
     isCameraSupported,
     previewUrl,
     reset,
-    selectFile,
     source,
     state,
     stop,

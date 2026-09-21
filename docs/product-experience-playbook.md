@@ -90,8 +90,7 @@ branding rights.
 
 - Explain purpose, processing provider, public publication, retention, and the
   removal contact before requesting camera access, after a user gesture.
-- Support fixed kiosk and mobile cameras, with the supported image-picker
-  fallback defined in the camera playbook.
+- Support fixed kiosk and mobile cameras.
 - Reject invalid theme slugs before camera or session work. Explain unavailable
   cameras, permission denial, camera-in-use, and other recoverable failures.
 - Display `3`, `2`, `1`, capture once at or after 3000 ms using a monotonic

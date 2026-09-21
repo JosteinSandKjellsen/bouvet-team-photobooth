@@ -10,6 +10,9 @@ applyTo: 'apps/web/test/**,apps/web/vitest.config.ts,apps/web/playwright.config.
   snapshots or Nuxt-generated cache keys.
 - Put production API/browser tests in `test/e2e`. Vitest must not collect them.
   Playwright owns one built Node/Nitro server; keep `reuseExistingServer: false`.
+- `playwright test` serves the existing `.output` and may not include source
+  changes. For browser validation after source edits, run `pnpm test:e2e`, or run
+  `pnpm build` immediately before invoking Playwright directly.
 - Use the real API for happy paths; intercept only failure scenarios. Cover
   error recovery, keyboard access and desktop/mobile overflow. Do not use sleeps.
 - Read the [product experience playbook](../../docs/product-experience-playbook.md)

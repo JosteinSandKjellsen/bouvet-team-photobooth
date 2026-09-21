@@ -33,6 +33,11 @@ applyTo: 'apps/web/app/**,apps/web/i18n/**,apps/web/nuxt.config.ts'
 - Add behavior coverage alongside the
   [health component tests](../../apps/web/test/nuxt/HealthStatus.nuxt.spec.ts)
   and verify changed user flows in Playwright.
+- When removing an implemented UI capability, remove its control, handlers or
+  composable API, feature-specific states and messages, and active canonical
+  playbook requirements together. Before handoff, search the maintained feature
+  sources, tests, catalogs and docs for the removed control label, key or API;
+  exclude generated output and add a focused absence or replacement assertion.
 
 ## Language Files
 

@@ -40,19 +40,22 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   ).toHaveAttribute('src', '/bouvet-logo.svg')
   await expect(
     page.getByRole('heading', {
-      name: 'Hvilket univers passer teamet deres?',
+      name: 'Hvilket team passer dere?',
     }),
   ).toBeVisible()
   const themeButtons = page.getByRole('button')
   await expect(themeButtons).toHaveCount(9)
-  await page.getByRole('button', { name: /Ødemark etter katastrofen/ }).click()
+  await page.getByRole('button', { name: /Grensepatruljen/ }).click()
   await expect(page).toHaveURL('/capture/wasteland')
   await expect(
-    page.getByRole('heading', { name: 'Gjør dere klare til bildet' }),
+    page.getByRole('heading', { name: 'Gjør dere klare!' }),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Aktiver kamera' }),
   ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Velg bilde fra enheten' }),
+  ).toHaveCount(0)
   await page.goto('/capture/unknown')
   await expect(
     page.getByRole('heading', { name: 'Dette universet finnes ikke.' }),

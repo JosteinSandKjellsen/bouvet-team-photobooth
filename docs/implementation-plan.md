@@ -100,8 +100,7 @@ Camera requirements:
 
 - Explain purpose and privacy before requesting permission, after an explicit
   user gesture. Display positioning guidance and one clear capture action.
-- Support fixed kiosk cameras and mobile cameras, with a supported image-picker
-  fallback for denied or unavailable camera access under the camera playbook.
+- Support fixed kiosk and mobile cameras.
 - Reject invalid themes before camera or session work. Explain missing support,
   permission denial, camera-in-use and other recoverable failures.
 - Display `3`, `2`, `1`; capture once at or after 3000 ms using a monotonic
@@ -339,10 +338,10 @@ provided, so the existing textual brand treatment remains.
 **Depends on:** M1. May proceed alongside M3 after shared contracts are agreed.
 
 Implement owned camera/state composables, activation and permission recovery,
-supported file fallback, mobile camera preferences/switching, three-second
-countdown, single-frame capture, preview/retake/approve and bounded compression.
-Keep sources in memory before approval. Use synthetic/fake media until the
-real-photo privacy gate is approved.
+mobile camera preferences/switching, three-second countdown, single-frame
+capture, preview/retake/approve and bounded compression. Keep sources in memory
+before approval. Use synthetic/fake media until the real-photo privacy gate is
+approved.
 
 **Acceptance:** no capture before 3000 ms, exactly one capture despite timer drift
 and repeated clicks, safe cancellation/hidden-tab/track-end/unmount behavior,

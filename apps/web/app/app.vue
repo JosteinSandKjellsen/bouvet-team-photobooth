@@ -13,7 +13,9 @@
         </NuxtLink>
         <span class="app-name">Team Photobooth</span>
       </header>
-      <NuxtPage />
+      <div class="page-content">
+        <NuxtPage />
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +49,9 @@ input {
 .application-content {
   position: relative;
   z-index: 1;
+}
+.page-content {
+  padding-top: clamp(var(--space-5), 4dvh, var(--space-7));
 }
 .masthead {
   display: flex;

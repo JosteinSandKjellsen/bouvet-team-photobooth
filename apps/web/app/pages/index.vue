@@ -57,7 +57,7 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 .page-shell {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: var(--space-5) var(--page-gutter) var(--space-7);
+  padding: 0 var(--page-gutter) var(--space-7);
 }
 .intro {
   display: grid;
@@ -106,9 +106,6 @@ a {
   .intro {
     grid-template-columns: 1fr;
     row-gap: var(--space-4);
-  }
-  .page-shell {
-    padding-top: var(--space-6);
   }
   h1 {
     font-size: 36px;

@@ -177,8 +177,6 @@ composition.
   to a recoverable camera-unavailable state when the stream ends unexpectedly.
 - Do not leave the camera active behind another application screen. Stop all
   tracks when leaving the camera flow.
-- Provide a JPEG, PNG, or WebP file-picker fallback when camera activation is
-  unavailable or denied.
 
 ### Three-second photobooth countdown
 
@@ -391,13 +389,11 @@ Map errors to actions rather than exposing raw provider responses:
 
 | Failure                              | User or system action                                  |
 | ------------------------------------ | ------------------------------------------------------ |
-| Camera unsupported                   | Offer a supported file picker                          |
-| Permission denied                    | Show browser settings guidance and file-picker option  |
-| Camera unavailable or in use         | Allow retry or file selection                          |
+| Camera unsupported                   | Explain that this browser cannot use the camera        |
+| Permission denied                    | Show browser settings guidance and retry action        |
+| Camera unavailable or in use         | Allow retry                                            |
 | Empty video dimensions               | Wait for metadata; do not capture a blank frame        |
-| Unsupported or corrupt image         | Ask for a new JPEG, PNG, or WebP                       |
-| Input exceeds inbound limits         | Reject before decode when possible                     |
-| Compression cannot meet target       | Ask for a lower-resolution or less detailed image      |
+| Compression cannot meet target       | Explain that the picture could not be prepared; retry  |
 | Presigned policy limit is lower      | Recompress against that limit or reject                |
 | Leonardo init request is 400/401/403 | Do not retry automatically                             |
 | Leonardo or storage returns 429/5xx  | Retry with bounded backoff according to provider rules |
@@ -419,7 +415,6 @@ sanitized failure category.
 - Keep focus on the countdown cancel action while counting down. After
   cancellation, return focus to **Take photo**; after capture, move focus to the
   preview actions.
-- Provide a file-picker fallback with `accept="image/jpeg,image/png,image/webp"`.
 - Explain why camera access is requested before triggering the browser prompt.
 - Do not start the camera automatically on page load.
 - Show the exact preview that will be submitted.
