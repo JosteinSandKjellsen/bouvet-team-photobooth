@@ -62,7 +62,7 @@ export async function getCurrentSession(capability: string) {
       capabilityHash: hashCapability(capability),
       expiresAt: { gt: new Date() },
     },
-    select: { expiresAt: true, themeId: true },
+    select: { expiresAt: true, id: true, themeId: true },
   })
 }
 

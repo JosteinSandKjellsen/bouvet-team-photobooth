@@ -31,6 +31,7 @@ export default defineConfig({
       NITRO_PORT: String(port),
       NUXT_SESSION_ORIGIN: baseURL,
       NUXT_SESSION_TTL_MS: '300000',
+      SOURCE_STORAGE_DIR: 'test-results/source-storage',
     },
     reuseExistingServer: false,
     timeout: 30_000,

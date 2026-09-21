@@ -9,6 +9,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AssetStatus {
+  ACTIVE
+  DELETED
+}
+
 model Session {
   id             String   @id @default(uuid()) @db.Uuid
   capabilityHash String   @unique
@@ -16,6 +21,25 @@ model Session {
   expiresAt      DateTime @db.Timestamptz(3)
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+  sourceImage    SourceImage?
 
   @@index([expiresAt])
+}
+
+model SourceImage {
+  id          String      @id @default(uuid()) @db.Uuid
+  sessionId   String      @unique @db.Uuid
+  session     Session     @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  storageKey  String      @unique
+  contentType String
+  byteSize    Int
+  width       Int
+  height      Int
+  status      AssetStatus @default(ACTIVE)
+  deleteAfter DateTime    @db.Timestamptz(3)
+  deletedAt   DateTime?   @db.Timestamptz(3)
+  createdAt   DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
+
+  @@index([status, deleteAfter])
 }

@@ -15,13 +15,16 @@ calls in that milestone. Later milestones require a separately selected scope.
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
 guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
-local capture/review are complete; M3 remains unselected.
+local capture/review are complete. M3 is selected and in progress: private
+anonymous sessions and synthetic-image source validation/normalization are
+implemented with local development storage; durable jobs, cleanup, abuse limits
+and production object storage remain.
 
 Suggested next-session request:
 
-> Read docs/implementation-plan.md and docs/product-experience-playbook.md,
-> then select M3 before implementing sessions, source storage or jobs. Do not
-> add provider or persistence behavior without selecting its milestone.
+> Continue M3 with durable source cleanup, job leases and configured abuse
+> limits. Do not add provider behavior without selecting M4 or use participant
+> images before the privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 

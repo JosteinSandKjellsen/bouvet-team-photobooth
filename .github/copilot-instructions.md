@@ -59,6 +59,10 @@ Make the smallest testable change. Preserve unrelated user work. Add regression
 coverage for behavior changes, run a focused check immediately, then run the
 relevant merge gates. Report actual command results and disclose skipped checks.
 Do not add speculative frameworks, cloud resources, or external API calls.
+Before declaring work complete after a request to continue a plan or asking
+whether it is done, compare the verified slice with the active milestone and
+handoff. Name remaining planned work; do not present an increment as a completed
+milestone.
 
 Support Windows, Linux and macOS. Prefer portable Node scripts and filesystem
 APIs over shell-specific commands; label platform-specific setup examples.

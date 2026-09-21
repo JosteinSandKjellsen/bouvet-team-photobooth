@@ -24,3 +24,11 @@ export interface SessionResponse {
   expiresAt: string
   themeId: ThemeDescriptor['id']
 }
+
+export interface SourceImageUploadResponse {
+  height: number
+  mimeType: 'image/jpeg'
+  processedBytes: number
+  sourceId: string
+  width: number
+}
