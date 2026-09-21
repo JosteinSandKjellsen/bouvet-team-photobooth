@@ -20,12 +20,13 @@ Root instructions directly reference each, and relevant scoped instructions and
 skills require loading them for that task. Do not load every playbook for an
 unrelated health-check edit or copy their complete chapters into instructions.
 
-| Work                                                                | Required reading                                                    |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Layouts, styling, UI copy, responsive behavior, visual verification | [Photobooth design](./design-playbook.md)                           |
-| Camera, countdown, preview, compression, source upload              | [Camera and initial images](./camera-and-initial-image-playbook.md) |
-| Leonardo models, paid submissions, completion, provider cleanup     | [Leonardo integration](./leonardo-integration-playbook.md)          |
-| Prisma, PostgreSQL, durable jobs, storage, retention, deployment    | [Data and jobs](./prisma-data-and-jobs-playbook.md)                 |
+| Work                                                                | Required reading                                                                                           |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Product behavior, routes, privacy, milestones, acceptance criteria  | [Product experience](./product-experience-playbook.md) and [implementation plan](./implementation-plan.md) |
+| Layouts, styling, UI copy, responsive behavior, visual verification | [Photobooth design](./design-playbook.md)                                                                  |
+| Camera, countdown, preview, compression, source upload              | [Camera and initial images](./camera-and-initial-image-playbook.md)                                        |
+| Leonardo models, paid submissions, completion, provider cleanup     | [Leonardo integration](./leonardo-integration-playbook.md)                                                 |
+| Prisma, PostgreSQL, durable jobs, storage, retention, deployment    | [Data and jobs](./prisma-data-and-jobs-playbook.md)                                                        |
 
 These are approved future baselines. The active scaffold remains database-free
 and provider-free. Do not install dependencies, request credentials or make paid
@@ -34,8 +35,8 @@ are historical, not evidence that a current provider operation was tested.
 
 The design guide translates the six supplied screen references into durable
 guidance; the original screenshot binaries are not in the repository. It does
-not override the [product decisions and milestone plan](./implementation-plan.md).
-The remaining M0 alignment, including the camera countdown duration, is pending.
+not override the [product experience](./product-experience-playbook.md) or
+[implementation plan](./implementation-plan.md).
 
 The aligned rules distinguish original image bytes, compressed bytes and total
 multipart ingress, return public `sourceId` handles, retain landscape 1376 x 768
@@ -87,7 +88,7 @@ To inspect VS Code discovery, open a matching source file, use the Chat
 Customization UI to inspect instructions/skills, and inspect attached references
 or agent tool activity in a fresh chat. Try these read-only prompts:
 
-1. "Plan camera countdown tests without editing code. Read the applicable playbook."
+1. "Plan camera countdown tests without editing code. Read the product and applicable technical playbook."
 2. "Explain the retry rule for an uncertain paid Leonardo submission. Do not call the provider."
 3. "Outline the prerequisites for adding durable Prisma jobs without installing anything."
 4. "Use verify-change to check the health scaffold and report actual command results."

@@ -86,7 +86,8 @@ Keep provider artifacts separate from application-owned artifacts:
 | Short-lived source URL or base64 | Application storage/input; Flare only                                 | v2 `URL` or `BASE64` reference                 | Delete the application-owned object; no Leonardo upload ID exists       |
 | `initImageId`                    | v1 `POST /init-image`; used by the ID-based workflow for either model | v2 `UPLOADED` reference                        | No current deletion endpoint is published in the reviewed docs index    |
 | `generationId`                   | v2 `POST /generations`                                                | Correlates completion, persistence, and output | No current v2 deletion endpoint is published in the reviewed docs index |
-| `imageId`                        | Application database                                                  | User-facing lookup ID                          | Delete or tombstone with the application retention record               |
+| `imageId`                        | Application database                                                  | Internal row ID; never expose it               | Delete or tombstone with the application retention record               |
+| `publicId`                       | Application database                                                  | Opaque public result/gallery lookup ID         | Stop serving when the application retention record expires              |
 | Generated-image object           | Application object storage                                            | Cached bytes served to users                   | Delete after `deleteAfter`; purge any application CDN copy              |
 
 Never interchange these IDs. Accept generation asynchronously:
@@ -98,7 +99,7 @@ interface GenerationAccepted {
 }
 
 interface GeneratedImageResult {
-  imageId: string
+  publicId: string
   imageUrl: string
   deleteAfter: string
 }
@@ -459,7 +460,7 @@ created. A scheduled worker must:
 
 1. Claim a bounded batch where `deleteAfter <= now`.
 2. Delete the generated object from application storage and purge its CDN key.
-3. Tombstone the `imageId` so reads return `410 Gone` and cannot repopulate the
+3. Tombstone the public result so reads return `410 Gone` and cannot repopulate the
    cache from Leonardo.
 4. Attempt provider-side generation deletion only through a documented,
    confirmed API. Retain the internal `generationId` and cleanup state if that
@@ -471,10 +472,11 @@ The normal read path must never extend `deleteAfter`.
 
 ## Serving generated images
 
-Expose an authenticated application endpoint such as
-`GET /api/images/{imageId}`. The normal read path is:
+Expose a public application endpoint such as `GET /api/photos/{publicId}` for a
+published, unexpired result. Private session status and mutation endpoints use
+the anonymous session capability instead. The public read path is:
 
-1. Resolve the opaque `imageId` and authorize the caller.
+1. Resolve the opaque `publicId`; do not require or expose a private session.
 2. Reject expired or tombstoned records with `410 Gone`.
 3. Stream the cached object from application storage, or redirect to a
    short-lived signed application-storage URL.

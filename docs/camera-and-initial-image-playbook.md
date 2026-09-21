@@ -125,7 +125,7 @@ The normal flow is:
 4. Wait for video metadata and non-zero `videoWidth` and `videoHeight`.
 5. Enable **Take photo** only when the stream is live and the video has non-zero
    dimensions.
-6. When the person selects **Take photo**, start a five-second countdown.
+6. When the person selects **Take photo**, start a three-second countdown.
 7. Capture exactly one frame when the countdown deadline is reached, using the
    displayed crop or framing rules.
 8. Encode to a `Blob`, show a preview, and let the user retake or accept it.
@@ -180,17 +180,17 @@ composition.
 - Provide a JPEG, PNG, or WebP file-picker fallback when camera activation is
   unavailable or denied.
 
-### Five-second photobooth countdown
+### Three-second photobooth countdown
 
-The five seconds run from the accepted **Take photo** click to capture. Show
-`5`, `4`, `3`, `2`, and `1`, then capture at or after the five-second deadline.
-Do not capture on the transition to `1`.
+The three seconds run from the accepted **Take photo** click to capture. Show
+`3`, `2`, and `1`, then capture at or after the three-second deadline. Do not
+capture on the transition to `1`.
 
-Use a deadline derived from a monotonic clock instead of assuming five
+Use a deadline derived from a monotonic clock instead of assuming three
 one-second timer callbacks will fire on time:
 
 ```ts
-const COUNTDOWN_DURATION_MS = 5_000
+const COUNTDOWN_DURATION_MS = 3_000
 
 const startedAt = performance.now()
 const captureAt = startedAt + COUNTDOWN_DURATION_MS
@@ -202,7 +202,7 @@ function getCountdownValue(now: number): number {
 
 Schedule updates against `captureAt` and recalculate from `performance.now()` on
 every tick. Timer callbacks can drift or be delayed. Capture once when
-`performance.now() >= captureAt`; never capture early and never add five seconds
+`performance.now() >= captureAt`; never capture early and never add three seconds
 of callback drift.
 
 Countdown behavior:
@@ -224,7 +224,7 @@ Countdown behavior:
   one-time state transition even if two callbacks arrive near the deadline.
 - Do not restart the countdown automatically after an error or cancellation.
 - Stop the stream after a successful capture. Retake starts a fresh stream and
-  requires a new **Take photo** click and five-second countdown.
+  requires a new **Take photo** click and three-second countdown.
 
 Use one owned timeout or animation-frame loop and clean it up on every state
 exit. Associate each run with an incrementing token or `AbortController`; stale
@@ -435,14 +435,14 @@ Cover at least:
 - Front and rear camera switching without leaked media tracks.
 - Component unmount, navigation, retake, and cancel all stop tracks.
 - Capture waits for non-zero video dimensions.
-- Take-photo click displays `5`, `4`, `3`, `2`, `1` and cannot capture before
-  5000 milliseconds have elapsed on the monotonic clock.
+- Take-photo click displays `3`, `2`, `1` and cannot capture before 3000
+  milliseconds have elapsed on the monotonic clock.
 - Timer drift still results in one capture at or after the original deadline.
 - Rapid clicks create one countdown and one captured frame.
 - Cancel button, Escape, hidden document, ended track, camera switch,
   navigation, and unmount prevent capture from stale timer callbacks.
 - Successful capture stops the stream; retake starts a new stream and a new
-  five-second countdown.
+  three-second countdown.
 - Countdown announcements occur once per displayed second and reduced-motion
   mode avoids a flashing shutter effect.
 - Preview crop and front-camera mirroring match the submitted frame.
@@ -479,8 +479,8 @@ Cover at least:
 - Persist initImageId only after the storage upload returns HTTP 204.
 - Activate the camera only after an explicit user action and keep at most one
   active stream.
-- Start an uncached five-second countdown for each accepted Take photo action.
-- Display 5, 4, 3, 2, 1 and capture once at or after the monotonic deadline.
+- Start an uncached three-second countdown for each accepted Take photo action.
+- Display 3, 2, 1 and capture once at or after the monotonic deadline.
 - Cancel the countdown on user cancellation, hidden document, ended track,
   camera switch, navigation, error, or unmount; stale callbacks must be inert.
 - Stop all tracks on capture, leaving/cancelling the camera flow, error,

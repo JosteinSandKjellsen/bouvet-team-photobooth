@@ -9,11 +9,14 @@ applyTo: 'apps/web/app/**,apps/web/nuxt.config.ts'
   [design playbook](../../docs/design-playbook.md). Follow its responsive screen
   patterns and visual checks; screenshots do not override product/privacy rules
   or authorize implementing a future milestone.
+- Before implementing a product route or visitor journey, read the
+  [product experience playbook](../../docs/product-experience-playbook.md) and
+  [implementation plan](../../docs/implementation-plan.md).
 - Reuse or extend existing components in `apps/web/app/components` before creating
   new ones. Extract genuinely repeated UI/behavior; do not copy it between pages
   or create speculative abstractions. Follow the
-  [component reuse rules](../../docs/design-playbook.md#component-reuse).
-- Use the [central color and size tokens](../../docs/design-playbook.md#starting-tokens)
+  [component reuse rules](../../docs/design-playbook.md).
+- Use the [central color and size tokens](../../docs/design-playbook.md)
   from the planned `apps/web/app/assets/css/tokens.css` once UI work introduces it.
   Shared styles consume CSS variables instead of repeating color/size literals.
 - Use Vue `<script setup lang="ts">` and Nuxt composables. Use relative API URLs

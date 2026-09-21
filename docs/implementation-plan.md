@@ -3,25 +3,25 @@
 ## Handoff Status
 
 Planning decisions recorded on 2026-09-21. This document is ready for a new
-coding session. It preserves the product brief and implementation sequence;
-it does not report implemented application features.
+coding session. The [product experience playbook](./product-experience-playbook.md)
+is the canonical product specification; this roadmap selects the implementation
+sequence and does not report implemented application features.
 
 The application is still the Nuxt 4/Vue/Nitro health-check foundation.
 **Start with M0: documentation and AI harness alignment only.** Do not implement
 application routes, add dependencies, provision resources or make paid provider
 calls in that milestone. Later milestones require a separately selected scope.
 
-The [design playbook](./design-playbook.md) now records the six supplied screen
-references, visual tokens, responsive behavior and review criteria, and is linked
-from the AI harness. This completes only the design-guidance part of M0; the
-product playbook and remaining technical alignment are still pending.
+The [product experience playbook](./product-experience-playbook.md) and
+[design playbook](./design-playbook.md) record canonical product and visual
+guidance. M0 documentation and harness alignment is complete; M1 remains
+unstarted.
 
 Suggested next-session request:
 
-> Read docs/implementation-plan.md and implement M0 only. Create the product
-> playbook, align existing technical guidance and AI harness routing, extend
-> the existing harness checks where specified, and run the documented checks.
-> Do not start M1 or change application runtime behavior.
+> Read docs/implementation-plan.md and docs/product-experience-playbook.md,
+> then implement M1 only after it is explicitly selected. Do not change runtime
+> behavior while performing documentation-only maintenance.
 
 ## Confirmed Product Decisions
 
@@ -45,11 +45,12 @@ Suggested next-session request:
 Technical approaches below are implementation recommendations, not claims that
 provider capabilities, privacy policies or deployment readiness were verified.
 
-## Product Brief To Preserve
+## Historical Product-Brief Input
 
-This section is the input for the product playbook in M0. Once that playbook
-exists, move the detailed requirements there and replace this section with a
-link so there is one canonical product specification.
+The detailed requirements in this historical planning input are canonical in the
+[product experience playbook](./product-experience-playbook.md). Maintain future
+product changes in that playbook; this retained planning record must not create
+a competing specification.
 
 ### Purpose And Principles
 
@@ -275,9 +276,9 @@ Application milestones M1-M7 are pending. M0 has design guidance and its harness
 routing in place but is not complete. Update status and verification evidence as
 the remaining work completes.
 
-### M0: Documentation And Harness
+### M0: Documentation And Harness (Complete)
 
-**Scope:** documentation and narrowly necessary harness validator/tests only.
+**Completed scope:** documentation and narrowly necessary harness validator/tests only.
 
 1. Create `docs/product-experience-playbook.md` from the product brief above and
    confirmed decisions. Include observable acceptance criteria and identifiers

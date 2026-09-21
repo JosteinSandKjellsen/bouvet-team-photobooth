@@ -341,6 +341,7 @@ model ImageGeneration {
 
 model GeneratedImage {
   id           String          @id @default(uuid()) @db.Uuid
+  publicId     String          @unique
   generationId String          @db.Uuid
   generation   ImageGeneration @relation(fields: [generationId], references: [id], onDelete: Restrict)
   storageKey   String          @unique
@@ -385,7 +386,9 @@ model BackgroundJob {
 
 Rules for this schema:
 
-- `GeneratedImage.id` is the opaque application `imageId` returned to clients.
+- `GeneratedImage.id` is an internal persistence ID. `GeneratedImage.publicId`
+  is a separately generated opaque public lookup ID with at least 128 bits of
+  entropy; neither is a provider ID.
 - Provider IDs and provider URLs are internal and must never become public identifiers.
 - `storageKey` is an object key, not a public URL.
 - `BackgroundJob.payload` contains small non-secret inputs only. Store large data in object storage and reference it by key.
@@ -697,6 +700,13 @@ Release temporary upload buffers after transfer, but keep durable source
 objects needed by generation until output ingestion succeeds. Define bounded
 failure and abandonment retention before implementing these workflows. Neither
 local deletion nor using a source URL proves provider-side erasure.
+
+Public result and gallery reads resolve only a published, unexpired `publicId`;
+they do not require a private session capability. Upload, generation, retry, and
+status operations remain separately authorized through the private anonymous
+session. Record the current-event completed-picture aggregate independently of
+expiring `GeneratedImage` rows, incrementing it exactly once after durable
+publication and never decrementing it during retention cleanup.
 
 Do not hard-delete a `SourceImage` while an `ImageGeneration` still references it. Retain metadata longer than the object when audit or support workflows require it.
 

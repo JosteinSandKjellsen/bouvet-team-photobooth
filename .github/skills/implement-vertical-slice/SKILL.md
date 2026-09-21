@@ -6,7 +6,9 @@ description: 'Implement an end-to-end Nuxt feature or API-backed Vue screen, fro
 # Implement A Vertical Slice
 
 1. Identify the requested behavior, active milestone and observable acceptance
-   criteria. Do not implement future features merely because a playbook exists.
+   criteria in the [product experience playbook](../../../docs/product-experience-playbook.md)
+   and [implementation plan](../../../docs/implementation-plan.md). Do not
+   implement future features merely because a playbook exists.
 2. Read the owning code and its scoped instructions. For layouts, styling or copy,
    read the [design playbook](../../../docs/design-playbook.md) and use its screen
    patterns without treating mockup placeholders as product requirements.

@@ -11,7 +11,8 @@ The solution is one Nuxt 4/Vue frontend and Nitro backend in a pnpm workspace,
 with type-only shared API contracts. Use Node 24 LTS (at least 24.11.0).
 The implemented app is still the credential-free health-check foundation;
 camera capture, generation, persistence and deployment are not implemented.
-Follow the [implementation plan](../docs/implementation-plan.md) for the selected
+Follow the [product experience playbook](../docs/product-experience-playbook.md)
+and [implementation plan](../docs/implementation-plan.md) for the selected
 milestone and unresolved gates; the product vision does not authorize extra work.
 
 ## Folder Structure
@@ -39,6 +40,7 @@ These are binding future baselines, not permission to expand the active task.
 
 | Task                                             | Read                                                                      |
 | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| Product behavior, routes, privacy, or milestones | [Product experience](../docs/product-experience-playbook.md)              |
 | Layouts, styling, UI copy or visual verification | [Photobooth design](../docs/design-playbook.md)                           |
 | Camera, countdown, image validation or upload    | [Camera and initial images](../docs/camera-and-initial-image-playbook.md) |
 | Leonardo requests, completion, cost or cleanup   | [Leonardo integration](../docs/leonardo-integration-playbook.md)          |

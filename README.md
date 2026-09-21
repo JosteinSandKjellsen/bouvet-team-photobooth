@@ -43,7 +43,8 @@ scripts/              Harness validation and regression tests
 
 | Guide                                                                  | Purpose                                                                |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [Implementation plan](docs/implementation-plan.md)                     | Product brief, confirmed decisions, milestones and readiness gates.    |
+| [Product experience](docs/product-experience-playbook.md)              | Canonical visitor journey, product requirements, privacy, and gates.   |
+| [Implementation plan](docs/implementation-plan.md)                     | Selected milestones, implementation sequence, and readiness gates.     |
 | [Design](docs/design-playbook.md)                                      | Screen layouts, styling, copy, accessibility and visual checks.        |
 | [Development](docs/development.md)                                     | Local setup, full command reference, browser tests and CI.             |
 | [AI development](docs/ai-development.md)                               | Copilot instructions, skills, discovery and harness maintenance.       |

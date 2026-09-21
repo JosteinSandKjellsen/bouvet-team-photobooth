@@ -8,6 +8,8 @@ description: 'Verify a change before handoff or pull-request review with Markdow
 1. Inspect the diff and identify changed ownership boundaries. Preserve unrelated
    user changes. Distinguish implemented features from future architecture.
 2. For feature work, read applicable acceptance requirements in the
+   [product experience](../../../docs/product-experience-playbook.md),
+   [implementation plan](../../../docs/implementation-plan.md),
    [camera](../../../docs/camera-and-initial-image-playbook.md),
    [Leonardo](../../../docs/leonardo-integration-playbook.md), and
    [data/jobs](../../../docs/prisma-data-and-jobs-playbook.md) playbooks.
@@ -18,7 +20,7 @@ description: 'Verify a change before handoff or pull-request review with Markdow
    `pnpm test:e2e`. It builds once and owns an isolated production Node server.
    Use `E2E_PORT` for a port conflict; do not reuse an unknown running server.
 5. Review browser traces/screenshots when UI behavior changes using the
-   [design checklist](../../../docs/design-playbook.md#implementation-and-review-checklist).
+   [design checklist](../../../docs/design-playbook.md).
    Check mobile layout, keyboard access, image framing and error recovery. Only
    claim comparison to reference screenshots actually available. The Node build is not evidence
    of a working Netlify deployment or a completed external privacy review.
@@ -28,7 +30,7 @@ description: 'Verify a change before handoff or pull-request review with Markdow
    Also run `pnpm format:check` and `pnpm lint:markdown`, including Markdown under
    `.github`. Fix formatting and structural errors, then rerun both checks.
 7. For scripts, tooling or CI changes, review the
-   [cross-platform rules](../../instructions/tooling.instructions.md#cross-platform-scripts).
+   [cross-platform rules](../../instructions/tooling.instructions.md).
    Check shell syntax, environment variables, path spaces, separators, filename
    casing and subprocess execution. Run focused checks on the current OS and
    inspect the Windows/Linux/macOS CI results when available. Do not claim all
