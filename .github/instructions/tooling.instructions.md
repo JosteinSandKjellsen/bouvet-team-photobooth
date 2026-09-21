@@ -60,6 +60,8 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
   serialized-path boundaries. Never hard-code drive letters or `/tmp`.
 - Launch Node subprocesses with `process.execPath` and argument arrays. For other
   CLIs, use a cross-platform runner or explicitly handle Windows command shims;
+  do not execute `npm_execpath` through Node because package managers can expose
+  native launchers there. Use the CLI command with its Windows shim when needed;
   do not assume `shell: true` or a Unix shebang makes an invocation portable.
 - Avoid POSIX environment assignments and shell-expanded globs in package
   scripts. Set child environments through Node APIs or workflow `env` mappings.

@@ -40,6 +40,39 @@ argument rather than a port option. The current M1 theme-selection shell require
 no environment variables or credentials. `GET /api/health` returns
 `{"status":"ok"}`: process liveness, not database or provider readiness.
 
+## Local PostgreSQL
+
+M3 persistence development and integration tests use local PostgreSQL through
+Docker Compose. Docker Desktop or Docker Engine with the Compose plugin is
+required. Copy the tracked environment template, then start the service:
+
+```sh
+cp .env.example .env
+docker compose up -d postgres
+docker compose ps
+```
+
+The service listens only on `127.0.0.1:54329`. It creates the `photobooth`
+development database and the separate `photobooth_test` database for automated
+tests. The example local credentials are intentionally non-secret and must not
+be used outside a developer machine. Future Prisma commands use `DATABASE_URL`
+for runtime traffic, `DIRECT_URL` for schema changes, and
+`TEST_DATABASE_URL` only for isolated tests.
+
+Run the PostgreSQL-backed HTTP tests with `pnpm test:db`. It refuses a database
+name that does not end in `_test`, applies migrations only to that database,
+builds the production Nitro server, and runs the session API tests.
+
+Stop the local service with `docker compose down`. Its named volume preserves
+local data; remove it only when a clean local database is needed:
+
+```sh
+docker compose down --volumes
+```
+
+On Windows, use PowerShell or Command Prompt equivalents to copy the template,
+for example `Copy-Item .env.example .env`. The Compose commands are the same.
+
 pnpm 12 settings, including engine enforcement and the dependency build-script
 allowlist, live in [pnpm-workspace.yaml](../pnpm-workspace.yaml), not `.npmrc`.
 Review new install-script permissions before extending that allowlist.
@@ -64,6 +97,7 @@ Run these from the repository root:
 | `pnpm format` / `pnpm format:check` | Format / check maintained source and docs.              |
 | `pnpm typecheck`                    | Check contracts, Vue, server, tests and configurations. |
 | `pnpm test` / `pnpm test:watch`     | Run component and harness tests / watch components.     |
+| `pnpm test:db`                      | Run database API tests against the local test database. |
 | `pnpm deps:check`                   | Report outdated direct workspace packages.              |
 | `pnpm deps:update`                  | Update direct packages to latest registry releases.     |
 | `pnpm check:harness`                | Validate metadata, scopes, commands and document links. |

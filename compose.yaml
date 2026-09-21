@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: photobooth
+      POSTGRES_PASSWORD: photobooth
+      POSTGRES_USER: photobooth
+    healthcheck:
+      interval: 5s
+      retries: 10
+      start_period: 5s
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      timeout: 5s
+    ports:
+      - '127.0.0.1:54329:5432'
+    volumes:
+      - photobooth-postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-local.sql:/docker-entrypoint-initdb.d/init-local.sql:ro
+
+volumes:
+  photobooth-postgres-data:

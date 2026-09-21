@@ -25,7 +25,13 @@ export default defineConfig({
   webServer: {
     command: 'node .output/server/index.mjs',
     url: `${baseURL}/api/health`,
-    env: { NITRO_HOST: '127.0.0.1', NITRO_PORT: String(port) },
+    env: {
+      ...process.env,
+      NITRO_HOST: '127.0.0.1',
+      NITRO_PORT: String(port),
+      NUXT_SESSION_ORIGIN: baseURL,
+      NUXT_SESSION_TTL_MS: '300000',
+    },
     reuseExistingServer: false,
     timeout: 30_000,
   },

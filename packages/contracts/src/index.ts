@@ -19,3 +19,8 @@ export interface ThemeDescriptor {
 export interface ThemesResponse {
   themes: ThemeDescriptor[]
 }
+
+export interface SessionResponse {
+  expiresAt: string
+  themeId: ThemeDescriptor['id']
+}

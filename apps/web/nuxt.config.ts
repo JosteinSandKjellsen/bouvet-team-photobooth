@@ -3,6 +3,10 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxtjs/i18n'],
   devtools: { enabled: false },
   telemetry: false,
+  runtimeConfig: {
+    sessionOrigin: '',
+    sessionTtlMs: '',
+  },
   typescript: {
     strict: true,
     nodeTsConfig: {
