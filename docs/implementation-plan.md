@@ -16,13 +16,14 @@ The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
 guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
 local capture/review are complete. M3 is selected and in progress: private
-anonymous sessions and synthetic-image source validation/normalization are
-implemented with local development storage; durable jobs, cleanup, abuse limits
-and production object storage remain.
+anonymous sessions, synthetic-image source validation/normalization, local
+development storage, and durable source-cleanup state/lease handling are
+implemented. A scheduled worker adapter, configured abuse limits, and production
+object storage remain.
 
 Suggested next-session request:
 
-> Continue M3 with durable source cleanup, job leases and configured abuse
+> Continue M3 with a scheduled cleanup-worker adapter and configured abuse
 > limits. Do not add provider behavior without selecting M4 or use participant
 > images before the privacy and retention gates are approved.
 

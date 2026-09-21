@@ -11,7 +11,19 @@ datasource db {
 
 enum AssetStatus {
   ACTIVE
+  DELETE_PENDING
   DELETED
+}
+
+enum BackgroundJobKind {
+  DELETE_SOURCE_IMAGE
+}
+
+enum BackgroundJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
 }
 
 model Session {
@@ -42,4 +54,26 @@ model SourceImage {
   updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
 
   @@index([status, deleteAfter])
+}
+
+model BackgroundJob {
+  id             String              @id @default(uuid()) @db.Uuid
+  kind           BackgroundJobKind
+  status         BackgroundJobStatus @default(QUEUED)
+  aggregateId    String              @db.Uuid
+  idempotencyKey String              @unique
+  attempt        Int                 @default(0)
+  maxAttempts    Int                 @default(5)
+  nextAttemptAt  DateTime            @default(now()) @db.Timestamptz(3)
+  leaseOwner     String?
+  leaseExpiresAt DateTime?           @db.Timestamptz(3)
+  lastErrorCode  String?
+  lastError      String?             @db.Text
+  completedAt    DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt, createdAt])
+  @@index([status, leaseExpiresAt])
+  @@index([kind, aggregateId])
 }

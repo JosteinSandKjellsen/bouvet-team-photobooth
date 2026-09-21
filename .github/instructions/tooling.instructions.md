@@ -5,9 +5,12 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
 
 # Tooling And Documentation
 
-- Use Node `>=24.15.0 <25` and the root `packageManager` pin. Commit the generated
-  pnpm lockfile. pnpm 12 uses `engineStrict`, `saveExact` and explicit `allowBuilds`
-  in `pnpm-workspace.yaml`; non-registry settings do not belong in `.npmrc`.
+- Use Node `>=24.15.0 <25` and the root `packageManager` pin. After selecting a
+  runtime, run `node --version` and confirm it is Node 24 before treating a
+  validation gate as compliant; a version-manager or package-manager path is not
+  proof of the active executable. Commit the generated pnpm lockfile. pnpm 12 uses
+  `engineStrict`, `saveExact` and explicit `allowBuilds` in `pnpm-workspace.yaml`;
+  non-registry settings do not belong in `.npmrc`.
 - Nuxt owns generated context configs. Extend them through `nuxt.config.ts`,
   including the test files; never edit `.nuxt` or replace its alias maps.
 - ESLint handles code correctness and dependency boundaries; Prettier handles
