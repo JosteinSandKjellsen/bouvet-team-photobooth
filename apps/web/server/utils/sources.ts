@@ -119,6 +119,8 @@ export async function createSourceImage(
   } catch (error) {
     console.error('Source storage write failed', {
       errorName: error instanceof Error ? error.name : typeof error,
+      hasBlobStoreName: Boolean(process.env.SOURCE_STORAGE_BLOB_STORE_NAME),
+      storageDriver: process.env.SOURCE_STORAGE_DRIVER ?? 'local',
     })
     await db.sourceImage.delete({ where: { id: source.id } })
     throw createError({
