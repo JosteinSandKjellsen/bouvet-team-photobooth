@@ -1,13 +1,16 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { getStore } from '@netlify/blobs'
-import { createError } from 'h3'
 
 function unavailableStorage() {
-  return createError({
-    statusCode: 503,
-    statusMessage: 'Source storage is unavailable',
-  })
+  return new SourceStorageUnavailableError()
+}
+
+class SourceStorageUnavailableError extends Error {
+  constructor() {
+    super('Source storage is unavailable')
+    this.name = 'SourceStorageUnavailableError'
+  }
 }
 
 function getStorageDriver() {

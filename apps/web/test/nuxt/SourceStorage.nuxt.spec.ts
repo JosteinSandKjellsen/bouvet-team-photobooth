@@ -33,6 +33,15 @@ afterEach(async () => {
 })
 
 describe('source storage', () => {
+  it('rejects storage without its required configuration', async () => {
+    process.env.SOURCE_STORAGE_DRIVER = 'netlify'
+    delete process.env.SOURCE_STORAGE_BLOB_STORE_NAME
+
+    await expect(
+      storeSourceImage('sources/session.jpg', Uint8Array.of(1, 2, 3)),
+    ).rejects.toThrow('Source storage is unavailable')
+  })
+
   it('stores and removes source images in the configured local directory', async () => {
     localStorageDir = await mkdtemp(join(tmpdir(), 'photobooth-sources-'))
     process.env.SOURCE_STORAGE_DRIVER = 'local'

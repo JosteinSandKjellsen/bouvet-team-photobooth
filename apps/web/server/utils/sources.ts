@@ -116,7 +116,10 @@ export async function createSourceImage(
 
   try {
     await storeSourceImage(storageKey, normalized.bytes)
-  } catch {
+  } catch (error) {
+    console.error('Source storage write failed', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    })
     await db.sourceImage.delete({ where: { id: source.id } })
     throw createError({
       statusCode: 503,
