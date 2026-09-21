@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-20',
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@nuxtjs/i18n'],
   devtools: { enabled: false },
   telemetry: false,
   typescript: {
@@ -16,14 +16,22 @@ export default defineNuxtConfig({
   },
   nitro: { preset: 'node-server' },
   eslint: { config: { autoInit: false } },
+  css: ['~/assets/css/tokens.css'],
+  i18n: {
+    defaultLocale: 'nb',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: false,
+    locales: [{ code: 'nb', language: 'nb-NO', file: 'nb.json' }],
+    vueI18n: './i18n.config.ts',
+  },
   app: {
     head: {
       title: 'Bouvet Team Photobooth',
-      htmlAttrs: { lang: 'en' },
+      htmlAttrs: { lang: 'nb-NO' },
       meta: [
         {
           name: 'description',
-          content: 'Bouvet team photobooth service status.',
+          content: 'Bouvet Team Photobooth.',
         },
       ],
     },

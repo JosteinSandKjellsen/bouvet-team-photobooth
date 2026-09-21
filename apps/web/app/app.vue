@@ -5,83 +5,61 @@ import { Camera } from '@lucide/vue'
 <template>
   <div class="application">
     <header class="masthead">
-      <div class="brand">
+      <NuxtLink class="brand" to="/" aria-label="Bouvet Team Photobooth">
         <Camera :size="24" aria-hidden="true" /><span>Bouvet</span>
-      </div>
+      </NuxtLink>
       <span class="app-name">Team Photobooth</span>
     </header>
-    <main>
-      <h1>Service status</h1>
-      <HealthStatus />
-    </main>
+    <NuxtPage />
   </div>
 </template>
 
 <style>
-:root {
-  color-scheme: light;
-  font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;
-  color: #222b29;
-  background: #f6f8f7;
-  font-synthesis: none;
-  letter-spacing: 0;
-}
-
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
 }
-button {
+button,
+input {
   font: inherit;
 }
 .application {
   min-height: 100dvh;
-  border-top: 5px solid #e35249;
+  border-top: 5px solid var(--color-brand-accent);
 }
 .masthead {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 24px max(24px, calc((100% - 880px) / 2));
-  border-bottom: 1px solid #dce3df;
-  background: #fff;
+  gap: var(--space-4);
+  padding: var(--space-5) max(var(--page-gutter), calc((100% - 1180px) / 2));
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-surface);
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   font-size: 24px;
   font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
 }
 .brand svg {
-  color: #c73c35;
+  color: var(--color-action-primary);
 }
 .app-name {
   font-size: 15px;
-  color: #52605a;
-}
-main {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 56px 24px;
-}
-h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
-  line-height: 1.3;
+  color: var(--color-muted-text);
 }
 button:focus-visible {
-  outline: 3px solid #b72f29;
+  outline: 3px solid var(--color-action-primary);
   outline-offset: 4px;
 }
 @media (max-width: 480px) {
-  main {
-    padding-top: 32px;
-  }
   .masthead {
     align-items: flex-start;
     flex-direction: column;

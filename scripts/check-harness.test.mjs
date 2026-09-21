@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import {
   canonicalPlaybooks,
   requiredCommands,
+  requiredSkills,
   validateHarness,
 } from './check-harness.mjs'
 
@@ -46,10 +47,11 @@ beforeEach(() => {
     scopedFile,
     `---\ndescription: "Use when editing Vue"\napplyTo: "apps/web/app/**"\n---\n${scopedLinks}\n`,
   )
-  write(
-    skillFile,
-    '---\nname: verify-change\ndescription: "Use for verification"\n---\nRun focused checks.\n',
-  )
+  for (const skill of requiredSkills)
+    write(
+      `.github/skills/${skill}/SKILL.md`,
+      `---\nname: ${skill}\ndescription: "Use for ${skill}"\n---\nRun focused checks.\n`,
+    )
 })
 
 afterEach(() => rmSync(root, { recursive: true, force: true }))
@@ -143,6 +145,15 @@ test('rejects missing and mismatched skill names', () => {
       /skill name must be valid and match/,
     )
   }
+})
+
+test('rejects a missing required compound-session skill', () => {
+  rmSync(join(root, '.github/skills/compound-session/SKILL.md'))
+  assert.ok(
+    validateHarness(root).includes(
+      'Missing required skill: .github/skills/compound-session/SKILL.md',
+    ),
+  )
 })
 
 test('rejects unmatched and blanket instruction patterns', () => {

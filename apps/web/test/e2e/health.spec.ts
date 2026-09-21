@@ -7,18 +7,51 @@ test('serves the real health contract', async ({ request }) => {
   expect(await response.json()).toEqual({ status: 'ok' })
 })
 
-test('connects to the API without overflow or runtime errors', async ({
+test('serves the nine public theme descriptors', async ({ request }) => {
+  const response = await request.get('/api/themes')
+  expect(response.status()).toBe(200)
+  expect(await response.json()).toEqual({
+    themes: [
+      { id: 'wasteland', image: '/themes/wasteland.svg' },
+      { id: 'treehouse', image: '/themes/treehouse.svg' },
+      { id: 'block-world', image: '/themes/block-world.svg' },
+      { id: 'space-cowboys', image: '/themes/space-cowboys.svg' },
+      { id: 'life-simulation', image: '/themes/life-simulation.svg' },
+      { id: 'mech-pilots', image: '/themes/mech-pilots.svg' },
+      { id: 'kids-on-bikes', image: '/themes/kids-on-bikes.svg' },
+      { id: 'red-carpet', image: '/themes/red-carpet.svg' },
+      { id: 'samurai', image: '/themes/samurai.svg' },
+    ],
+  })
+})
+
+test('selects a Norwegian theme and handles an invalid capture route', async ({
   page,
 }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
   await expect(
-    page.getByRole('heading', { name: 'Service status' }),
+    page.getByRole('heading', {
+      name: 'Hvilket univers passer teamet deres?',
+    }),
   ).toBeVisible()
-  await expect(page.getByRole('status')).toHaveText('Connected')
-  await page.getByRole('button', { name: 'Check again' }).click()
-  await expect(page.getByRole('status')).toHaveText('Connected')
+  const continueButton = page.getByRole('button', { name: 'Fortsett' })
+  await expect(continueButton).toBeDisabled()
+  await expect(page.getByRole('radio')).toHaveCount(9)
+  await page
+    .getByRole('radio', { name: /Ødemark etter katastrofen/ })
+    .check({ force: true })
+  await expect(continueButton).toBeEnabled()
+  await continueButton.click()
+  await expect(page).toHaveURL('/capture/wasteland')
+  await expect(
+    page.getByRole('heading', { name: 'Kameradelen er ikke klar ennå.' }),
+  ).toBeVisible()
+  await page.goto('/capture/unknown')
+  await expect(
+    page.getByRole('heading', { name: 'Dette universet finnes ikke.' }),
+  ).toBeVisible()
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -26,25 +59,7 @@ test('connects to the API without overflow or runtime errors', async ({
   ).toBe(true)
   expect(errors).toEqual([])
   await page.screenshot({
-    path: testInfo.outputPath('status.png'),
+    path: testInfo.outputPath('themes.png'),
     fullPage: true,
   })
-})
-
-test('recovers from an API failure with keyboard retry', async ({ page }) => {
-  await page.route('**/api/health', (route) =>
-    route.fulfill({
-      status: 503,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: 'Unavailable' }),
-    }),
-  )
-  await page.goto('/')
-  await expect(page.getByRole('status')).toHaveText('Service unavailable')
-  await page.unroute('**/api/health')
-  const retry = page.getByRole('button', { name: 'Retry connection' })
-  await retry.focus()
-  await expect(retry).toBeFocused()
-  await page.keyboard.press('Enter')
-  await expect(page.getByRole('status')).toHaveText('Connected')
 })

@@ -53,6 +53,9 @@ and source URLs do not prove provider erasure.
   with a reproducible observation and a small discriminating check.
 - [verify-change](../.github/skills/verify-change/SKILL.md): use before handoff or
   review to run the applicable gates and report actual evidence.
+- [compound-session](../.github/skills/compound-session/SKILL.md): use after a
+  session with repeated failures or correction to extract durable harness
+  improvements from session evidence.
 
 Skills have portable `name` and `description` frontmatter and concrete procedures.
 VS Code supports slash invocation and task-based discovery; available surfaces
@@ -93,6 +96,7 @@ or agent tool activity in a fresh chat. Try these read-only prompts:
 3. "Outline the prerequisites for adding durable Prisma jobs without installing anything."
 4. "Use verify-change to check the health scaffold and report actual command results."
 5. "Plan the photo result layout for kiosk and phone. Read the design guide, identify mockup placeholders, and do not edit code."
+6. "Compound the current session into the AI harness. Separate logged evidence from inference and validate each harness edit."
 
 The feature-planning prompts should load the relevant domain guide without treating the
 entire future feature as authorized implementation. Ordinary health-check work

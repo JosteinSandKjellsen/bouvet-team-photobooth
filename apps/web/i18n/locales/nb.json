@@ -1,0 +1,76 @@
+{
+  "common": {
+    "actions": {
+      "continue": "Fortsett",
+      "backToThemes": "Velg et annet univers",
+      "goHome": "Til forsiden",
+      "retry": "Prøv igjen"
+    },
+    "status": {
+      "loading": "Laster inn",
+      "unavailable": "Ikke tilgjengelig"
+    }
+  },
+  "themeSelection": {
+    "title": "Hvilket univers passer teamet deres?",
+    "description": "Velg et fiktivt univers for teambildet.",
+    "selectionLabel": "Velg univers",
+    "overviewLink": "Se teambilder fra arrangementet",
+    "loadError": "Universene kunne ikke lastes inn.",
+    "empty": "Ingen universer er tilgjengelige akkurat nå."
+  },
+  "capture": {
+    "title": "{theme}",
+    "notReady": "Kameradelen er ikke klar ennå.",
+    "notReadyDescription": "Velg et annet univers eller kom tilbake senere.",
+    "invalidTheme": "Dette universet finnes ikke."
+  },
+  "photo": {
+    "title": "Teambilde",
+    "notReady": "Bildesiden er ikke klar ennå.",
+    "notReadyDescription": "Ferdige teambilder blir tilgjengelige her senere."
+  },
+  "overview": {
+    "title": "Teambilder fra arrangementet",
+    "notReady": "Oversikten er ikke klar ennå.",
+    "notReadyDescription": "Ferdige teambilder blir vist her senere."
+  },
+  "themes": {
+    "wasteland": {
+      "name": "Ødemark etter katastrofen",
+      "description": "Et robust team i et vilt landskap."
+    },
+    "treehouse": {
+      "name": "Fantasiby i trekronene",
+      "description": "Et lyst lag høyt over bakken."
+    },
+    "blockWorld": {
+      "name": "Klossverden",
+      "description": "Et lag bygget av store ideer."
+    },
+    "spaceCowboys": {
+      "name": "Romcowboyer",
+      "description": "Et stjernelag på vei mot nye galakser."
+    },
+    "lifeSimulation": {
+      "name": "Livssimulering",
+      "description": "Et fargerikt nabolag med deres egen stil."
+    },
+    "mechPilots": {
+      "name": "Mekapiloter",
+      "description": "Et team klart for teknologiske eventyr."
+    },
+    "kidsOnBikes": {
+      "name": "Sykkelgjeng på 1980-tallet",
+      "description": "Et modig lag på et mystisk oppdrag."
+    },
+    "redCarpet": {
+      "name": "Rød løper",
+      "description": "Et team klart for rampelyset."
+    },
+    "samurai": {
+      "name": "Samurai",
+      "description": "Et fokusert team med elegant styrke."
+    }
+  }
+}

@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light;
+  font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;
+  font-synthesis: none;
+  letter-spacing: 0;
+  color: #171717;
+  background: #f7f5f2;
+  --color-brand-accent: #ee2950;
+  --color-action-primary: #c9143b;
+  --color-canvas: #f7f5f2;
+  --color-surface: #ffffff;
+  --color-text: #171717;
+  --color-muted-text: #62605e;
+  --color-divider: #d8d3d0;
+  --color-focus: #1e5f74;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --page-gutter: 48px;
+  --card-radius: 8px;
+  --control-height: 48px;
+}
+
+body {
+  min-width: 320px;
+  background: var(--color-canvas);
+}
+
+@media (max-width: 900px) {
+  :root {
+    --page-gutter: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --page-gutter: 16px;
+  }
+}

@@ -5,7 +5,7 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
 
 # Tooling And Documentation
 
-- Use Node `>=24.11.0 <25` and the root `packageManager` pin. Commit the generated
+- Use Node `>=24.15.0 <25` and the root `packageManager` pin. Commit the generated
   pnpm lockfile. pnpm 12 uses `engineStrict`, `saveExact` and explicit `allowBuilds`
   in `pnpm-workspace.yaml`; non-registry settings do not belong in `.npmrc`.
 - Nuxt owns generated context configs. Extend them through `nuxt.config.ts`,
@@ -32,6 +32,23 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
   comma-separated `applyTo` globs that match real files. They are additive,
   not an ordered override system. Ask about conflicting requirements.
 
+## Third-Party Packages
+
+- Use the latest compatible stable release of every direct third-party package.
+  Before adding or changing dependencies, run `pnpm deps:check`; if direct
+  packages are outdated, run `pnpm deps:update` and review every manifest and
+  lockfile change. Keep exact versions through `saveExact`.
+- After an update, run `pnpm peers check`, the cheapest relevant compile/test,
+  and the applicable merge gates. Read migration notes before accepting a major
+  version and do not hide peer, engine, deprecation, or install-script warnings.
+- If the registry's latest release is incompatible, prove that with package peer
+  metadata and a focused failing check, then use the newest compatible stable
+  release. Record the package, blocked version, reason, and evidence in the
+  development guide. Recheck exceptions during every dependency update.
+- Do not add direct dependencies merely to force transitive versions. Use an
+  override only for a verified security or compatibility requirement and
+  document why normal resolution cannot satisfy it.
+
 ## Cross-Platform Scripts
 
 - Support Windows, Linux and macOS without requiring Bash, WSL, GNU utilities or
@@ -54,3 +71,7 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
 - Exercise script regressions with temporary directories and guaranteed cleanup.
   Keep the Windows/Linux/macOS CI matrix for repository checks. Report the OS
   actually tested locally; configured CI is not evidence of a successful run.
+- Before starting a development server, check whether its port is already owned.
+  Reuse an existing server only after verifying it belongs to this workspace;
+  otherwise choose another port. Do not report an async process as running until
+  the tool confirms startup or a direct request reaches the expected app.

@@ -1,6 +1,6 @@
 ---
 description: 'Use when editing Nuxt Vue components, frontend composables, layouts, design tokens, UI copy, language files, localization, async data states, accessibility, camera UI, or Nuxt i18n configuration.'
-applyTo: 'apps/web/app/**,apps/web/nuxt.config.ts'
+applyTo: 'apps/web/app/**,apps/web/i18n/**,apps/web/nuxt.config.ts'
 ---
 
 # Frontend

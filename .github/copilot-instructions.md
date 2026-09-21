@@ -8,9 +8,10 @@ playful shared activity, not a personality assessment. Visitor photos require
 clear public-sharing information, bounded retention and private source handling.
 
 The solution is one Nuxt 4/Vue frontend and Nitro backend in a pnpm workspace,
-with type-only shared API contracts. Use Node 24 LTS (at least 24.11.0).
-The implemented app is still the credential-free health-check foundation;
-camera capture, generation, persistence and deployment are not implemented.
+with type-only shared API contracts. Use Node 24 LTS (at least 24.15.0).
+The implemented app includes the M1 theme-selection shell and credential-free
+health endpoint; camera capture, generation, persistence and deployment are not
+implemented.
 Follow the [product experience playbook](../docs/product-experience-playbook.md)
 and [implementation plan](../docs/implementation-plan.md) for the selected
 milestone and unresolved gates; the product vision does not authorize extra work.
@@ -64,6 +65,9 @@ APIs over shell-specific commands; label platform-specific setup examples.
 Follow the [tooling rules](instructions/tooling.instructions.md) for scripts,
 paths and line endings. Check Markdown with both Prettier and markdownlint,
 including documentation, instructions and skills.
+Use the [compound-session skill](skills/compound-session/SKILL.md) after repeated
+tool failures, user correction or an inaccurate handoff to turn session evidence
+into small, reusable harness improvements.
 
 ## Commands And Completion
 
@@ -77,6 +81,8 @@ and lint config must exist before checks. The demo requires no credentials.
 - `pnpm lint`: ESLint for code and markdownlint for Markdown structure.
 - `pnpm lint:markdown`: focused Markdown lint, including the Copilot harness.
 - `pnpm test`: non-watch component tests and harness validator regressions.
+- `pnpm deps:check`: report outdated direct workspace packages.
+- `pnpm deps:update`: update direct workspace packages to latest releases.
 - `pnpm check:harness`: metadata, file scopes, commands and document links.
 - `pnpm check`: formatting, lint, types, tests and harness checks.
 - `pnpm test:e2e`: fresh production build and desktop/mobile Chromium tests.

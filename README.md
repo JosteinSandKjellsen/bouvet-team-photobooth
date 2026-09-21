@@ -9,12 +9,12 @@ expiration are part of the journey.
 
 Built as one Nuxt 4/Vue frontend and Nitro backend in a pnpm workspace, with
 type-only shared API contracts. **Currently implemented: a health-check
-foundation only.** Camera capture, generation, storage and deployment are planned;
-the current app needs no credentials.
+foundation and M1 theme-selection shell.** Camera capture, generation, storage
+and deployment are planned; the current app needs no credentials.
 
 ## Quickstart
 
-Use Node **24 LTS, at least 24.11.0**, and pnpm **12.5.1**. From the repository root:
+Use Node **24 LTS, at least 24.15.0**, and pnpm **12.5.1**. From the repository root:
 
 ```sh
 pnpm install --frozen-lockfile

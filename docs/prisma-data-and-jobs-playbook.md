@@ -25,7 +25,7 @@ Use these defaults unless a measured requirement justifies a change:
 - Use PostgreSQL on every platform.
 - Use Prisma ORM `7.10.0`, the latest stable release verified for this baseline.
 - Pin `prisma`, `@prisma/client`, and `@prisma/adapter-pg` to the same exact version.
-- Use the Node.js 24 LTS release line, with Node.js `24.11.0` as the minimum version for local development, CI, Netlify builds, and Netlify Functions.
+- Use the Node.js 24 LTS release line, with Node.js `24.15.0` as the minimum version for local development, CI, Netlify builds, and Netlify Functions.
 - Run Prisma only in a Node.js runtime, never in an edge runtime or browser bundle.
 - Put image bytes in object storage. PostgreSQL stores keys, metadata, state, and ownership only.
 - Treat PostgreSQL as the durable source of truth for jobs, retries, leases, and idempotency.
@@ -96,7 +96,7 @@ This compatibility baseline was verified on September 15, 2026:
 
 | Component            | Baseline   | Node.js requirement                       |
 | -------------------- | ---------- | ----------------------------------------- |
-| Node.js              | `24.x` LTS | `>=24.11.0 <25`                           |
+| Node.js              | `24.x` LTS | `>=24.15.0 <25`                           |
 | Nuxt                 | `4.5.2`    | 22: `>=22.19.0`; 24: `>=24.11.0`; 26: any |
 | Prisma ORM           | `7.10.0`   | 20: `>=20.19.0`; 22: `>=22.12.0`; 24: any |
 | `@netlify/functions` | `6.0.0`    | `>=22.12.0`                               |
@@ -111,7 +111,7 @@ Declare the supported range in `package.json`:
 ```json
 {
   "engines": {
-    "node": ">=24.11.0 <25"
+    "node": ">=24.15.0 <25"
   }
 }
 ```
@@ -932,7 +932,7 @@ Alert on backlog age, repeated lease recovery, pool exhaustion, failed retention
 Before production:
 
 - [ ] Prisma packages are pinned to the same stable version.
-- [ ] Node.js 24 is selected by `.node-version`, `engines.node` requires `>=24.11.0 <25`, and local, CI, Netlify build, and Netlify Functions logs show the expected major version.
+- [ ] Node.js 24 is selected by `.node-version`, `engines.node` requires `>=24.15.0 <25`, and local, CI, Netlify build, and Netlify Functions logs show the expected major version.
 - [ ] Nuxt uses Nitro's `netlify` preset and `dist` publish directory; no Prisma-backed route is deployed with `netlify_edge`.
 - [ ] Native Netlify functions use the modern Request/Response API rather than deprecated Lambda compatibility mode.
 - [ ] `prisma validate`, `prisma generate`, type checking, and tests pass.

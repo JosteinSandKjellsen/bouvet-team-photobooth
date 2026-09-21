@@ -17,8 +17,17 @@ export const requiredCommands = [
   'typecheck',
   'test',
   'test:e2e',
+  'deps:check',
+  'deps:update',
   'check',
   'check:harness',
+]
+
+export const requiredSkills = [
+  'compound-session',
+  'diagnose-and-fix',
+  'implement-vertical-slice',
+  'verify-change',
 ]
 
 export const canonicalPlaybooks = [
@@ -85,6 +94,10 @@ export function validateHarness(directory) {
   }
   if (!instructions.length) errors.push('No scoped instructions found')
   if (!skills.length) errors.push('No skills found')
+  for (const skill of requiredSkills) {
+    const path = `.github/skills/${skill}/SKILL.md`
+    if (!skills.includes(path)) errors.push(`Missing required skill: ${path}`)
+  }
 
   for (const file of [...instructions, ...skills]) {
     const source = readFileSync(join(root, file), 'utf8')

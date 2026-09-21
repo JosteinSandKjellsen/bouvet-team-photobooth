@@ -14,14 +14,14 @@ calls in that milestone. Later milestones require a separately selected scope.
 
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
-guidance. M0 documentation and harness alignment is complete; M1 remains
-unstarted.
+guidance. M0 documentation/harness alignment and M1 product shell/themes are
+complete; M2 remains unselected.
 
 Suggested next-session request:
 
 > Read docs/implementation-plan.md and docs/product-experience-playbook.md,
-> then implement M1 only after it is explicitly selected. Do not change runtime
-> behavior while performing documentation-only maintenance.
+> then select M2 before implementing camera capture. Do not add session,
+> provider, persistence, or real-photo behavior without selecting its milestone.
 
 ## Confirmed Product Decisions
 
@@ -272,9 +272,8 @@ silently override a conflicting technical guide with this roadmap.
 
 ## Milestones
 
-Application milestones M1-M7 are pending. M0 has design guidance and its harness
-routing in place but is not complete. Update status and verification evidence as
-the remaining work completes.
+Application milestones M2-M7 are pending. Update status and verification
+evidence as the remaining work completes.
 
 ### M0: Documentation And Harness (Complete)
 
@@ -304,7 +303,7 @@ privacy gates explicit; no conflicting five-second or private-only result guidan
 correct root/task routing; README still truthfully describes the health scaffold;
 checks and skipped checks reported. M1 remains unstarted.
 
-### M1: Product Shell And Themes
+### M1: Product Shell And Themes (Complete 2026-09-21)
 
 **Depends on:** completed M0 and selection of M1 for implementation.
 
@@ -327,6 +326,13 @@ landing, no private prompt/provider settings in public metadata, accessible
 keyboard/touch layout and desktop/mobile fit. Test the real theme API and UI,
 including Norwegian messages, accessible labels and matching SSR/client locale
 without missing keys. Keep the agreed public URLs unchanged.
+
+**Verification:** `pnpm check` and `pnpm test:e2e` passed on macOS under Node
+24.15.0. The production browser suite exercises all nine public descriptors,
+Norwegian theme selection, valid/invalid capture routes, desktop/mobile overflow
+and the retained health API contract. The theme artwork is source-controlled,
+abstract original SVG artwork; approved Bouvet logo artwork has not been
+provided, so the existing textual brand treatment remains.
 
 ### M2: Local Capture And Review
 
@@ -457,7 +463,7 @@ relative `useFetch` loading/error/retry states, `@lucide/vue` icons and existing
 
 ## Verification And Gates
 
-Use the pinned pnpm version and Node 24 LTS, at least 24.11.0. Bootstrap with
+Use the pinned pnpm version and Node 24 LTS, at least 24.15.0. Bootstrap with
 `pnpm install --frozen-lockfile` and `pnpm prepare` when needed.
 
 For M0, run a focused check immediately after the relevant edit:

@@ -7,7 +7,7 @@ This guide owns local setup, commands and verification. Start with the
 
 ## Prerequisites And Setup
 
-Use Node **24 LTS, at least 24.11.0**, and pnpm **12.5.1**, matching the root
+Use Node **24 LTS, at least 24.15.0**, and pnpm **12.5.1**, matching the root
 [manifest](../package.json). Select Node 24 with a version manager for your OS:
 `fnm` supports Windows, Linux and macOS. On Linux/macOS, `nvm install` and
 `nvm use` read [.nvmrc](../.nvmrc); `nvm-windows` requires explicit version
@@ -27,9 +27,9 @@ pnpm dev
 ```
 
 Open <http://127.0.0.1:3000>. Use `pnpm dev --port 3001` if that port is occupied.
-The current health-check app requires no environment variables or credentials.
-`GET /api/health` returns `{"status":"ok"}`: process liveness, not database or
-provider readiness. The status screen includes failure and retry.
+The current M1 theme-selection shell requires no environment variables or
+credentials. `GET /api/health` returns `{"status":"ok"}`: process liveness,
+not database or provider readiness.
 
 pnpm 12 settings, including engine enforcement and the dependency build-script
 allowlist, live in [pnpm-workspace.yaml](../pnpm-workspace.yaml), not `.npmrc`.
@@ -55,6 +55,8 @@ Run these from the repository root:
 | `pnpm format` / `pnpm format:check` | Format / check maintained source and docs.              |
 | `pnpm typecheck`                    | Check contracts, Vue, server, tests and configurations. |
 | `pnpm test` / `pnpm test:watch`     | Run component and harness tests / watch components.     |
+| `pnpm deps:check`                   | Report outdated direct workspace packages.              |
+| `pnpm deps:update`                  | Update direct packages to latest registry releases.     |
 | `pnpm check:harness`                | Validate metadata, scopes, commands and document links. |
 | `pnpm check`                        | Run formatting, lint, types, tests and harness checks.  |
 | `pnpm build` / `pnpm start`         | Build / run production Node/Nitro output.               |
@@ -69,6 +71,23 @@ Prettier checks Markdown formatting; markdownlint checks structure. Both run in
 in [.markdownlint-cli2.jsonc](../.markdownlint-cli2.jsonc), independent of shell
 glob expansion. MD013 is disabled because Prettier owns line wrapping; other
 default Markdown rules remain enabled.
+
+## Dependency Updates
+
+Run `pnpm deps:check` before dependency work. Update outdated direct packages
+with `pnpm deps:update`, inspect release and migration notes for major changes,
+then run `pnpm peers check`, a focused check, and the relevant merge gates.
+The portable update script reads the recursive audit, updates actionable direct
+packages to their latest releases and retains the documented exceptions below.
+
+TypeScript `7.0.2` is a current compatibility exception as of 2026-09-21:
+`vue-tsc` fails because TypeScript no longer exports `./lib/tsc`, and the latest
+`@typescript-eslint/parser` accepts TypeScript only below `6.1.0`. The workspace
+therefore uses TypeScript `6.0.3`, the newest compatible stable release observed.
+`@types/node` remains on `24.13.6`, the newest Node 24 type release, because the
+workspace targets Node 24 rather than the registry-latest Node 26 type family.
+These exceptions mean `pnpm deps:check` exits nonzero and reports both packages;
+recheck them whenever the Node, Vue or ESLint toolchain changes.
 
 ## Browser Tests And Ports
 
