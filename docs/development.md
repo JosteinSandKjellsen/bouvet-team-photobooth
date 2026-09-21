@@ -1,0 +1,116 @@
+# Development Guide
+
+This guide owns local setup, commands and verification. Start with the
+[README](../README.md) for the product overview and folder map, the
+[implementation plan](./implementation-plan.md) for feature scope, and
+[AI development](./ai-development.md) for Copilot harness usage.
+
+## Prerequisites And Setup
+
+Use Node **24 LTS, at least 24.11.0**, and pnpm **12.5.1**, matching the root
+[manifest](../package.json). Select Node 24 with a version manager for your OS:
+`fnm` supports Windows, Linux and macOS. On Linux/macOS, `nvm install` and
+`nvm use` read [.nvmrc](../.nvmrc); `nvm-windows` requires explicit version
+arguments. Install the pinned package manager if necessary:
+
+```sh
+npm install --global pnpm@12.5.1
+```
+
+Run from the repository root. These commands work in PowerShell, Command Prompt
+and POSIX shells:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm prepare
+pnpm dev
+```
+
+Open <http://127.0.0.1:3000>. Use `pnpm dev --port 3001` if that port is occupied.
+The current health-check app requires no environment variables or credentials.
+`GET /api/health` returns `{"status":"ok"}`: process liveness, not database or
+provider readiness. The status screen includes failure and retry.
+
+pnpm 12 settings, including engine enforcement and the dependency build-script
+allowlist, live in [pnpm-workspace.yaml](../pnpm-workspace.yaml), not `.npmrc`.
+Review new install-script permissions before extending that allowlist.
+
+One app runs both frontend and backend. The contracts package is consumed through
+`workspace:*` and erased at runtime. Nuxt owns generated TypeScript/lint contexts;
+run `pnpm prepare` before checks and never edit `.nuxt` or `.output`.
+For local editing, Vue - Official, ESLint and Prettier VS Code extensions are
+useful; no global editor settings are required.
+
+## Commands
+
+Run these from the repository root:
+
+| Command                             | Purpose                                                 |
+| ----------------------------------- | ------------------------------------------------------- |
+| `pnpm prepare`                      | Generate Nuxt types and lint configuration.             |
+| `pnpm dev`                          | Start the single development server.                    |
+| `pnpm lint` / `pnpm lint:fix`       | Lint code and Markdown / apply fixes.                   |
+| `pnpm lint:code`                    | Check code and import boundaries with ESLint.           |
+| `pnpm lint:markdown`                | Check Markdown structure, including Copilot files.      |
+| `pnpm format` / `pnpm format:check` | Format / check maintained source and docs.              |
+| `pnpm typecheck`                    | Check contracts, Vue, server, tests and configurations. |
+| `pnpm test` / `pnpm test:watch`     | Run component and harness tests / watch components.     |
+| `pnpm check:harness`                | Validate metadata, scopes, commands and document links. |
+| `pnpm check`                        | Run formatting, lint, types, tests and harness checks.  |
+| `pnpm build` / `pnpm start`         | Build / run production Node/Nitro output.               |
+| `pnpm test:e2e`                     | Build once and run real API/browser tests.              |
+
+Run focused checks while iterating and `pnpm check` before handoff. Application
+behavior or build changes also require `pnpm test:e2e`. Report actual results and
+explain skipped checks.
+
+Prettier checks Markdown formatting; markdownlint checks structure. Both run in
+`pnpm check`, including docs, instructions and skills. Markdown discovery lives
+in [.markdownlint-cli2.jsonc](../.markdownlint-cli2.jsonc), independent of shell
+glob expansion. MD013 is disabled because Prettier owns line wrapping; other
+default Markdown rules remain enabled.
+
+## Browser Tests And Ports
+
+Install Chromium before running browser tests:
+
+```sh
+pnpm --filter @bouvet-team-photobooth/web exec playwright install chromium
+pnpm check
+pnpm test:e2e
+```
+
+On Linux CI, browser installation also needs `--with-deps`. Playwright starts
+its own fresh production server on port 3100 and never reuses an existing service.
+To choose another port:
+
+- Bash/zsh: `E2E_PORT=3101 pnpm test:e2e`.
+- PowerShell: `$env:E2E_PORT = '3101'; pnpm test:e2e`; clear afterward with
+  `Remove-Item Env:E2E_PORT`.
+- Command Prompt: `set "E2E_PORT=3101" && pnpm test:e2e`; clear afterward with
+  `set "E2E_PORT="`.
+
+The server stops when tests finish. Reports, failure traces and screenshots are
+in `apps/web/playwright-report` and `apps/web/test-results` and are ignored by Git.
+Inspect them when diagnosing failures or verifying changed UI behavior.
+Production-build tests validate Node/Nitro, not a future Netlify deployment.
+
+## CI And Portability
+
+The [CI workflow](../.github/workflows/ci.yml) runs quality gates and production
+browser tests on Windows, Linux and macOS for pull requests and main-branch
+pushes. Requiring matrix checks for merges needs branch protection configured
+by an owner. A configured matrix is not proof of a successful run; inspect actual
+results and report local and remote verification separately.
+
+Repository scripts must work on all three platforms. Prefer Node filesystem,
+path and process APIs over shell utilities; see the
+[cross-platform rules](../.github/instructions/tooling.instructions.md#cross-platform-scripts).
+[.gitattributes](../.gitattributes) keeps text checkouts at LF, matching
+EditorConfig and Prettier, including on Windows.
+
+The [cloud-agent setup](../.github/workflows/copilot-setup-steps.yml) installs the
+same tools and Chromium on GitHub. It takes effect after reaching the default
+branch; creating the file alone does not enable remote settings or prove a
+successful session. See [AI development](./ai-development.md#github-cloud-agent)
+for discovery and remote setup caveats.

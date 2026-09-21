@@ -58,6 +58,42 @@ test('accepts a valid harness', () => {
   assert.deepEqual(validateHarness(root), [])
 })
 
+test('rejects a missing canonical design playbook', () => {
+  rmSync(join(root, 'docs/design-playbook.md'))
+  assert.ok(
+    validateHarness(root).includes(
+      'Missing required document: docs/design-playbook.md',
+    ),
+  )
+})
+
+test('rejects only the design guide being omitted from root routing', () => {
+  write(
+    rootInstructions,
+    canonicalPlaybooks
+      .filter((file) => file !== 'docs/design-playbook.md')
+      .map((file) => `[Guide](../${file})`)
+      .join('\n'),
+  )
+  assert.deepEqual(validateHarness(root), [
+    'Root instructions must reference docs/design-playbook.md',
+  ])
+})
+
+test('rejects only the design guide being omitted from task routing', () => {
+  const links = canonicalPlaybooks
+    .filter((file) => file !== 'docs/design-playbook.md')
+    .map((file) => `[Guide](../../${file})`)
+    .join('\n')
+  write(
+    scopedFile,
+    `---\ndescription: "Use for Vue"\napplyTo: "apps/web/app/**"\n---\n${links}\n`,
+  )
+  assert.deepEqual(validateHarness(root), [
+    'Scoped instructions or skills must reference docs/design-playbook.md',
+  ])
+})
+
 test('rejects malformed YAML', () => {
   write(scopedFile, '---\ndescription: [unclosed\n---\nCheck.\n')
   assert.match(validateHarness(root).join('\n'), /invalid YAML/)

@@ -20,16 +20,22 @@ Root instructions directly reference each, and relevant scoped instructions and
 skills require loading them for that task. Do not load every playbook for an
 unrelated health-check edit or copy their complete chapters into instructions.
 
-| Work                                                             | Required reading                                                    |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Camera, countdown, preview, compression, source upload           | [Camera and initial images](./camera-and-initial-image-playbook.md) |
-| Leonardo models, paid submissions, completion, provider cleanup  | [Leonardo integration](./leonardo-integration-playbook.md)          |
-| Prisma, PostgreSQL, durable jobs, storage, retention, deployment | [Data and jobs](./prisma-data-and-jobs-playbook.md)                 |
+| Work                                                                | Required reading                                                    |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Layouts, styling, UI copy, responsive behavior, visual verification | [Photobooth design](./design-playbook.md)                           |
+| Camera, countdown, preview, compression, source upload              | [Camera and initial images](./camera-and-initial-image-playbook.md) |
+| Leonardo models, paid submissions, completion, provider cleanup     | [Leonardo integration](./leonardo-integration-playbook.md)          |
+| Prisma, PostgreSQL, durable jobs, storage, retention, deployment    | [Data and jobs](./prisma-data-and-jobs-playbook.md)                 |
 
 These are approved future baselines. The active scaffold remains database-free
 and provider-free. Do not install dependencies, request credentials or make paid
 calls just because a future playbook mentions them. Source verification dates
 are historical, not evidence that a current provider operation was tested.
+
+The design guide translates the six supplied screen references into durable
+guidance; the original screenshot binaries are not in the repository. It does
+not override the [product decisions and milestone plan](./implementation-plan.md).
+The remaining M0 alignment, including the camera countdown duration, is pending.
 
 The aligned rules distinguish original image bytes, compressed bytes and total
 multipart ingress, return public `sourceId` handles, retain landscape 1376 x 768
@@ -85,8 +91,9 @@ or agent tool activity in a fresh chat. Try these read-only prompts:
 2. "Explain the retry rule for an uncertain paid Leonardo submission. Do not call the provider."
 3. "Outline the prerequisites for adding durable Prisma jobs without installing anything."
 4. "Use verify-change to check the health scaffold and report actual command results."
+5. "Plan the photo result layout for kiosk and phone. Read the design guide, identify mockup placeholders, and do not edit code."
 
-The first three should load the relevant domain guide without treating the
+The feature-planning prompts should load the relevant domain guide without treating the
 entire future feature as authorized implementation. Ordinary health-check work
 should not need the full camera or persistence specification. Structural tests
 cannot certify these live editor behaviors; validate them in your Copilot client.
@@ -96,7 +103,7 @@ cannot certify these live editor behaviors; validate them in your Copilot client
 [copilot-setup-steps.yml](../.github/workflows/copilot-setup-steps.yml) contains
 the required single `copilot-setup-steps` job. It sets up Node/pnpm, installs the
 frozen dependency graph, generates Nuxt configuration and installs Chromium.
-The agent then runs the same commands described in the [README](../README.md).
+The agent then runs the same commands described in the [development guide](./development.md).
 
 This setup takes effect after it reaches the default branch. Observe a GitHub
 workflow/session to verify remote execution; local checks alone do not prove it.

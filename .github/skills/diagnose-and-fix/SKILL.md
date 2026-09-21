@@ -19,7 +19,7 @@ description: 'Diagnose runtime failures, regressions, failing tests, and fronten
    that exact check before investigating unrelated surfaces.
 5. If the check falsifies the hypothesis, follow the nearest controlling call.
    Preserve the reproduction and do not weaken assertions to hide the failure.
-6. Run the relevant checks from the [README](../../../README.md), including
+6. Run the relevant checks from the [development guide](../../../docs/development.md), including
    production browser checks when application behavior changed.
 
 Complete with the root cause, regression evidence, actual validation results and

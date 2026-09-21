@@ -17,8 +17,10 @@ description: 'Verify a change before handoff or pull-request review with Markdow
 4. For app, API or build changes, install Chromium if needed and run
    `pnpm test:e2e`. It builds once and owns an isolated production Node server.
    Use `E2E_PORT` for a port conflict; do not reuse an unknown running server.
-5. Review browser traces/screenshots when UI behavior changes. Check mobile
-   layout, keyboard access and error recovery. The Node build is not evidence
+5. Review browser traces/screenshots when UI behavior changes using the
+   [design checklist](../../../docs/design-playbook.md#implementation-and-review-checklist).
+   Check mobile layout, keyboard access, image framing and error recovery. Only
+   claim comparison to reference screenshots actually available. The Node build is not evidence
    of a working Netlify deployment or a completed external privacy review.
 6. For harness/docs changes, check reference coverage and metadata with
    `pnpm check:harness`; inspect heading anchors and Copilot discovery manually.

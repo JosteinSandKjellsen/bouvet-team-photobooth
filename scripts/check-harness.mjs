@@ -22,6 +22,7 @@ export const requiredCommands = [
 ]
 
 export const canonicalPlaybooks = [
+  'docs/design-playbook.md',
   'docs/camera-and-initial-image-playbook.md',
   'docs/leonardo-integration-playbook.md',
   'docs/prisma-data-and-jobs-playbook.md',
