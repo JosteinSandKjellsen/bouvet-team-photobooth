@@ -20,15 +20,16 @@ anonymous sessions, synthetic-image source validation/normalization, local
 development storage, and durable source-cleanup state/lease handling are
 implemented. The authenticated cleanup-worker adapter and configured active
 session admission limit are implemented. Netlify scheduler and site-wide Blob
-storage adapters are configured, but hosted scheduler/storage behavior has not
-been observed. Approved public-use limit values remain unresolved.
+storage adapters have been observed on the deployed site: a synthetic source
+was normalized and stored privately, and a manually invoked `job-sweep`
+completed. Automated expiry deletion and lease recovery remain unobserved.
+Approved public-use limit values remain unresolved.
 
 Suggested next-session request:
 
-> Verify the M3 Netlify scheduler and Blob adapters against isolated
-> non-production infrastructure. Do not add provider behavior without selecting
-> M4 or use participant images before the privacy and retention gates are
-> approved.
+> Verify M3 expiry deletion and lease recovery against isolated non-production
+> infrastructure. Do not add provider behavior without selecting M4 or use
+> participant images before the privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 
