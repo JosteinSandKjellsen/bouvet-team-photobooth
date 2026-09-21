@@ -1,0 +1,10 @@
+[build]
+  command = "pnpm build"
+  publish = "apps/web/dist"
+
+[functions]
+  directory = "apps/web/netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."job-sweep"]
+  schedule = "*/10 * * * *"

@@ -101,7 +101,7 @@ This compatibility baseline was verified on September 15, 2026:
 | Prisma ORM           | `7.10.0`   | 20: `>=20.19.0`; 22: `>=22.12.0`; 24: any |
 | `@netlify/functions` | `6.0.0`    | `>=22.12.0`                               |
 | `@netlify/nuxt`      | `1.0.1`    | `>=22.12.0`                               |
-| `@netlify/blobs`     | `11.1.0`   | `>=22.12.0`                               |
+| `@netlify/blobs`     | `10.7.13`  | `>=22.12.0`                               |
 | `dotenv`             | `17.4.2`   | `>=12.0.0`                                |
 
 Node.js 24 is the common supported LTS line. Do not use Node.js 26 for this baseline while it is a Current release rather than an LTS release. Keep the application on one Node.js major version and re-evaluate the matrix before changing it.
@@ -127,11 +127,15 @@ the platform build-image default.
 Install matching stable packages:
 
 ```bash
-pnpm add --save-exact @prisma/client@7.10.0 @prisma/adapter-pg@7.10.0 @netlify/blobs@11.1.0 @netlify/functions@6.0.0 dotenv@17.4.2 pg
+pnpm add --save-exact @prisma/client@7.10.0 @prisma/adapter-pg@7.10.0 @netlify/blobs@10.7.13 @netlify/functions@6.0.0 dotenv@17.4.2 pg
 pnpm add --save-dev --save-exact prisma@7.10.0 @netlify/nuxt@1.0.1 @types/pg
 ```
 
 Use exact versions rather than `latest` or a caret range for the Prisma and Netlify integration packages, and commit the package-manager lockfile. Upgrade the three Prisma packages together in a dedicated pull request that runs schema validation, generation, integration tests, and a deployment smoke test.
+
+`@netlify/blobs` `11.1.0` is newer, but Nuxt `4.5.2` resolves
+`unstorage@1.17.5`, whose peer range supports Blob clients only through major 10. Keep `10.7.13` until a Nuxt-compatible `unstorage` release supports a newer
+Blob client; recheck this exception during dependency updates.
 
 At each planned upgrade:
 

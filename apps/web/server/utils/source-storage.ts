@@ -1,29 +1,64 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { getStore } from '@netlify/blobs'
+import { createError } from 'h3'
+
+function unavailableStorage() {
+  return createError({
+    statusCode: 503,
+    statusMessage: 'Source storage is unavailable',
+  })
+}
+
+function getStorageDriver() {
+  const driver = process.env.SOURCE_STORAGE_DRIVER ?? 'local'
+  if (driver !== 'local' && driver !== 'netlify') {
+    throw unavailableStorage()
+  }
+
+  return driver
+}
+
+function getNetlifySourceStore() {
+  const name = process.env.SOURCE_STORAGE_BLOB_STORE_NAME
+  if (!name) throw unavailableStorage()
+
+  return getStore(name)
+}
+
+function toBlobBody(bytes: Uint8Array) {
+  const body = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(body).set(bytes)
+  return body
+}
 
 function getSourcePath(storageKey: string) {
   const directory = process.env.SOURCE_STORAGE_DIR
   if (!directory) {
-    throw createError({
-      statusCode: 503,
-      statusMessage: 'Source storage is unavailable',
-    })
+    throw unavailableStorage()
   }
 
   const root = resolve(directory)
   const path = resolve(root, storageKey)
   const pathFromRoot = relative(root, path)
   if (pathFromRoot.startsWith('..') || isAbsolute(pathFromRoot)) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Source storage is unavailable',
-    })
+    throw unavailableStorage()
   }
 
   return path
 }
 
 export async function storeSourceImage(storageKey: string, bytes: Uint8Array) {
+  if (getStorageDriver() === 'netlify') {
+    const result = await getNetlifySourceStore().set(
+      storageKey,
+      new Blob([toBlobBody(bytes)]),
+      { onlyIfNew: true },
+    )
+    if (!result.modified) throw unavailableStorage()
+    return
+  }
+
   const path = getSourcePath(storageKey)
 
   await mkdir(dirname(path), { recursive: true })
@@ -31,5 +66,10 @@ export async function storeSourceImage(storageKey: string, bytes: Uint8Array) {
 }
 
 export async function deleteSourceImage(storageKey: string) {
+  if (getStorageDriver() === 'netlify') {
+    await getNetlifySourceStore().delete(storageKey)
+    return
+  }
+
   await rm(getSourcePath(storageKey), { force: true })
 }

@@ -40,10 +40,15 @@ applyTo: 'package.json,pnpm-workspace.yaml,pnpm-lock.yaml,.nvmrc,.editorconfig,.
 - Use the latest compatible stable release of every direct third-party package.
   Before adding or changing dependencies, run `pnpm deps:check`; if direct
   packages are outdated, run `pnpm deps:update` and review every manifest and
-  lockfile change. Keep exact versions through `saveExact`.
+  lockfile change. For a package that integrates with the current framework,
+  inspect its peer and engine metadata before installing so the selected version
+  is compatible with the resolved framework stack. Keep exact versions through
+  `saveExact`.
 - After an update, run `pnpm peers check`, the cheapest relevant compile/test,
-  and the applicable merge gates. Read migration notes before accepting a major
-  version and do not hide peer, engine, deprecation, or install-script warnings.
+  inspect the manifest, lockfile and `pnpm-workspace.yaml` diff for package
+  manager side effects, and run the applicable merge gates. Read migration notes
+  before accepting a major version and do not hide peer, engine, deprecation, or
+  install-script warnings.
 - If the registry's latest release is incompatible, prove that with package peer
   metadata and a focused failing check, then use the newest compatible stable
   release. Record the package, blocked version, reason, and evidence in the

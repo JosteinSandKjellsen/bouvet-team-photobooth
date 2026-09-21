@@ -22,12 +22,13 @@ export default defineNuxtConfig({
       include: [
         '../vitest.config.ts',
         '../playwright.config.ts',
+        '../netlify/**/*.mts',
         '../test/e2e/**/*.ts',
       ],
       compilerOptions: { types: ['node'] },
     },
   },
-  nitro: { preset: 'node-server' },
+  nitro: { preset: process.env.NETLIFY ? 'netlify' : 'node-server' },
   eslint: { config: { autoInit: false } },
   css: ['~/assets/css/tokens.css'],
   i18n: {
