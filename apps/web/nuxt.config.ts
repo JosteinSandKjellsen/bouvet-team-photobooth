@@ -1,3 +1,10 @@
+import { config } from 'dotenv'
+
+config({
+  path: new URL('../../.env', import.meta.url).pathname,
+  quiet: true,
+})
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-20',
   modules: ['@nuxt/eslint', '@nuxtjs/i18n'],

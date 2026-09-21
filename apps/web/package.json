@@ -12,7 +12,7 @@
     "db:migrate:dev": "pnpm db:require-direct && prisma migrate dev && pnpm db:generate",
     "db:require-direct": "node --env-file-if-exists=../../.env -e \"if (!process.env.DIRECT_URL) throw new Error('DIRECT_URL is required')\"",
     "db:validate": "prisma validate",
-    "start": "node .output/server/index.mjs",
+    "start": "node --env-file-if-exists=../../.env .output/server/index.mjs",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
