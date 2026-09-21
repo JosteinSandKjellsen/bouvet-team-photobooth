@@ -53,6 +53,18 @@ test('rejects forged, invalid, and unauthenticated session requests', async ({
   expect(current.status()).toBe(401)
 })
 
+test('runs scheduled source cleanup only with its worker token', async ({
+  request,
+}) => {
+  const unauthorized = await request.post('/api/internal/source-cleanup')
+  expect(unauthorized.status()).toBe(401)
+
+  const authorized = await request.post('/api/internal/source-cleanup', {
+    headers: { authorization: 'Bearer test-cleanup-worker-token' },
+  })
+  expect(authorized.status()).toBe(204)
+})
+
 test('stores one normalized source privately for the current session', async ({
   request,
 }, testInfo) => {

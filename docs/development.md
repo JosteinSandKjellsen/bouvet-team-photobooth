@@ -59,6 +59,13 @@ be used outside a developer machine. Future Prisma commands use `DATABASE_URL`
 for runtime traffic, `DIRECT_URL` for schema changes, and
 `TEST_DATABASE_URL` only for isolated tests.
 
+The local template also configures `NUXT_SESSION_MAX_ACTIVE` for anonymous
+session admission and `NUXT_CLEANUP_WORKER_TOKEN` for the internal
+`POST /api/internal/source-cleanup` sweep. The latter accepts a bearer token and
+must be scheduled by the deployment platform; its local token and capacity are
+not approved production values. Configure distinct secret and numeric values
+before public use.
+
 Run the PostgreSQL-backed HTTP tests with `pnpm test:db`. It refuses a database
 name that does not end in `_test`, applies migrations only to that database,
 builds the production Nitro server, and runs the session API tests.

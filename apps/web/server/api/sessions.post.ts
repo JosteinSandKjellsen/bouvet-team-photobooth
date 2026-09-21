@@ -33,6 +33,7 @@ export default defineEventHandler(async (event): Promise<SessionResponse> => {
   const { capability, session } = await createSession(
     body.themeId as ThemeDescriptor['id'],
     settings.sessionTtlMs,
+    settings.sessionMaxActive,
   )
   setCookie(event, sessionCookieName, capability, {
     httpOnly: true,

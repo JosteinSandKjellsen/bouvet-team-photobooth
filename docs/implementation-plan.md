@@ -18,14 +18,15 @@ guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
 local capture/review are complete. M3 is selected and in progress: private
 anonymous sessions, synthetic-image source validation/normalization, local
 development storage, and durable source-cleanup state/lease handling are
-implemented. A scheduled worker adapter, configured abuse limits, and production
-object storage remain.
+implemented. The authenticated cleanup-worker adapter and configured active
+session admission limit are implemented. Deployment scheduler wiring, approved
+public-use limit values, and production object storage remain.
 
 Suggested next-session request:
 
-> Continue M3 with a scheduled cleanup-worker adapter and configured abuse
-> limits. Do not add provider behavior without selecting M4 or use participant
-> images before the privacy and retention gates are approved.
+> Continue M3 with deployment scheduler wiring and production object storage.
+> Do not add provider behavior without selecting M4 or use participant images
+> before the privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 

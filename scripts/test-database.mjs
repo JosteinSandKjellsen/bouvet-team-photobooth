@@ -22,6 +22,8 @@ function main() {
     ...process.env,
     DATABASE_URL: testDatabaseUrl,
     DIRECT_URL: testDatabaseUrl,
+    NUXT_CLEANUP_WORKER_TOKEN: 'test-cleanup-worker-token',
+    NUXT_SESSION_MAX_ACTIVE: '100',
     NUXT_SESSION_TTL_MS: '300000',
   }
 
