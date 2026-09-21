@@ -70,7 +70,7 @@ professional and technologically capable.
 
 | Route              | Required behavior                                                                                                                                                                  |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                | Nine visual theme cards with title, image and short description; clear selection and continue action; subtle overview link.                                                        |
+| `/`                | Nine visual theme buttons with title, image and short description; each opens capture directly; subtle overview link.                                                              |
 | `/capture/[theme]` | Camera activation/ready, countdown, capture, review/retake, approved upload, generation and recoverable errors in one route.                                                       |
 | `/photo/[id]`      | Prominent generated image, QR code, readable/copyable public URL, download, kiosk print, take-another action and expired/unavailable states.                                       |
 | `/overview`        | Six recent completed pictures per page, responsive two-by-three or three-by-two grid, total on the right where space permits, older/newer navigation and a restrained home action. |

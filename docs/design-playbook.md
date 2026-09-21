@@ -126,14 +126,14 @@ unverified external font. Do not claim the screenshot font has been identified.
 
 The IDs identify the supplied screen concepts, not routes or required filenames.
 
-| Reference           | Route/state                    | Composition to preserve                                                                                                           |
-| ------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| D1: Theme selection | `/`                            | Brand header, bold question, nine illustrated theme cards in a three-column desktop grid, quiet footer and clear continue action. |
-| D2: Countdown       | `/capture/[theme]`, countdown  | Task heading above a large live preview; centered high-contrast number on a translucent disc; visible cancel action below.        |
-| D3: Picture review  | `/capture/[theme]`, review     | Large approved-framing preview, paired retake and use-picture actions beneath, brief next-step context.                           |
-| D4: Generating      | `/capture/[theme]`, generating | Stable image-sized region with a restrained loading indicator and status; compact stage summary below when backed by real state.  |
-| D5: Result          | `/photo/[id]`                  | Generated portrait dominates the wide layout, with QR/URL and actions in a narrower side tool; quiet footer.                      |
-| D6: Overview        | `/overview`                    | Six pictures in a three-by-two wide grid, event counter to the right and restrained older/newer/home navigation below.            |
+| Reference           | Route/state                    | Composition to preserve                                                                                                                |
+| ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| D1: Theme selection | `/`                            | Brand header, bold question, nine illustrated theme buttons in a three-column desktop grid, quiet footer and a direct path to capture. |
+| D2: Countdown       | `/capture/[theme]`, countdown  | Task heading above a large live preview; centered high-contrast number on a translucent disc; visible cancel action below.             |
+| D3: Picture review  | `/capture/[theme]`, review     | Large approved-framing preview, paired retake and use-picture actions beneath, brief next-step context.                                |
+| D4: Generating      | `/capture/[theme]`, generating | Stable image-sized region with a restrained loading indicator and status; compact stage summary below when backed by real state.       |
+| D5: Result          | `/photo/[id]`                  | Generated portrait dominates the wide layout, with QR/URL and actions in a narrower side tool; quiet footer.                           |
+| D6: Overview        | `/overview`                    | Six pictures in a three-by-two wide grid, event counter to the right and restrained older/newer/home navigation below.                 |
 
 ### Theme Selection
 
@@ -142,11 +142,11 @@ align. The desktop three-by-three layout becomes two columns and then one when
 needed; all nine themes remain available without miniature labels. Keep artwork
 recognizable, not dimmed behind text. Place short descriptions below the image.
 
-Make the whole choice a semantic radio-style selection, with a visible focus ring
-and selected border/checkmark as well as color. Enable the continue action only
-when a theme is selected. Do not invent a selection or keyboard shortcut from
-the mockup's card numbers or "1-9" button label. Keep the overview link subtle
-but discoverable. Use the agreed theme registry, not image-derived names/slugs.
+Make each whole card a semantic button that opens capture for its theme, with a
+visible focus ring. Do not add a separate selection state, continue action or
+keyboard shortcut from the mockup's card numbers or "1-9" button label. Keep
+the overview link subtle but discoverable. Use the agreed theme registry, not
+image-derived names/slugs.
 
 ### Capture And Review
 

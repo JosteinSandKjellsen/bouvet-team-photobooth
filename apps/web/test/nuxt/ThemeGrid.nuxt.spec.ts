@@ -12,21 +12,15 @@ let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined
 afterEach(() => wrapper?.unmount())
 
 describe('ThemeGrid', () => {
-  it('exposes Norwegian radio choices and updates the selected theme', async () => {
+  it('exposes Norwegian theme buttons and emits the clicked theme', async () => {
     wrapper = await mountSuspended(ThemeGrid, {
-      props: { themes, modelValue: null },
+      props: { themes },
     })
 
-    const wasteland = wrapper.get('input[value="wasteland"]')
-    expect(wasteland.attributes('type')).toBe('radio')
-    expect(wasteland.element.closest('label')?.textContent).toContain(
-      'Ødemark etter katastrofen',
-    )
-    await wasteland.setValue()
+    const wasteland = wrapper.get('button')
+    expect(wasteland.text()).toContain('Ødemark etter katastrofen')
+    await wasteland.trigger('click')
 
-    expect(wrapper.emitted('update:modelValue')).toEqual([['wasteland']])
-    expect(wrapper.get('.theme-card.selected').text()).toContain(
-      'Ødemark etter katastrofen',
-    )
+    expect(wrapper.emitted('select')).toEqual([['wasteland']])
   })
 })

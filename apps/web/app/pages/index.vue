@@ -7,7 +7,6 @@ import type {
 defineOptions({ name: 'ThemeSelectionPage' })
 
 const { t } = useI18n()
-const selectedTheme = ref<ThemeDescriptor['id'] | null>(null)
 const { data, error, status, refresh } = useFetch<ThemesResponse>(
   '/api/themes',
   {
@@ -20,11 +19,8 @@ const loading = computed(
   () => status.value === 'idle' || status.value === 'pending',
 )
 
-const continueToCapture = async () => {
-  if (!selectedTheme.value) {
-    return
-  }
-  await navigateTo(`/capture/${selectedTheme.value}`)
+const selectTheme = async (themeId: ThemeDescriptor['id']) => {
+  await navigateTo(`/capture/${themeId}`)
 }
 </script>
 
@@ -46,17 +42,14 @@ const continueToCapture = async () => {
     <p v-else-if="themes.length === 0" class="message">
       {{ t('themeSelection.empty') }}
     </p>
-    <form v-else @submit.prevent="continueToCapture">
-      <ThemeGrid v-model="selectedTheme" :themes="themes" />
+    <section v-else aria-labelledby="theme-heading">
+      <ThemeGrid :themes="themes" @select="selectTheme" />
       <div class="actions">
-        <button type="submit" :disabled="!selectedTheme">
-          {{ t('common.actions.continue') }}
-        </button>
         <NuxtLink to="/overview">{{
           t('themeSelection.overviewLink')
         }}</NuxtLink>
       </div>
-    </form>
+    </section>
   </main>
 </template>
 
@@ -100,22 +93,6 @@ h1 {
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-divider);
 }
-button {
-  min-height: var(--control-height);
-  padding: 0 var(--space-5);
-  border: 1px solid var(--color-action-primary);
-  border-radius: 999px;
-  background: var(--color-action-primary);
-  color: var(--color-surface);
-  font-weight: 700;
-  cursor: pointer;
-}
-button:disabled {
-  border-color: var(--color-divider);
-  background: var(--color-divider);
-  color: var(--color-muted-text);
-  cursor: not-allowed;
-}
 a {
   color: var(--color-text);
 }
@@ -130,10 +107,6 @@ a {
 @media (max-width: 480px) {
   h1 {
     font-size: 28px;
-  }
-  .actions {
-    align-items: stretch;
-    flex-direction: column;
   }
   .actions a {
     text-align: center;

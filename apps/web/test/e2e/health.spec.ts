@@ -36,14 +36,9 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
       name: 'Hvilket univers passer teamet deres?',
     }),
   ).toBeVisible()
-  const continueButton = page.getByRole('button', { name: 'Fortsett' })
-  await expect(continueButton).toBeDisabled()
-  await expect(page.getByRole('radio')).toHaveCount(9)
-  await page
-    .getByRole('radio', { name: /Ødemark etter katastrofen/ })
-    .check({ force: true })
-  await expect(continueButton).toBeEnabled()
-  await continueButton.click()
+  const themeButtons = page.getByRole('button')
+  await expect(themeButtons).toHaveCount(9)
+  await page.getByRole('button', { name: /Ødemark etter katastrofen/ }).click()
   await expect(page).toHaveURL('/capture/wasteland')
   await expect(
     page.getByRole('heading', { name: 'Gjør dere klare til bildet' }),

@@ -43,7 +43,7 @@ describe expected behavior, not implemented functionality.
 
 | Route              | Required behavior                                                                                                                                                             |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                | Show nine visual theme cards with title, image, and short description; include clear selection/continue behavior and a subtle overview link.                                  |
+| `/`                | Show nine visual theme buttons with title, image, and short description; each opens capture directly, alongside a subtle overview link.                                       |
 | `/capture/[theme]` | Handle camera activation/ready, countdown, capture, review/retake, approved upload, generation, and recoverable errors.                                                       |
 | `/photo/[id]`      | Show the generated image, QR code, readable and copyable public URL, download, kiosk print, another-photo action, and expired/unavailable states.                             |
 | `/overview`        | Show six recent completed pictures per page, a responsive two-by-three or three-by-two grid, the total on wide screens, older/newer navigation, and a restrained home action. |

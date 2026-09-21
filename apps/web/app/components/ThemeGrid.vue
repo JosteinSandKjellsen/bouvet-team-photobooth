@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
-import { Check } from '@lucide/vue'
 import { themeMessages } from '~/utils/themeMessages'
-
-const selectedTheme = defineModel<ThemeDescriptor['id'] | null>({
-  required: true,
-})
 
 defineProps<{
   themes: ThemeDescriptor[]
+}>()
+
+const emit = defineEmits<{
+  select: [themeId: ThemeDescriptor['id']]
 }>()
 
 const { t } = useI18n()
@@ -17,20 +16,14 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
 </script>
 
 <template>
-  <fieldset class="theme-grid">
-    <legend class="sr-only">{{ t('themeSelection.selectionLabel') }}</legend>
-    <label
+  <div class="theme-grid">
+    <button
       v-for="theme in themes"
       :key="theme.id"
+      type="button"
       class="theme-card"
-      :class="{ selected: selectedTheme === theme.id }"
+      @click="emit('select', theme.id)"
     >
-      <input
-        v-model="selectedTheme"
-        type="radio"
-        name="theme"
-        :value="theme.id"
-      />
       <img :src="theme.image" alt="" />
       <span class="theme-copy">
         <span class="theme-name">{{ t(messageFor(theme).name) }}</span>
@@ -38,11 +31,8 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
           t(messageFor(theme).description)
         }}</span>
       </span>
-      <span class="selection-mark" aria-hidden="true">
-        <Check v-if="selectedTheme === theme.id" :size="18" />
-      </span>
-    </label>
-  </fieldset>
+    </button>
+  </div>
 </template>
 
 <style scoped>
@@ -63,20 +53,17 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
   border: 2px solid var(--color-divider);
   border-radius: var(--card-radius);
   background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.theme-card:has(input:focus-visible) {
+.theme-card:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
-.theme-card.selected {
+.theme-card:hover {
   border-color: var(--color-action-primary);
-}
-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
 }
 img {
   display: block;
@@ -100,27 +87,6 @@ img {
   color: var(--color-muted-text);
   font-size: 16px;
   line-height: 1.4;
-}
-.selection-mark {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 2px solid var(--color-surface);
-  border-radius: 50%;
-  background: var(--color-action-primary);
-  color: var(--color-surface);
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 @media (max-width: 800px) {
   .theme-grid {

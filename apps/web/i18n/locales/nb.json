@@ -1,7 +1,6 @@
 {
   "common": {
     "actions": {
-      "continue": "Fortsett",
       "backToThemes": "Velg et annet univers",
       "goHome": "Til forsiden",
       "retry": "Prøv igjen"
@@ -14,7 +13,6 @@
   "themeSelection": {
     "title": "Hvilket univers passer teamet deres?",
     "description": "Velg et fiktivt univers for teambildet.",
-    "selectionLabel": "Velg univers",
     "overviewLink": "Se teambilder fra arrangementet",
     "loadError": "Universene kunne ikke lastes inn.",
     "empty": "Ingen universer er tilgjengelige akkurat nå."
