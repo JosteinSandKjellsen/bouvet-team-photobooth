@@ -59,6 +59,7 @@ id_ed25519
 
 # Generated local tool and operating-system state.
 /apps/web/.nuxtrc
+/apps/web/.local/
 /apps/web/server/generated/prisma/
 .netlify/
 .DS_Store

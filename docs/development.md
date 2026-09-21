@@ -66,6 +66,13 @@ must be scheduled by the deployment platform; its local token and capacity are
 not approved production values. Configure distinct secret and numeric values
 before public use.
 
+Approved source images use the `local` storage driver by default and are written
+under `apps/web/.local/sources`, which is ignored by Git. Netlify Blob storage
+is only for hosted deployments: set `SOURCE_STORAGE_DRIVER=netlify` and provide
+`SOURCE_STORAGE_BLOB_STORE_NAME` there. The application needs temporary storage
+because an approved source may be processed asynchronously or retained for a
+permitted retry; it does not require Blob storage for local development.
+
 Run the PostgreSQL-backed HTTP tests with `pnpm test:db`. It refuses a database
 name that does not end in `_test`, applies migrations only to that database,
 builds the production Nitro server, and runs the session API tests.

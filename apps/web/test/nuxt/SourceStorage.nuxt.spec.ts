@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const { deleteBlob, getStore, setBlob } = vi.hoisted(() => ({
@@ -15,14 +18,41 @@ const { deleteSourceImage, storeSourceImage } =
 
 const sourceStorageDriver = process.env.SOURCE_STORAGE_DRIVER
 const sourceStorageBlobStoreName = process.env.SOURCE_STORAGE_BLOB_STORE_NAME
+const sourceStorageDir = process.env.SOURCE_STORAGE_DIR
+let localStorageDir: string | undefined
 
-afterEach(() => {
+afterEach(async () => {
   vi.clearAllMocks()
   process.env.SOURCE_STORAGE_DRIVER = sourceStorageDriver
   process.env.SOURCE_STORAGE_BLOB_STORE_NAME = sourceStorageBlobStoreName
+  process.env.SOURCE_STORAGE_DIR = sourceStorageDir
+  if (localStorageDir) {
+    await rm(localStorageDir, { force: true, recursive: true })
+    localStorageDir = undefined
+  }
 })
 
 describe('source storage', () => {
+  it('stores and removes source images in the configured local directory', async () => {
+    localStorageDir = await mkdtemp(join(tmpdir(), 'photobooth-sources-'))
+    process.env.SOURCE_STORAGE_DRIVER = 'local'
+    process.env.SOURCE_STORAGE_DIR = localStorageDir
+
+    await storeSourceImage('sources/session.jpg', Uint8Array.of(1, 2, 3))
+
+    await expect(
+      readFile(join(localStorageDir, 'sources/session.jpg')),
+    ).resolves.toEqual(Buffer.from([1, 2, 3]))
+
+    await deleteSourceImage('sources/session.jpg')
+
+    await expect(
+      readFile(join(localStorageDir, 'sources/session.jpg')),
+    ).rejects.toMatchObject({
+      code: 'ENOENT',
+    })
+  })
+
   it('uses the configured site-wide Netlify Blob store', async () => {
     process.env.SOURCE_STORAGE_DRIVER = 'netlify'
     process.env.SOURCE_STORAGE_BLOB_STORE_NAME = 'photobooth-sources'
