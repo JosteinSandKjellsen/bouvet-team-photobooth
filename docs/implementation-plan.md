@@ -44,18 +44,21 @@ adapter permits no redirects or credentials, requires a JPEG response, and
 bounds the response body before application-owned storage. The real built-Nitro
 test covers unauthorized and malformed callback rejection plus duplicate
 callback convergence before the deterministic worker stores the output and
-queues source cleanup. The scheduled worker can now also read the active
-application-owned source, validate its server-owned theme, reserve credits, and
-submit it to the Leonardo adapter when `GENERATION_PROVIDER=leonardo` is
-explicitly configured. This integration is covered with mocked provider calls;
-no live Leonardo request or callback has been observed.
+queues source cleanup. After storage succeeds, the output gets one durable,
+database-unique 256-bit opaque identifier; the private status API returns only
+its relative `/photo/<id>` path. The scheduled worker can now also read the
+active application-owned source, validate its server-owned theme, reserve
+credits, and submit it to the Leonardo adapter when
+`GENERATION_PROVIDER=leonardo` is explicitly configured. This integration is
+covered with mocked provider calls; no live Leonardo request or callback has
+been observed.
 
 Suggested next-session request:
 
-> Continue M4 with an application-owned result identifier and sanitized result
-> redirect after durable output storage. Publish and count only in the separate
-> approved public-result increment. Keep participant images disabled until the
-> privacy and retention gates are approved.
+> Continue M4 only with an approved private capture-to-generation handoff.
+> Publish and count only in the separate approved public-result increment.
+> Keep participant images disabled until the privacy and retention gates are
+> approved.
 
 ## Confirmed Product Decisions
 
@@ -458,9 +461,11 @@ any reservation or provider request; uncertain provider acceptance still holds
 for reconciliation rather than resubmission. Focused tests mock the provider;
 no paid request has been made.
 
-Next introduce an application-owned result identifier and sanitized redirect
-after durable output storage. Publish/count only after output is durable and
-readable, in the separate approved public-result increment.
+Each durable stored output now receives one application-owned, 256-bit opaque
+result identifier. The private session status response exposes only its relative
+`/photo/<id>` path after both output activation and generation success; it never
+returns a provider URL, storage key or internal database ID. This does not
+publish, count or serve the output. Those remain separate approved increments.
 
 Use deterministic provider adapters behind real application APIs for development
 and CI. No paid CI calls or browser happy-path API mocks. Unknown acceptance

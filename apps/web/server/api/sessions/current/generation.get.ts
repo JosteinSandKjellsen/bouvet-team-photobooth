@@ -25,7 +25,11 @@ export default defineEventHandler(
 
     const generation = await db.imageGeneration.findFirst({
       where: { sourceImage: { sessionId: session.id } },
-      select: { id: true, status: true },
+      select: {
+        generatedImage: { select: { publicId: true, status: true } },
+        id: true,
+        status: true,
+      },
     })
     if (!generation) {
       throw createError({
@@ -34,9 +38,17 @@ export default defineEventHandler(
       })
     }
 
-    return {
+    const response: GenerationStatusResponse = {
       jobId: generation.id,
       status: generationStatuses[generation.status],
     }
+    if (
+      generation.status === 'SUCCEEDED' &&
+      generation.generatedImage?.status === 'ACTIVE'
+    ) {
+      response.resultPath = `/photo/${generation.generatedImage.publicId}`
+    }
+
+    return response
   },
 )

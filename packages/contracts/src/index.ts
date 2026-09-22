@@ -40,6 +40,7 @@ export interface GenerationAcceptedResponse {
 
 export interface GenerationStatusResponse {
   jobId: string
+  resultPath?: string
   status:
     | 'pending'
     | 'submitting'

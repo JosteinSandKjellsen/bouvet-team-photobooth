@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
 import { reserveGenerationCredits } from './generation-budget'
@@ -370,6 +370,7 @@ async function reconcileClaimedGeneration(
       deleteAfter: generation.sourceImage.deleteAfter,
       generationId: job.aggregateId,
       height: metadata.height,
+      publicId: randomBytes(32).toString('base64url'),
       storageKey: `generated/${job.aggregateId}.jpg`,
       width: metadata.width,
     },

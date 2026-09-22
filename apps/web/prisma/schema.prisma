@@ -74,6 +74,7 @@ model GeneratedImage {
   id           String          @id @default(uuid()) @db.Uuid
   generationId String          @unique @db.Uuid
   generation   ImageGeneration @relation(fields: [generationId], references: [id], onDelete: Restrict)
+  publicId     String          @unique
   storageKey   String          @unique
   contentType  String
   byteSize     Int

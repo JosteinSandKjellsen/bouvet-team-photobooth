@@ -388,10 +388,11 @@ test('queues one generation only for the current session approved source', async
 
   await submitGeneration(request)
   const generatedImage = await database.generatedImage.findUniqueOrThrow({
-    select: { status: true, storageKey: true },
+    select: { publicId: true, status: true, storageKey: true },
     where: { generationId: generation.jobId },
   })
   expect(generatedImage.status).toBe('ACTIVE')
+  expect(generatedImage.publicId).toMatch(/^[A-Za-z0-9_-]{43}$/)
   expect(
     existsSync(
       resolve('test-results/source-storage', generatedImage.storageKey),
@@ -423,10 +424,17 @@ test('queues one generation only for the current session approved source', async
     { headers: { cookie } },
   )
   expect(succeededStatus.status()).toBe(200)
-  expect(await succeededStatus.json()).toEqual({
+  const succeeded = (await succeededStatus.json()) as {
+    jobId: string
+    resultPath?: string
+    status: string
+  }
+  expect(succeeded).toEqual({
     jobId: generation.jobId,
+    resultPath: `/photo/${generatedImage.publicId}`,
     status: 'succeeded',
   })
+  expect(succeeded.resultPath).not.toContain(generation.jobId)
 })
 
 test('requeues only confirmed retryable generation failures', async ({
