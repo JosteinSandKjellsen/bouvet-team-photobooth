@@ -19,6 +19,9 @@ export default defineNuxtConfig({
     sessionTtlMs: '',
     public: {
       captureGenerationEnabled: false,
+      kioskMode: false,
+      kioskResetMs: '60000',
+      photoOrigin: '',
     },
   },
   typescript: {

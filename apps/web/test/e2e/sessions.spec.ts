@@ -179,6 +179,12 @@ test('creates a private session and keeps its capability out of JSON', async ({
   })
   expect(current.status()).toBe(200)
   expect(await current.json()).toMatchObject({ themeId: 'samurai' })
+
+  const closed = await request.post('/api/sessions/current/close', {
+    headers: { cookie, origin },
+  })
+  expect(closed.status()).toBe(204)
+  expect(closed.headers()['set-cookie']).toContain('Max-Age=0')
 })
 
 test('rejects forged, invalid, and unauthenticated session requests', async ({
@@ -291,6 +297,7 @@ test('rejects source uploads without a private same-origin session', async ({
 })
 
 test('queues one generation only for the current session approved source', async ({
+  page,
   request,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'runs once')
@@ -430,7 +437,12 @@ test('queues one generation only for the current session approved source', async
 
   await submitGeneration(request)
   const generatedImage = await database.generatedImage.findUniqueOrThrow({
-    select: { publicId: true, status: true, storageKey: true },
+    select: {
+      byteSize: true,
+      publicId: true,
+      status: true,
+      storageKey: true,
+    },
     where: { generationId: generation.jobId },
   })
   expect(generatedImage.status).toBe('ACTIVE')
@@ -477,6 +489,83 @@ test('queues one generation only for the current session approved source', async
     status: 'succeeded',
   })
   expect(succeeded.resultPath).not.toContain(generation.jobId)
+
+  const publicPhoto = await request.get(
+    `/api/photos/${generatedImage.publicId}`,
+  )
+  expect(publicPhoto.status()).toBe(200)
+  expect(await publicPhoto.json()).toEqual({
+    downloadUrl: `/api/photos/${generatedImage.publicId}/download`,
+    height: 768,
+    imageUrl: `/api/photos/${generatedImage.publicId}/image`,
+    width: 1376,
+  })
+
+  const publicImage = await request.get(
+    `/api/photos/${generatedImage.publicId}/image`,
+  )
+  expect(publicImage.status()).toBe(200)
+  expect(publicImage.headers()['cache-control']).toBe('no-store')
+  expect(publicImage.headers()['content-length']).toBe(
+    String(generatedImage.byteSize),
+  )
+  expect(publicImage.headers()['content-type']).toContain('image/jpeg')
+  expect((await publicImage.body()).byteLength).toBe(generatedImage.byteSize)
+
+  const publicDownload = await request.get(
+    `/api/photos/${generatedImage.publicId}/download`,
+  )
+  expect(publicDownload.status()).toBe(200)
+  expect(publicDownload.headers()['content-disposition']).toContain(
+    'attachment',
+  )
+  expect((await publicDownload.body()).byteLength).toBe(generatedImage.byteSize)
+
+  await page.goto(`/photo/${generatedImage.publicId}`)
+  await expect(page.getByTestId('photo-image')).toBeVisible()
+  await expect(page.getByTestId('photo-image')).toHaveAttribute(
+    'src',
+    `/api/photos/${generatedImage.publicId}/image`,
+  )
+  await expect(page.getByTestId('photo-download')).toHaveAttribute(
+    'href',
+    `/api/photos/${generatedImage.publicId}/download`,
+  )
+  await expect(page.getByTestId('photo-qr-code')).toHaveAttribute(
+    'src',
+    /^data:image\/png;base64,/,
+  )
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], {
+    origin,
+  })
+  await page.getByTestId('photo-copy-link').click()
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`${origin}/photo/${generatedImage.publicId}`)
+  await page.evaluate(() => {
+    window.print = () => document.body.setAttribute('data-printed', 'true')
+  })
+  await page.getByTestId('photo-print').click()
+  await expect(page.locator('body')).toHaveAttribute('data-printed', 'true')
+
+  await database.generatedImage.update({
+    data: { deleteAfter: new Date('2000-01-01T00:00:00.000Z') },
+    where: { publicId: generatedImage.publicId },
+  })
+  const expiredPhoto = await request.get(
+    `/api/photos/${generatedImage.publicId}`,
+  )
+  expect(expiredPhoto.status()).toBe(404)
+  const expiredImage = await request.get(
+    `/api/photos/${generatedImage.publicId}/image`,
+  )
+  expect(expiredImage.status()).toBe(404)
+  const expiredDownload = await request.get(
+    `/api/photos/${generatedImage.publicId}/download`,
+  )
+  expect(expiredDownload.status()).toBe(404)
+  await page.reload()
+  await expect(page.getByTestId('photo-unavailable')).toBeVisible()
 })
 
 test('requeues only confirmed retryable generation failures', async ({

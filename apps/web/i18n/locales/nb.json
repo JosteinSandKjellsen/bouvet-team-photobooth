@@ -58,8 +58,21 @@
   },
   "photo": {
     "title": "Teambilde",
-    "notReady": "Bildesiden er ikke klar ennå.",
-    "notReadyDescription": "Ferdige teambilder blir tilgjengelige her senere."
+    "loading": "Laster teambildet.",
+    "imageAlt": "Ferdig teambilde",
+    "download": "Last ned bilde",
+    "print": "Skriv ut bilde",
+    "copyLink": "Kopier lenke",
+    "copied": "Lenken er kopiert.",
+    "copyFailed": "Lenken kunne ikke kopieres. Kopier den fra feltet i stedet.",
+    "shareUnavailable": "Delingslenken er ikke tilgjengelig i denne visningen.",
+    "qrAlt": "QR-kode til teambildet",
+    "qrLoading": "Lager QR-kode.",
+    "printFailed": "Utskriftsdialogen kunne ikke åpnes. Prøv igjen eller last ned bildet.",
+    "unavailableTitle": "Dette teambildet er ikke tilgjengelig.",
+    "unavailableDescription": "Bildet kan ha blitt fjernet eller utløpt.",
+    "retry": "Prøv igjen",
+    "newPicture": "Ta et nytt bilde"
   },
   "overview": {
     "title": "Teambilder fra arrangementet",

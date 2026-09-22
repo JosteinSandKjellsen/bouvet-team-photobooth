@@ -11,14 +11,15 @@ records verified increments without authorizing later scope.
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
 guidance. M0 documentation/harness alignment, M1 product shell/themes, M2
-local capture/review, M3 private source handling, and M4 private generation and
-recovery are complete. M3 provides private anonymous sessions, synthetic-image
-source validation/normalization, local development storage, durable
-source-cleanup state/lease handling, an authenticated cleanup worker, and an
-active session admission limit. Netlify scheduler and site-wide Blob storage
-adapters have been observed on the deployed site: a synthetic source was
-normalized and stored privately, and a manually invoked `job-sweep` completed.
-Approved public-use limit values remain unresolved.
+local capture/review, M3 private source handling, M4 private generation and
+recovery, and M5 public results/kiosk presentation are complete for synthetic
+testing. M3 provides private anonymous sessions, synthetic-image source
+validation/normalization, local development storage, durable source-cleanup
+state/lease handling, an authenticated cleanup worker, and an active session
+admission limit. Netlify scheduler and site-wide Blob storage adapters have
+been observed on the deployed site: a synthetic source was normalized and
+stored privately, and a manually invoked `job-sweep` completed. Approved
+public-use limit values remain unresolved.
 
 Automated expiry deletion and stale-lease recovery are now verified against an
 isolated local PostgreSQL instance (2026-09-22): `test/e2e/sessions.spec.ts`
@@ -64,14 +65,24 @@ database (2026-09-22): approved synthetic camera capture creates its private
 session, stores its approved source, starts one duplicate-safe generation,
 polls sanitized status, and resumes a live generation after page reload. The
 same suite verifies classified retry behavior, uncertainty handling, output
-ingestion, and source cleanup. `pnpm node:24 -- test:db` passed 17 tests with 7
-intentional project/global skips.
+ingestion, and source cleanup.
+
+The completed M5 handoff is verified against the isolated PostgreSQL database
+(2026-09-22): public metadata, image, and download reads resolve only one
+active, unexpired opaque ID and return application-owned JPEG bytes with no
+provider/source exposure. The browser route renders the real image, download,
+QR, copy, and browser-print actions, then displays an unavailable state after
+expiry. Kiosk-only reset is explicitly configured, clears the private session
+capability through a same-origin endpoint, and replaces the result route with
+home; phone pages do not reset automatically. The canonical public photo origin
+must be configured outside localhost synthetic testing. `pnpm node:24 --
+test:db` passed 17 tests with 7 intentional project/global skips.
 
 Suggested next-session request:
 
-> Approve M5 before implementing public result serving, sharing, download,
-> printing, or kiosk reset. Keep participant images disabled until the privacy
-> and retention gates are approved.
+> Approve M6 before implementing the public event overview, gallery reads, or
+> completed-picture aggregate. Keep participant images disabled until the
+> privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 

@@ -49,3 +49,10 @@ export interface GenerationStatusResponse {
     | 'succeeded'
     | 'failed'
 }
+
+export interface PublicPhotoResponse {
+  downloadUrl: string
+  height: number
+  imageUrl: string
+  width: number
+}
