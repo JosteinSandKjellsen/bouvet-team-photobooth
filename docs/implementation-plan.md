@@ -2,15 +2,11 @@
 
 ## Handoff Status
 
-Planning decisions recorded on 2026-09-21. This document is ready for a new
-coding session. The [product experience playbook](./product-experience-playbook.md)
-is the canonical product specification; this roadmap selects the implementation
-sequence and does not report implemented application features.
-
-The application is still the Nuxt 4/Vue/Nitro health-check foundation.
-**Start with M0: documentation and AI harness alignment only.** Do not implement
-application routes, add dependencies, provision resources or make paid provider
-calls in that milestone. Later milestones require a separately selected scope.
+Planning decisions were recorded on 2026-09-21 and implementation evidence is
+updated as milestones progress. The
+[product experience playbook](./product-experience-playbook.md) is the canonical
+product specification; this roadmap selects the implementation sequence and
+records verified increments without authorizing later scope.
 
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
@@ -42,8 +38,10 @@ Blob storage, or its function-instance concurrency model.
 
 Suggested next-session request:
 
-> Select and implement M4 (Leonardo generation and recovery). Do not use
-> participant images before the privacy and retention gates are approved.
+> Continue M4 with authenticated Leonardo completion ingestion and atomic spend
+> reservation. Keep paid submission disabled until a numeric cap is approved,
+> and do not use participant images before the privacy and retention gates are
+> approved.
 
 ## Confirmed Product Decisions
 
@@ -419,11 +417,18 @@ deterministic worker sweep validates and stores one private application-owned
 output, marks the generation successful, and atomically enqueues source deletion.
 Generated outputs have durable expiry cleanup but are not publicly served. This
 is not a Leonardo integration, publication/counting, or an authorization to use
-participant images.
+participant images. A server-only, contract-tested Leonardo Flare adapter now
+constructs one private v2 generation request from application-owned source bytes
+and one of nine server-owned theme prompts. It enforces the 1376 by 768 baseline,
+quantity one, BASE64 reference shape, bearer authentication, a bounded request
+timeout, and runtime validation of `generationId` and optional `apiCreditCost`.
+The scheduled worker remains deterministic-only, so this adapter cannot yet make
+a paid workflow request; no live Leonardo call has been made.
 
-Implement the Leonardo adapter, per-theme prompts, asynchronous submission,
-authenticated idempotent completion, confirmed reconciliation, durable output
-ingestion, sanitized status/retry and result redirect. Reserve spend atomically;
+Next implement atomic spend reservation and the approved numeric cap, then wire
+source retrieval and asynchronous Leonardo submission. Add authenticated,
+idempotent completion ingestion and confirmed reconciliation before enabling the
+production adapter. Finish sanitized status/retry and result redirect;
 publish/count only after output is durable and readable.
 
 Use deterministic provider adapters behind real application APIs for development

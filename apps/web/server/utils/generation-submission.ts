@@ -162,7 +162,7 @@ async function submitClaimedGeneration(
   })
   if (prepared.count === 0) return
 
-  const result = await submitGeneration(job.aggregateId)
+  const result = await submitGeneration({ generationId: job.aggregateId })
   await db.$transaction(async (transaction) => {
     const completed = await transaction.backgroundJob.updateMany({
       where: {

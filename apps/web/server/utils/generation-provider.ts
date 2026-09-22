@@ -1,11 +1,112 @@
+import { Buffer } from 'node:buffer'
+import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 import sharp from 'sharp'
 
-export async function submitGeneration(generationId: string) {
-  if (process.env.GENERATION_PROVIDER !== 'deterministic') {
+const leonardoGenerationUrl =
+  'https://cloud.leonardo.ai/api/rest/v2/generations'
+const leonardoModel = 'openai/gpt-image-2.5-flare'
+const leonardoRequestTimeoutMs = 15_000
+
+const themePrompts: Record<ThemeDescriptor['id'], string> = {
+  'block-world':
+    'Reimagine the people in the reference photo as a cheerful block-built adventure team in a colorful landscape. Keep every person recognizable and preserve the group composition.',
+  'kids-on-bikes':
+    'Reimagine the people in the reference photo as a close-knit 1980s mystery-adventure team with bicycles, flashlights and cinematic small-town atmosphere. Keep every person recognizable and preserve the group composition.',
+  'life-simulation':
+    'Reimagine the people in the reference photo as a playful life-simulation household in a bright stylized neighborhood. Keep every person recognizable and preserve the group composition.',
+  'mech-pilots':
+    'Reimagine the people in the reference photo as an elite team of futuristic mech pilots in a cinematic hangar. Keep every person recognizable and preserve the group composition.',
+  'red-carpet':
+    'Reimagine the people in the reference photo as a glamorous ensemble arriving together on a film-premiere red carpet. Keep every person recognizable and preserve the group composition.',
+  samurai:
+    'Reimagine the people in the reference photo as a dignified samurai team in a cinematic historical landscape. Keep every person recognizable and preserve the group composition.',
+  'space-cowboys':
+    'Reimagine the people in the reference photo as a charismatic crew of space cowboys on a vivid frontier planet. Keep every person recognizable and preserve the group composition.',
+  treehouse:
+    'Reimagine the people in the reference photo as an inventive woodland team gathered around an extraordinary treehouse. Keep every person recognizable and preserve the group composition.',
+  wasteland:
+    'Reimagine the people in the reference photo as a resilient post-apocalyptic survivor team in a cinematic wasteland. Keep every person recognizable and preserve the group composition.',
+}
+
+interface GenerationSubmission {
+  generationId: string
+  sourceImage?: Uint8Array
+  themeId?: ThemeDescriptor['id']
+}
+
+export async function submitGeneration(submission: GenerationSubmission) {
+  if (process.env.GENERATION_PROVIDER === 'deterministic') {
+    return {
+      providerGenerationId: `deterministic-${submission.generationId}`,
+    }
+  }
+
+  if (process.env.GENERATION_PROVIDER !== 'leonardo') {
     throw new Error('Generation provider is unavailable')
   }
 
-  return { providerGenerationId: `deterministic-${generationId}` }
+  const apiKey = process.env.LEONARDO_API_KEY
+  if (!apiKey || !submission.sourceImage?.byteLength || !submission.themeId) {
+    throw new Error('Generation provider is unavailable')
+  }
+
+  const response = await fetch(leonardoGenerationUrl, {
+    body: JSON.stringify({
+      model: leonardoModel,
+      parameters: {
+        guidances: {
+          image_reference: [
+            {
+              image: {
+                data: Buffer.from(submission.sourceImage).toString('base64'),
+                type: 'BASE64',
+              },
+            },
+          ],
+        },
+        height: 768,
+        prompt: themePrompts[submission.themeId],
+        prompt_enhance: 'AUTO',
+        quantity: 1,
+        width: 1376,
+      },
+      public: false,
+    }),
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    signal: AbortSignal.timeout(leonardoRequestTimeoutMs),
+  })
+
+  if (!response.ok) throw new Error('Generation provider request failed')
+
+  const body: unknown = await response.json()
+  if (!isLeonardoGenerationResponse(body)) {
+    throw new Error('Invalid generation provider response')
+  }
+
+  return {
+    apiCreditCost: body.apiCreditCost,
+    providerGenerationId: body.generationId,
+  }
+}
+
+function isLeonardoGenerationResponse(
+  value: unknown,
+): value is { apiCreditCost?: number; generationId: string } {
+  if (!value || typeof value !== 'object') return false
+
+  const response = value as Record<string, unknown>
+  return (
+    typeof response.generationId === 'string' &&
+    response.generationId.length > 0 &&
+    (response.apiCreditCost === undefined ||
+      (Number.isInteger(response.apiCreditCost) &&
+        (response.apiCreditCost as number) >= 0))
+  )
 }
 
 export async function getGeneratedOutput(providerGenerationId: string) {
