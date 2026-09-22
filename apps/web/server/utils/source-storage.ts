@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { getStore } from '@netlify/blobs'
 
@@ -80,6 +80,22 @@ export async function storeGeneratedImage(
   const path = getSourcePath(storageKey)
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, bytes)
+}
+
+export async function getSourceImage(storageKey: string) {
+  if (getStorageDriver() === 'netlify') {
+    const image = await getNetlifySourceStore().get(storageKey, {
+      type: 'arrayBuffer',
+    })
+    if (!image) throw unavailableStorage()
+    return new Uint8Array(image)
+  }
+
+  try {
+    return new Uint8Array(await readFile(getSourcePath(storageKey)))
+  } catch {
+    throw unavailableStorage()
+  }
 }
 
 export async function deleteSourceImage(storageKey: string) {

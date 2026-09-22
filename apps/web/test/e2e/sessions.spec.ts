@@ -68,6 +68,13 @@ test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   test.skip(testInfo.project.name !== 'desktop', 'runs once')
 
   const budgetDay = new Date('2099-01-01T12:00:00.000Z')
+  const database = getTestDb()
+  await database.generationCreditReservation.deleteMany({
+    where: { budgetDay: new Date('2099-01-01T00:00:00.000Z') },
+  })
+  await database.dailyGenerationBudget.deleteMany({
+    where: { day: new Date('2099-01-01T00:00:00.000Z') },
+  })
   const reservations = await Promise.all(
     Array.from({ length: 201 }, () =>
       reserveGenerationCredits(randomUUID(), budgetDay),
@@ -75,7 +82,6 @@ test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   )
   expect(reservations.filter(Boolean)).toHaveLength(200)
 
-  const database = getTestDb()
   await expect(
     database.dailyGenerationBudget.findUniqueOrThrow({
       select: { reservedCredits: true },

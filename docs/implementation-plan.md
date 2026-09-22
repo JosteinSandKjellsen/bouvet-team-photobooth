@@ -44,14 +44,18 @@ adapter permits no redirects or credentials, requires a JPEG response, and
 bounds the response body before application-owned storage. The real built-Nitro
 test covers unauthorized and malformed callback rejection plus duplicate
 callback convergence before the deterministic worker stores the output and
-queues source cleanup. No live Leonardo request or callback has been observed.
+queues source cleanup. The scheduled worker can now also read the active
+application-owned source, validate its server-owned theme, reserve credits, and
+submit it to the Leonardo adapter when `GENERATION_PROVIDER=leonardo` is
+explicitly configured. This integration is covered with mocked provider calls;
+no live Leonardo request or callback has been observed.
 
 Suggested next-session request:
 
-> Continue M4 by wiring approved-source retrieval and asynchronous Leonardo
-> submission. A PostgreSQL-backed UTC-day ledger atomically reserves 50 credits
-> per request up to 10,000 credits per day. Keep participant images disabled
-> until the privacy and retention gates are approved.
+> Continue M4 with an application-owned result identifier and sanitized result
+> redirect after durable output storage. Publish and count only in the separate
+> approved public-result increment. Keep participant images disabled until the
+> privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 
@@ -445,12 +449,18 @@ A PostgreSQL-backed UTC-day ledger now atomically reserves 50 credits before a
 Leonardo submission, up to an approved 10,000-credit daily cap. Replaying a
 reservation for the same generation is idempotent. An isolated PostgreSQL test
 submits 201 concurrent reservations and verifies exactly 200 succeed, with the
-stored total fixed at 10,000 credits. The worker remains deterministic-only
-until approved-source retrieval and asynchronous Leonardo submission are wired.
+stored total fixed at 10,000 credits. The scheduled worker admits only explicit
+deterministic or Leonardo providers. For a Leonardo submission, it reads the
+active unexpired source from private application storage, validates the
+server-owned selected theme, reserves credits, and passes the bytes and theme to
+the asynchronous provider adapter. Local source failures are classified before
+any reservation or provider request; uncertain provider acceptance still holds
+for reconciliation rather than resubmission. Focused tests mock the provider;
+no paid request has been made.
 
-Next wire source retrieval and asynchronous Leonardo submission, then finish
-sanitized status/retry and result redirect; publish/count only after output is
-durable and readable.
+Next introduce an application-owned result identifier and sanitized redirect
+after durable output storage. Publish/count only after output is durable and
+readable, in the separate approved public-result increment.
 
 Use deterministic provider adapters behind real application APIs for development
 and CI. No paid CI calls or browser happy-path API mocks. Unknown acceptance

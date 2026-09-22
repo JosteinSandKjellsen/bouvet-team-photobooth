@@ -13,7 +13,7 @@ vi.mock('@netlify/blobs', () => ({
   getStore,
 }))
 
-const { deleteSourceImage, storeSourceImage } =
+const { deleteSourceImage, getSourceImage, storeSourceImage } =
   await import('../../server/utils/source-storage')
 
 const sourceStorageDriver = process.env.SOURCE_STORAGE_DRIVER
@@ -52,6 +52,9 @@ describe('source storage', () => {
     await expect(
       readFile(join(localStorageDir, 'sources/session.jpg')),
     ).resolves.toEqual(Buffer.from([1, 2, 3]))
+    await expect(getSourceImage('sources/session.jpg')).resolves.toEqual(
+      Uint8Array.of(1, 2, 3),
+    )
 
     await deleteSourceImage('sources/session.jpg')
 

@@ -3,13 +3,15 @@ import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
 import { reserveGenerationCredits } from './generation-budget'
 import { getGeneratedOutput, submitGeneration } from './generation-provider'
-import { storeGeneratedImage } from './source-storage'
+import { getSourceImage, storeGeneratedImage } from './source-storage'
+import { isThemeId } from './themes'
 
 const submissionBatchSize = 10
 const submissionLeaseMs = 60_000
 
 export async function runGenerationSubmission(now = new Date()) {
-  if (process.env.GENERATION_PROVIDER !== 'deterministic') return
+  const provider = process.env.GENERATION_PROVIDER
+  if (provider !== 'deterministic' && provider !== 'leonardo') return
 
   await recoverUncertainSubmissions(now)
   await reconcileSubmittedGenerations(now)
@@ -163,6 +165,50 @@ async function submitClaimedGeneration(
   })
   if (prepared.count === 0) return
 
+  const generation = await db.imageGeneration.findUnique({
+    where: { id: job.aggregateId },
+    select: {
+      sourceImage: {
+        select: {
+          deleteAfter: true,
+          session: { select: { themeId: true } },
+          status: true,
+          storageKey: true,
+        },
+      },
+    },
+  })
+  const source = generation?.sourceImage
+  const themeId = source?.session.themeId
+  if (
+    !source ||
+    source.deleteAfter <= now ||
+    source.status !== 'ACTIVE' ||
+    !themeId ||
+    !isThemeId(themeId)
+  ) {
+    await failGenerationForUnavailableSource(
+      job.id,
+      job.aggregateId,
+      owner,
+      now,
+    )
+    return
+  }
+
+  let sourceImage: Uint8Array
+  try {
+    sourceImage = await getSourceImage(source.storageKey)
+  } catch {
+    await failGenerationForUnavailableSource(
+      job.id,
+      job.aggregateId,
+      owner,
+      now,
+    )
+    return
+  }
+
   if (process.env.GENERATION_PROVIDER === 'leonardo') {
     const reserved = await reserveGenerationCredits(job.aggregateId, now)
     if (!reserved) {
@@ -171,7 +217,11 @@ async function submitClaimedGeneration(
     }
   }
 
-  const result = await submitGeneration({ generationId: job.aggregateId })
+  const result = await submitGeneration({
+    generationId: job.aggregateId,
+    sourceImage,
+    themeId,
+  })
   await db.$transaction(async (transaction) => {
     const completed = await transaction.backgroundJob.updateMany({
       where: {
@@ -222,6 +272,33 @@ async function failGenerationForDailyCap(
     data: {
       completedAt: now,
       lastErrorCode: 'DAILY_CREDIT_CAP_EXCEEDED',
+      status: 'FAILED',
+    },
+  })
+  if (completed.count === 0) return
+
+  await db.imageGeneration.updateMany({
+    where: { id: generationId, status: 'SUBMITTING' },
+    data: { status: 'FAILED' },
+  })
+}
+
+async function failGenerationForUnavailableSource(
+  jobId: string,
+  generationId: string,
+  owner: string,
+  now: Date,
+) {
+  const completed = await db.backgroundJob.updateMany({
+    where: {
+      id: jobId,
+      leaseExpiresAt: { gt: now },
+      leaseOwner: owner,
+      status: 'RUNNING',
+    },
+    data: {
+      completedAt: now,
+      lastErrorCode: 'SOURCE_UNAVAILABLE',
       status: 'FAILED',
     },
   })
