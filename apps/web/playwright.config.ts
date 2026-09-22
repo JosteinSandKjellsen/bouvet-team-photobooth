@@ -29,6 +29,7 @@ export default defineConfig({
       ...process.env,
       NITRO_HOST: '127.0.0.1',
       NITRO_PORT: String(port),
+      NUXT_LEONARDO_WEBHOOK_TOKEN: 'test-leonardo-webhook-token',
       NUXT_SESSION_MAX_ACTIVE: '100',
       NUXT_SESSION_ORIGIN: baseURL,
       NUXT_SESSION_TTL_MS: '300000',

@@ -36,12 +36,22 @@ the other project for the same claimable rows. This is only observed with
 Node-server/isolated-Postgres verification, not Netlify's hosted scheduler,
 Blob storage, or its function-instance concurrency model.
 
+Leonardo completion handling is now verified against an isolated local
+PostgreSQL instance (2026-09-22): an authenticated callback accepts only a
+complete event with exactly one HTTPS `cdn.leonardo.ai` image, stores the
+private output URL, and idempotently retains one reconciliation job. The output
+adapter permits no redirects or credentials, requires a JPEG response, and
+bounds the response body before application-owned storage. The real built-Nitro
+test covers unauthorized and malformed callback rejection plus duplicate
+callback convergence before the deterministic worker stores the output and
+queues source cleanup. No live Leonardo request or callback has been observed.
+
 Suggested next-session request:
 
-> Continue M4 with authenticated Leonardo completion ingestion and atomic spend
-> reservation. Keep paid submission disabled until a numeric cap is approved,
-> and do not use participant images before the privacy and retention gates are
-> approved.
+> Continue M4 by wiring approved-source retrieval and asynchronous Leonardo
+> submission. A PostgreSQL-backed UTC-day ledger atomically reserves 50 credits
+> per request up to 10,000 credits per day. Keep participant images disabled
+> until the privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
 
@@ -423,13 +433,24 @@ and one of nine server-owned theme prompts. It enforces the 1376 by 768 baseline
 quantity one, BASE64 reference shape, bearer authentication, a bounded request
 timeout, and runtime validation of `generationId` and optional `apiCreditCost`.
 The scheduled worker remains deterministic-only, so this adapter cannot yet make
-a paid workflow request; no live Leonardo call has been made.
+a paid workflow request; no live Leonardo call has been made. An authenticated
+Leonardo completion callback validates a complete event, one HTTPS
+`cdn.leonardo.ai` output and its bearer token before storing only the private
+output URL and idempotently retaining the reconciliation job. The output adapter
+fetches that URL without credentials, redirects or unbounded body reads, then
+the existing worker validates and stores the application-owned JPEG before
+source cleanup. No live Leonardo request or callback has been observed.
 
-Next implement atomic spend reservation and the approved numeric cap, then wire
-source retrieval and asynchronous Leonardo submission. Add authenticated,
-idempotent completion ingestion and confirmed reconciliation before enabling the
-production adapter. Finish sanitized status/retry and result redirect;
-publish/count only after output is durable and readable.
+A PostgreSQL-backed UTC-day ledger now atomically reserves 50 credits before a
+Leonardo submission, up to an approved 10,000-credit daily cap. Replaying a
+reservation for the same generation is idempotent. An isolated PostgreSQL test
+submits 201 concurrent reservations and verifies exactly 200 succeed, with the
+stored total fixed at 10,000 credits. The worker remains deterministic-only
+until approved-source retrieval and asynchronous Leonardo submission are wired.
+
+Next wire source retrieval and asynchronous Leonardo submission, then finish
+sanitized status/retry and result redirect; publish/count only after output is
+durable and readable.
 
 Use deterministic provider adapters behind real application APIs for development
 and CI. No paid CI calls or browser happy-path API mocks. Unknown acceptance

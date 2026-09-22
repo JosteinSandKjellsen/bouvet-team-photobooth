@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { submitGeneration } from '../../server/utils/generation-provider'
+import {
+  getGeneratedOutput,
+  submitGeneration,
+} from '../../server/utils/generation-provider'
 
 afterEach(() => {
   delete process.env.GENERATION_PROVIDER
@@ -77,5 +80,49 @@ describe('generation provider', () => {
         themeId: 'wasteland',
       }),
     ).rejects.toThrow('Invalid generation provider response')
+  })
+
+  it('downloads a completed JPEG only from Leonardo CDN without credentials', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: {
+          'content-length': '3',
+          'content-type': 'image/jpeg; charset=binary',
+        },
+        status: 200,
+      }),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      getGeneratedOutput(
+        'provider-id',
+        'https://cdn.leonardo.ai/generations/provider-id.jpg',
+      ),
+    ).resolves.toEqual({
+      contentType: 'image/jpeg',
+      image: new Uint8Array([1, 2, 3]),
+    })
+
+    const [url, request] = providerFetch.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://cdn.leonardo.ai/generations/provider-id.jpg')
+    expect(request).toMatchObject({
+      headers: { Accept: 'image/jpeg' },
+      method: 'GET',
+      redirect: 'error',
+    })
+    expect(request.headers).not.toHaveProperty('Authorization')
+  })
+
+  it('rejects a completed output outside the Leonardo CDN', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    const providerFetch = vi.fn()
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      getGeneratedOutput('provider-id', 'https://attacker.example/output.jpg'),
+    ).rejects.toThrow('Generation provider is unavailable')
+    expect(providerFetch).not.toHaveBeenCalled()
   })
 })

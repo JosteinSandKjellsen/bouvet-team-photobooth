@@ -94,12 +94,29 @@ model ImageGeneration {
   sourceImage          SourceImage      @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
   idempotencyKey       String           @unique
   providerGenerationId String?          @unique
+  providerOutputUrl    String?
   status               GenerationStatus @default(PENDING)
   generatedImage       GeneratedImage?
   createdAt            DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([status, createdAt])
+}
+
+model DailyGenerationBudget {
+  day             DateTime @id @db.Date
+  reservedCredits Int      @default(0)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model GenerationCreditReservation {
+  generationId String   @id @db.Uuid
+  budgetDay    DateTime @db.Date
+  credits      Int
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([budgetDay])
 }
 
 model BackgroundJob {

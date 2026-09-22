@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   telemetry: false,
   runtimeConfig: {
     cleanupWorkerToken: '',
+    leonardoWebhookToken: '',
     sessionMaxActive: '',
     sessionOrigin: '',
     sessionTtlMs: '',

@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { APIRequestContext } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
+import { reserveGenerationCredits } from '../../server/utils/generation-budget'
 import { getTestDb } from './test-db'
 
 const hasTestDatabase = Boolean(process.env.TEST_DATABASE_URL)
@@ -58,6 +60,50 @@ async function submitGeneration(request: APIRequestContext) {
     headers: { authorization: 'Bearer test-cleanup-worker-token' },
   })
   expect(submitted.status()).toBe(204)
+}
+
+test('atomically caps daily Leonardo reservations at 10000 credits', async ({
+  request: _request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  const budgetDay = new Date('2099-01-01T12:00:00.000Z')
+  const reservations = await Promise.all(
+    Array.from({ length: 201 }, () =>
+      reserveGenerationCredits(randomUUID(), budgetDay),
+    ),
+  )
+  expect(reservations.filter(Boolean)).toHaveLength(200)
+
+  const database = getTestDb()
+  await expect(
+    database.dailyGenerationBudget.findUniqueOrThrow({
+      select: { reservedCredits: true },
+      where: { day: new Date('2099-01-01T00:00:00.000Z') },
+    }),
+  ).resolves.toEqual({ reservedCredits: 10_000 })
+  await expect(
+    database.generationCreditReservation.count({
+      where: { budgetDay: new Date('2099-01-01T00:00:00.000Z') },
+    }),
+  ).resolves.toBe(200)
+})
+
+function leonardoCompletion(providerGenerationId: string) {
+  return {
+    data: {
+      object: {
+        id: providerGenerationId,
+        images: [
+          {
+            url: `https://cdn.leonardo.ai/generations/${providerGenerationId}.jpg`,
+          },
+        ],
+        status: 'COMPLETE',
+      },
+    },
+    type: 'image_generation.complete',
+  }
 }
 
 test('creates a private session and keeps its capability out of JSON', async ({
@@ -284,6 +330,55 @@ test('queues one generation only for the current session approved source', async
     jobId: generation.jobId,
     status: 'submitted',
   })
+
+  const unauthorizedCompletion = await request.post(
+    '/api/internal/leonardo-completion',
+    { data: leonardoCompletion(`deterministic-${generation.jobId}`) },
+  )
+  expect(unauthorizedCompletion.status()).toBe(401)
+
+  const malformedCompletion = await request.post(
+    '/api/internal/leonardo-completion',
+    {
+      data: { type: 'image_generation.complete' },
+      headers: { authorization: 'Bearer test-leonardo-webhook-token' },
+    },
+  )
+  expect(malformedCompletion.status()).toBe(400)
+
+  const completion = leonardoCompletion(`deterministic-${generation.jobId}`)
+  const acceptedCompletion = await request.post(
+    '/api/internal/leonardo-completion',
+    {
+      data: completion,
+      headers: { authorization: 'Bearer test-leonardo-webhook-token' },
+    },
+  )
+  expect(acceptedCompletion.status()).toBe(204)
+  const replayedCompletion = await request.post(
+    '/api/internal/leonardo-completion',
+    {
+      data: completion,
+      headers: { authorization: 'Bearer test-leonardo-webhook-token' },
+    },
+  )
+  expect(replayedCompletion.status()).toBe(204)
+  await expect(
+    database.imageGeneration.findUniqueOrThrow({
+      select: { providerOutputUrl: true },
+      where: { id: generation.jobId },
+    }),
+  ).resolves.toEqual({
+    providerOutputUrl: `https://cdn.leonardo.ai/generations/deterministic-${generation.jobId}.jpg`,
+  })
+  await expect(
+    database.backgroundJob.count({
+      where: {
+        aggregateId: generation.jobId,
+        kind: 'RECONCILE_GENERATION',
+      },
+    }),
+  ).resolves.toBe(1)
 
   await submitGeneration(request)
   const generatedImage = await database.generatedImage.findUniqueOrThrow({

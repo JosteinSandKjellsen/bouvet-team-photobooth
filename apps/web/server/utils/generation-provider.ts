@@ -6,6 +6,7 @@ const leonardoGenerationUrl =
   'https://cloud.leonardo.ai/api/rest/v2/generations'
 const leonardoModel = 'openai/gpt-image-2.5-flare'
 const leonardoRequestTimeoutMs = 15_000
+const maxGeneratedOutputBytes = 8_000_000
 
 const themePrompts: Record<ThemeDescriptor['id'], string> = {
   'block-world':
@@ -109,24 +110,87 @@ function isLeonardoGenerationResponse(
   )
 }
 
-export async function getGeneratedOutput(providerGenerationId: string) {
+export async function getGeneratedOutput(
+  providerGenerationId: string,
+  providerOutputUrl?: string,
+) {
   if (
-    process.env.GENERATION_PROVIDER !== 'deterministic' ||
-    !providerGenerationId.startsWith('deterministic-')
+    process.env.GENERATION_PROVIDER === 'deterministic' &&
+    providerGenerationId.startsWith('deterministic-')
+  ) {
+    const image = await sharp({
+      create: {
+        background: { b: 160, g: 90, r: 18 },
+        channels: 3,
+        height: 768,
+        width: 1376,
+      },
+    })
+      .jpeg({ quality: 85 })
+      .toBuffer()
+
+    return { contentType: 'image/jpeg', image: new Uint8Array(image) }
+  }
+
+  if (
+    process.env.GENERATION_PROVIDER !== 'leonardo' ||
+    !isLeonardoOutputUrl(providerOutputUrl)
   ) {
     throw new Error('Generation provider is unavailable')
   }
 
-  const image = await sharp({
-    create: {
-      background: { b: 160, g: 90, r: 18 },
-      channels: 3,
-      height: 768,
-      width: 1376,
-    },
+  const response = await fetch(providerOutputUrl, {
+    headers: { Accept: 'image/jpeg' },
+    method: 'GET',
+    redirect: 'error',
+    signal: AbortSignal.timeout(leonardoRequestTimeoutMs),
   })
-    .jpeg({ quality: 85 })
-    .toBuffer()
+  const contentType = response.headers.get('content-type')?.split(';', 1)[0]
+  const contentLength = response.headers.get('content-length')
+  const declaredLength = contentLength ? Number(contentLength) : undefined
+  if (
+    !response.ok ||
+    contentType !== 'image/jpeg' ||
+    (declaredLength !== undefined &&
+      (!Number.isSafeInteger(declaredLength) ||
+        declaredLength < 1 ||
+        declaredLength > maxGeneratedOutputBytes)) ||
+    !response.body
+  ) {
+    throw new Error('Invalid generated output')
+  }
 
-  return { contentType: 'image/jpeg', image: new Uint8Array(image) }
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let byteLength = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    byteLength += value.byteLength
+    if (byteLength > maxGeneratedOutputBytes) {
+      await reader.cancel()
+      throw new Error('Invalid generated output')
+    }
+    chunks.push(value)
+  }
+
+  const image = new Uint8Array(byteLength)
+  let offset = 0
+  for (const chunk of chunks) {
+    image.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  return { contentType, image }
+}
+
+function isLeonardoOutputUrl(value: string | undefined): value is string {
+  if (!value) return false
+
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && url.hostname === 'cdn.leonardo.ai'
+  } catch {
+    return false
+  }
 }

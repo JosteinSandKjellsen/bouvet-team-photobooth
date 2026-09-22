@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
+import { reserveGenerationCredits } from './generation-budget'
 import { getGeneratedOutput, submitGeneration } from './generation-provider'
 import { storeGeneratedImage } from './source-storage'
 
@@ -162,6 +163,14 @@ async function submitClaimedGeneration(
   })
   if (prepared.count === 0) return
 
+  if (process.env.GENERATION_PROVIDER === 'leonardo') {
+    const reserved = await reserveGenerationCredits(job.aggregateId, now)
+    if (!reserved) {
+      await failGenerationForDailyCap(job.id, job.aggregateId, owner, now)
+      return
+    }
+  }
+
   const result = await submitGeneration({ generationId: job.aggregateId })
   await db.$transaction(async (transaction) => {
     const completed = await transaction.backgroundJob.updateMany({
@@ -197,6 +206,33 @@ async function submitClaimedGeneration(
   })
 }
 
+async function failGenerationForDailyCap(
+  jobId: string,
+  generationId: string,
+  owner: string,
+  now: Date,
+) {
+  const completed = await db.backgroundJob.updateMany({
+    where: {
+      id: jobId,
+      leaseExpiresAt: { gt: now },
+      leaseOwner: owner,
+      status: 'RUNNING',
+    },
+    data: {
+      completedAt: now,
+      lastErrorCode: 'DAILY_CREDIT_CAP_EXCEEDED',
+      status: 'FAILED',
+    },
+  })
+  if (completed.count === 0) return
+
+  await db.imageGeneration.updateMany({
+    where: { id: generationId, status: 'SUBMITTING' },
+    data: { status: 'FAILED' },
+  })
+}
+
 async function reconcileClaimedGeneration(
   job: {
     aggregateId: string
@@ -211,6 +247,7 @@ async function reconcileClaimedGeneration(
     where: { id: job.aggregateId },
     select: {
       providerGenerationId: true,
+      providerOutputUrl: true,
       sourceImage: { select: { deleteAfter: true, id: true, status: true } },
       status: true,
     },
@@ -229,7 +266,10 @@ async function reconcileClaimedGeneration(
   let output: Awaited<ReturnType<typeof getGeneratedOutput>>
   let metadata: Metadata
   try {
-    output = await getGeneratedOutput(generation.providerGenerationId)
+    output = await getGeneratedOutput(
+      generation.providerGenerationId,
+      generation.providerOutputUrl ?? undefined,
+    )
     metadata = await sharp(output.image).metadata()
     if (
       output.contentType !== 'image/jpeg' ||
