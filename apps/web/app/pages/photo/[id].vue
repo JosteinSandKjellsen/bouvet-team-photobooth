@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PublicPhotoResponse } from '@bouvet-team-photobooth/contracts'
-import { Clipboard, Download, Printer } from '@lucide/vue'
+import { ArrowLeft, Clipboard, Download, Printer } from '@lucide/vue'
 import QRCode from 'qrcode'
 
 defineOptions({ name: 'PhotoResultPage' })
@@ -144,72 +144,84 @@ onBeforeUnmount(() => {
       {{ t('photo.loading') }}
     </p>
 
-    <section v-else-if="data" class="photo-workspace">
-      <div class="image-region">
-        <img
-          data-testid="photo-image"
-          :src="data.imageUrl"
-          :alt="t('photo.imageAlt')"
-          :width="data.width"
-          :height="data.height"
-        />
-      </div>
-
-      <aside class="share-panel">
-        <template v-if="publicUrl">
+    <template v-else-if="data">
+      <section class="photo-workspace">
+        <div class="image-region">
           <img
-            v-if="qrCodeUrl"
-            class="qr-code"
-            data-testid="photo-qr-code"
-            :src="qrCodeUrl"
-            :alt="t('photo.qrAlt')"
+            data-testid="photo-image"
+            :src="data.imageUrl"
+            :alt="t('photo.imageAlt')"
+            :width="data.width"
+            :height="data.height"
           />
-          <p v-else role="status">{{ t('photo.qrLoading') }}</p>
-        </template>
-        <p v-else class="share-unavailable">
-          {{ t('photo.shareUnavailable') }}
-        </p>
-        <ActionButton data-testid="photo-print" @click="printPhoto">
-          <Printer :size="20" aria-hidden="true" />
-          {{ t('photo.print') }}
-        </ActionButton>
-        <ActionButton
-          as="a"
-          data-testid="photo-download"
-          :href="data.downloadUrl"
-          download
-        >
-          <Download :size="20" aria-hidden="true" />
-          {{ t('photo.download') }}
-        </ActionButton>
-        <ActionButton
-          v-if="kioskMode"
-          data-testid="photo-kiosk-reset"
-          @click="resetKiosk"
-        >
-          {{ t('photo.newPicture') }}
-        </ActionButton>
-        <p v-if="printFailed" class="error" role="alert">
-          {{ t('photo.printFailed') }}
-        </p>
-        <template v-if="publicUrl">
-          <ActionButton
-            data-testid="photo-copy-link"
-            variant="secondary"
-            @click="copyPublicUrl"
-          >
-            <Clipboard :size="20" aria-hidden="true" />
-            {{ t('photo.copyLink') }}
+        </div>
+
+        <aside class="share-panel">
+          <template v-if="publicUrl">
+            <img
+              v-if="qrCodeUrl"
+              class="qr-code"
+              data-testid="photo-qr-code"
+              :src="qrCodeUrl"
+              :alt="t('photo.qrAlt')"
+            />
+            <p v-else role="status">{{ t('photo.qrLoading') }}</p>
+          </template>
+          <p v-else class="share-unavailable">
+            {{ t('photo.shareUnavailable') }}
+          </p>
+          <ActionButton data-testid="photo-print" @click="printPhoto">
+            <Printer :size="20" aria-hidden="true" />
+            {{ t('photo.print') }}
           </ActionButton>
-          <p v-if="copyStatus === 'copied'" role="status">
-            {{ t('photo.copied') }}
+          <ActionButton
+            as="a"
+            data-testid="photo-download"
+            :href="data.downloadUrl"
+            download
+          >
+            <Download :size="20" aria-hidden="true" />
+            {{ t('photo.download') }}
+          </ActionButton>
+          <ActionButton
+            v-if="kioskMode"
+            data-testid="photo-kiosk-reset"
+            @click="resetKiosk"
+          >
+            {{ t('photo.newPicture') }}
+          </ActionButton>
+          <p v-if="printFailed" class="error" role="alert">
+            {{ t('photo.printFailed') }}
           </p>
-          <p v-else-if="copyStatus === 'failed'" class="error" role="alert">
-            {{ t('photo.copyFailed') }}
-          </p>
-        </template>
-      </aside>
-    </section>
+          <template v-if="publicUrl">
+            <ActionButton
+              data-testid="photo-copy-link"
+              variant="secondary"
+              @click="copyPublicUrl"
+            >
+              <Clipboard :size="20" aria-hidden="true" />
+              {{ t('photo.copyLink') }}
+            </ActionButton>
+            <p v-if="copyStatus === 'copied'" role="status">
+              {{ t('photo.copied') }}
+            </p>
+            <p v-else-if="copyStatus === 'failed'" class="error" role="alert">
+              {{ t('photo.copyFailed') }}
+            </p>
+          </template>
+        </aside>
+      </section>
+      <ActionButton
+        class="page-navigation"
+        as="link"
+        data-testid="photo-back-to-themes"
+        to="/"
+        variant="navigation"
+      >
+        <ArrowLeft :size="28" aria-hidden="true" />
+        {{ t('common.actions.backToThemes') }}
+      </ActionButton>
+    </template>
 
     <section v-else class="unavailable" data-testid="photo-unavailable">
       <h2>{{ t('photo.unavailableTitle') }}</h2>
@@ -245,6 +257,9 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: var(--space-3);
   align-items: stretch;
+}
+.page-navigation {
+  margin-top: var(--space-5);
 }
 .image-region {
   display: grid;

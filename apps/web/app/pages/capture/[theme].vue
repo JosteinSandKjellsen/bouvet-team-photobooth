@@ -581,14 +581,17 @@ onBeforeUnmount(() => {
         {{ t('capture.invalidTheme') }}
       </h1>
     </template>
-    <NuxtLink
-      class="back-to-themes"
+    <ActionButton
+      v-if="!(locallyApproved && captureGenerationEnabled)"
+      class="page-navigation"
+      as="link"
       data-testid="capture-back-to-themes"
       to="/"
+      variant="navigation"
     >
       <ArrowLeft :size="28" aria-hidden="true" />
       {{ t('common.actions.backToThemes') }}
-    </NuxtLink>
+    </ActionButton>
   </main>
 </template>
 
@@ -624,6 +627,9 @@ h1 {
 }
 .capture-workspace {
   max-width: 100%;
+}
+.page-navigation {
+  margin-top: var(--space-5);
 }
 .media-frame {
   position: relative;
@@ -873,29 +879,6 @@ img {
 .approval {
   margin: var(--space-5) 0 0;
   font-weight: 700;
-}
-.back-to-themes {
-  display: inline-flex;
-  min-height: var(--control-height);
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  padding: 0 var(--space-3);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  color: var(--color-muted-text);
-  font-size: 14px;
-  font-weight: 500;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition:
-    color 150ms ease,
-    text-decoration-color 150ms ease;
-}
-.back-to-themes:hover {
-  color: var(--color-text);
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 @media (max-width: 700px) {
   h1 {

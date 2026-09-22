@@ -95,6 +95,7 @@ test('submits an approved browser capture through the private generation flow', 
   await expect(
     page.getByTestId('capture-generation-progress-label'),
   ).toHaveCount(1)
+  await expect(page.getByTestId('capture-back-to-themes')).toBeHidden()
   expect(mutationRequests).toEqual(
     expect.arrayContaining([
       'POST /api/sessions',
@@ -109,13 +110,14 @@ test('submits an approved browser capture through the private generation flow', 
     'data-stage',
     'preparing',
   )
+  await expect(page.getByTestId('capture-back-to-themes')).toBeHidden()
   expect(
     mutationRequests.filter(
       (request) => request === 'POST /api/sessions/current/generate',
     ),
   ).toHaveLength(1)
 
-  await page.getByTestId('capture-back-to-themes').click()
+  await page.goto('/')
   await page.getByTestId('theme-samurai').click()
   await expect(page.getByTestId('capture-video')).toBeVisible()
   await expect(page.getByTestId('capture-generating')).toBeHidden()
@@ -548,6 +550,10 @@ test('queues one generation only for the current session approved source', async
   await expect(page.getByTestId('photo-download')).toHaveAttribute(
     'href',
     `/api/photos/${generatedImage.publicId}/download`,
+  )
+  await expect(page.getByTestId('photo-back-to-themes')).toHaveAttribute(
+    'href',
+    '/',
   )
   await expect(page.getByTestId('photo-qr-code')).toHaveAttribute(
     'src',

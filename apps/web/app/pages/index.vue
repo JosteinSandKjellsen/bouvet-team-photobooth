@@ -3,6 +3,7 @@ import type {
   ThemeDescriptor,
   ThemesResponse,
 } from '@bouvet-team-photobooth/contracts'
+import { ContactRound } from '@lucide/vue'
 
 defineOptions({ name: 'ThemeSelectionPage' })
 
@@ -67,9 +68,10 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
         @select="selectTheme"
       />
       <div class="actions">
-        <NuxtLink to="/overview">{{
-          t('themeSelection.overviewLink')
-        }}</NuxtLink>
+        <ActionButton as="link" to="/overview" variant="navigation">
+          <ContactRound :size="28" aria-hidden="true" />
+          {{ t('themeSelection.overviewLink') }}
+        </ActionButton>
       </div>
     </section>
   </main>
@@ -121,9 +123,6 @@ h1 {
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-divider);
 }
-a {
-  color: var(--color-text);
-}
 @media (max-width: 700px) {
   .intro {
     grid-template-columns: 1fr;
@@ -136,9 +135,6 @@ a {
 @media (max-width: 480px) {
   h1 {
     font-size: 28px;
-  }
-  .actions a {
-    text-align: center;
   }
 }
 </style>

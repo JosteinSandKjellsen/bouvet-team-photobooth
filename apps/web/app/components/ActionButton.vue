@@ -1,13 +1,14 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    as?: 'a' | 'button'
+    as?: 'a' | 'button' | 'link'
     disabled?: boolean
     download?: boolean | string
     href?: string
     iconOnly?: boolean
+    to?: string
     type?: 'button' | 'reset' | 'submit'
-    variant?: 'primary' | 'secondary'
+    variant?: 'navigation' | 'primary' | 'secondary'
   }>(),
   {
     as: 'button',
@@ -15,6 +16,7 @@ withDefaults(
     download: false,
     href: undefined,
     iconOnly: false,
+    to: undefined,
     type: 'button',
     variant: 'primary',
   },
@@ -32,7 +34,7 @@ withDefaults(
     <slot />
   </button>
   <a
-    v-else
+    v-else-if="as === 'a'"
     class="app-action"
     :class="[`app-action--${variant}`, { 'app-action--icon': iconOnly }]"
     :download="download || undefined"
@@ -40,6 +42,14 @@ withDefaults(
   >
     <slot />
   </a>
+  <NuxtLink
+    v-else
+    class="app-action"
+    :class="[`app-action--${variant}`, { 'app-action--icon': iconOnly }]"
+    :to="to"
+  >
+    <slot />
+  </NuxtLink>
 </template>
 
 <style scoped>
@@ -64,6 +74,17 @@ withDefaults(
   border-color: currentcolor;
   background: transparent;
   color: var(--color-text);
+}
+.app-action--navigation {
+  padding: 0 var(--space-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-muted-text);
+}
+.app-action--navigation:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .app-action--icon {
   width: var(--control-height);
