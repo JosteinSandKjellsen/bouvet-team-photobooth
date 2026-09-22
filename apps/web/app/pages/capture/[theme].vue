@@ -20,6 +20,7 @@ const camera = useLocalCameraCapture()
 const videoElement = ref<HTMLVideoElement | null>(null)
 const videoReady = ref(false)
 const locallyApproved = ref(false)
+const recoveringGeneration = ref(false)
 const submissionError = ref(false)
 const submitting = ref(false)
 const generationStatus = ref<GenerationStatusResponse['status'] | null>(null)
@@ -27,6 +28,7 @@ const captureGenerationEnabled = computed(
   () => String(publicConfig.captureGenerationEnabled) === 'true',
 )
 let pollTimer: ReturnType<typeof setTimeout> | undefined
+let isActive = true
 const countdown = useCaptureCountdown({
   onComplete: () => void captureImage(),
 })
@@ -98,6 +100,7 @@ function schedulePoll() {
     clearTimeout(pollTimer)
   }
   if (
+    !isActive ||
     generationStatus.value === 'failed' ||
     generationStatus.value === 'succeeded'
   ) {
@@ -107,11 +110,16 @@ function schedulePoll() {
   pollTimer = setTimeout(() => void loadGenerationStatus(), 2_000)
 }
 
-async function loadGenerationStatus() {
+async function loadGenerationStatus(silent = false) {
   try {
     const generation = await $fetch<GenerationStatusResponse>(
       '/api/sessions/current/generation',
     )
+    if (!isActive) {
+      return
+    }
+
+    locallyApproved.value = true
     generationStatus.value = generation.status
     submissionError.value = false
 
@@ -121,10 +129,26 @@ async function loadGenerationStatus() {
     }
     schedulePoll()
   } catch {
+    if (!isActive || silent) {
+      return
+    }
+
     submissionError.value = true
     if (locallyApproved.value) {
       pollTimer = setTimeout(() => void loadGenerationStatus(), 2_000)
     }
+  }
+}
+
+async function resumeGeneration() {
+  if (!captureGenerationEnabled.value) {
+    return
+  }
+
+  recoveringGeneration.value = true
+  await loadGenerationStatus(true)
+  if (isActive) {
+    recoveringGeneration.value = false
   }
 }
 
@@ -195,7 +219,9 @@ async function retryGeneration() {
 onMounted(() =>
   document.addEventListener('visibilitychange', cancelCountdownOnHiddenTab),
 )
+onMounted(() => void resumeGeneration())
 onBeforeUnmount(() => {
+  isActive = false
   document.removeEventListener('visibilitychange', cancelCountdownOnHiddenTab)
   countdown.cancel()
   clearGenerationState()
@@ -244,6 +270,9 @@ onBeforeUnmount(() => {
           >
             {{ countdown.remainingSeconds.value }}
           </p>
+        </div>
+        <div v-else-if="recoveringGeneration" class="media-frame empty-media">
+          <p>{{ t('capture.generating.pending') }}</p>
         </div>
         <div v-else class="media-frame empty-media">
           <Camera :size="48" aria-hidden="true" />

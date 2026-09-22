@@ -94,6 +94,14 @@ test('submits an approved browser capture through the private generation flow', 
       'POST /api/sessions/current/generate',
     ]),
   )
+
+  await page.reload()
+  await expect(page.getByTestId('capture-generating')).toBeVisible()
+  expect(
+    mutationRequests.filter(
+      (request) => request === 'POST /api/sessions/current/generate',
+    ),
+  ).toHaveLength(1)
 })
 
 test('atomically caps daily Leonardo reservations at 10000 credits', async ({
