@@ -50,9 +50,9 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
     <p v-if="loading" role="status">{{ t('common.status.loading') }}</p>
     <section v-else-if="error" class="message" aria-live="polite">
       <p>{{ t('themeSelection.loadError') }}</p>
-      <button type="button" @click="refresh()">
+      <ActionButton @click="refresh()">
         {{ t('common.actions.retry') }}
-      </button>
+      </ActionButton>
     </section>
     <p v-else-if="themes.length === 0" class="message">
       {{ t('themeSelection.empty') }}

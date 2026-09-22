@@ -26,7 +26,6 @@
       "description": "Se mot kameraet. Bildet tas om ...",
       "mediaPlaceholder": "Kameraet er ikke aktivert.",
       "activateCamera": "Aktiver kamera",
-      "requestingPermission": "Venter på tilgang til kameraet.",
       "processingImage": "Gjør klart bildet.",
       "takePhoto": "Ta bilde",
       "switchCamera": "Bytt kamera"
@@ -42,11 +41,6 @@
     },
     "generating": {
       "pending": "Bildet er klart for behandling.",
-      "submitting": "Bildet sendes til behandling.",
-      "submission_unknown": "Vi bekrefter fortsatt behandlingen av bildet.",
-      "submitted": "Bildet behandles.",
-      "failed": "Behandlingen av bildet kunne ikke fullføres.",
-      "succeeded": "Bildet er klart. Åpner resultatet.",
       "overlay": {
         "title": "Lager teambilde",
         "description": "Vi samler teamet i et nytt univers."

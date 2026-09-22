@@ -60,6 +60,7 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
   font: inherit;
   padding: 0;
   text-align: left;
+  text-transform: none;
   cursor: pointer;
   transition:
     box-shadow 150ms ease,

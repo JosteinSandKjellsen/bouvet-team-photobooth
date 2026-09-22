@@ -47,10 +47,10 @@ const label = computed(() =>
       <CircleAlert v-else :size="20" aria-hidden="true" />
       <span>{{ label }}</span>
     </p>
-    <button
+    <ActionButton
       data-testid="health-refresh"
-      type="button"
       :disabled="checking"
+      variant="secondary"
       @click="refresh()"
     >
       <RefreshCw :size="16" aria-hidden="true" />
@@ -61,7 +61,7 @@ const label = computed(() =>
             ? 'Check again'
             : 'Retry connection'
       }}
-    </button>
+    </ActionButton>
   </section>
 </template>
 
@@ -101,27 +101,8 @@ code {
 .checking {
   color: #52605a;
 }
-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
+.health :deep(.app-action) {
   width: 180px;
-  padding: 10px 12px;
-  border: 1px solid #a7b8ad;
-  border-radius: 4px;
-  background: #fff;
-  color: #222b29;
-  font-size: 14px;
-  cursor: pointer;
-}
-button:hover:not(:disabled) {
-  background: #e7efe9;
-}
-button:disabled {
-  cursor: wait;
-  color: #65736a;
 }
 @media (max-width: 700px) {
   .health {

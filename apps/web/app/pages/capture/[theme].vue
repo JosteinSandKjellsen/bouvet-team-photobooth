@@ -4,7 +4,14 @@ import type {
   GenerationStatusResponse,
   ThemesResponse,
 } from '@bouvet-team-photobooth/contracts'
-import { Camera, Check, RotateCcw, SwitchCamera, X } from '@lucide/vue'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  SwitchCamera,
+  X,
+} from '@lucide/vue'
 import { themeMessages } from '~/utils/themeMessages'
 
 defineOptions({ name: 'ThemeCapturePage' })
@@ -347,16 +354,15 @@ onBeforeUnmount(() => {
                 : t('capture.ready.mediaPlaceholder')
             }}
           </p>
-          <button
+          <ActionButton
             v-if="
               camera.state.value === 'idle' || camera.state.value === 'error'
             "
             data-testid="capture-activate-camera"
-            type="button"
             @click="startCamera"
           >
             {{ t('capture.ready.activateCamera') }}
-          </button>
+          </ActionButton>
         </div>
 
         <ol
@@ -480,70 +486,59 @@ onBeforeUnmount(() => {
           {{ t(`capture.errors.${camera.error.value}`) }}
         </p>
 
-        <div
-          v-if="
-            camera.state.value === 'requestingPermission' ||
-            camera.state.value === 'compressing'
-          "
-          class="actions"
-        >
-          <p>
-            {{
-              camera.state.value === 'compressing'
-                ? t('capture.ready.processingImage')
-                : t('capture.ready.requestingPermission')
-            }}
-          </p>
+        <div v-if="camera.state.value === 'compressing'" class="actions">
+          <p>{{ t('capture.ready.processingImage') }}</p>
         </div>
-        <div v-else-if="camera.state.value === 'streaming'" class="actions">
-          <button
+        <div
+          v-else-if="camera.state.value === 'streaming'"
+          class="actions capture-actions"
+        >
+          <ActionButton
             v-if="countdown.isCountingDown.value"
-            type="button"
             @click="countdown.cancel"
           >
             {{ t('capture.countdown.cancel') }}
-          </button>
+          </ActionButton>
           <template v-else>
-            <button
+            <ActionButton
               data-testid="capture-take-photo"
-              type="button"
               :disabled="!videoReady"
               @click="startCountdown"
             >
               {{ t('capture.ready.takePhoto') }}
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               v-if="camera.canSwitchCamera.value"
-              class="secondary-button icon-button"
               type="button"
               :aria-label="t('capture.ready.switchCamera')"
+              icon-only
+              variant="secondary"
               @click="switchCamera"
             >
               <SwitchCamera :size="20" aria-hidden="true" />
-            </button>
+            </ActionButton>
           </template>
         </div>
         <div
           v-else-if="camera.state.value === 'previewing' && !locallyApproved"
           class="actions review-actions"
         >
-          <button
-            class="secondary-button"
+          <ActionButton
             data-testid="capture-retake"
-            type="button"
+            variant="secondary"
             @click="retake"
           >
-            <RotateCcw :size="20" aria-hidden="true" />
+            <Camera :size="20" aria-hidden="true" />
             {{ t('capture.review.retake') }}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
             data-testid="capture-use-picture"
-            type="button"
             :disabled="submitting"
             @click="approvePicture"
           >
             {{ t('capture.review.usePicture') }}
-          </button>
+            <ArrowRight :size="20" aria-hidden="true" />
+          </ActionButton>
         </div>
         <p
           v-else-if="locallyApproved && !captureGenerationEnabled"
@@ -559,16 +554,14 @@ onBeforeUnmount(() => {
           data-testid="capture-generating"
           role="status"
         >
-          <p>{{ t(`capture.generating.${generationStatus ?? 'pending'}`) }}</p>
-          <button
+          <ActionButton
             v-if="generationStatus === 'failed'"
             data-testid="capture-retry-generation"
-            type="button"
             :disabled="submitting"
             @click="retryGeneration"
           >
             {{ t('common.actions.retry') }}
-          </button>
+          </ActionButton>
           <p v-if="submissionError" class="error" role="alert">
             {{ t('capture.errors.generationUnavailable') }}
           </p>
@@ -588,9 +581,14 @@ onBeforeUnmount(() => {
         {{ t('capture.invalidTheme') }}
       </h1>
     </template>
-    <NuxtLink data-testid="capture-back-to-themes" to="/">{{
-      t('common.actions.backToThemes')
-    }}</NuxtLink>
+    <NuxtLink
+      class="back-to-themes"
+      data-testid="capture-back-to-themes"
+      to="/"
+    >
+      <ArrowLeft :size="28" aria-hidden="true" />
+      {{ t('common.actions.backToThemes') }}
+    </NuxtLink>
   </main>
 </template>
 
@@ -799,7 +797,7 @@ img {
   place-items: center;
   border: 1px solid var(--color-muted-text);
   border-radius: 50%;
-  background: var(--color-surface);
+  background: transparent;
 }
 .generation-progress__step.is-complete,
 .generation-progress__step.is-active {
@@ -819,6 +817,7 @@ img {
 }
 .generation-progress__step.is-active .generation-progress__indicator {
   border: 3px solid var(--color-action-primary);
+  animation: generation-progress-pulse 2.4s ease-in-out infinite;
 }
 .generation-progress__step.is-active
   .generation-progress__indicator:not(:has(svg))::after {
@@ -828,6 +827,17 @@ img {
   border-radius: 50%;
   background: var(--color-action-primary);
   content: '';
+}
+@keyframes generation-progress-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .generation-progress__step-label,
 .generation-progress__mobile-label {
@@ -847,33 +857,13 @@ img {
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
-button {
-  display: inline-flex;
-  min-height: var(--control-height);
-  align-items: center;
+.review-actions,
+.capture-actions {
   justify-content: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-5);
-  border: 1px solid var(--color-action-primary);
-  border-radius: 999px;
-  background: var(--color-action-primary);
-  color: var(--color-surface);
-  font-weight: 700;
-  cursor: pointer;
 }
-button:disabled {
-  border-color: var(--color-divider);
-  background: var(--color-divider);
-  color: var(--color-muted-text);
-  cursor: not-allowed;
-}
-.secondary-button {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-.icon-button {
-  width: var(--control-height);
-  padding: 0;
+.review-actions :deep(.app-action),
+.capture-actions :deep(.app-action:not(.app-action--icon)) {
+  flex: 0 1 18rem;
 }
 .error {
   margin: var(--space-4) 0 0;
@@ -884,10 +874,28 @@ button:disabled {
   margin: var(--space-5) 0 0;
   font-weight: 700;
 }
-a {
-  display: inline-block;
+.back-to-themes {
+  display: inline-flex;
+  min-height: var(--control-height);
+  align-items: center;
+  gap: var(--space-3);
   margin-top: var(--space-5);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--color-muted-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
+}
+.back-to-themes:hover {
   color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 @media (max-width: 700px) {
   h1 {
@@ -905,7 +913,11 @@ a {
     align-items: stretch;
     flex-direction: column;
   }
-  .icon-button {
+  .review-actions :deep(.app-action),
+  .capture-actions :deep(.app-action:not(.app-action--icon)) {
+    flex-basis: auto;
+  }
+  .actions :deep(.app-action--icon) {
     width: 100%;
   }
   .generation-progress__step {
@@ -925,7 +937,8 @@ a {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .universe-loader__ring {
+  .universe-loader__ring,
+  .generation-progress__step.is-active .generation-progress__indicator {
     animation: none;
   }
 }

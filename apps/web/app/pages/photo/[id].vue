@@ -156,48 +156,7 @@ onBeforeUnmount(() => {
       </div>
 
       <aside class="share-panel">
-        <a
-          class="action-button"
-          data-testid="photo-download"
-          :href="data.downloadUrl"
-          download
-        >
-          <Download :size="20" aria-hidden="true" />
-          {{ t('photo.download') }}
-        </a>
-        <button data-testid="photo-print" type="button" @click="printPhoto">
-          <Printer :size="20" aria-hidden="true" />
-          {{ t('photo.print') }}
-        </button>
-        <button
-          v-if="kioskMode"
-          data-testid="photo-kiosk-reset"
-          type="button"
-          @click="resetKiosk"
-        >
-          {{ t('photo.newPicture') }}
-        </button>
-        <p v-if="printFailed" class="error" role="alert">
-          {{ t('photo.printFailed') }}
-        </p>
-
         <template v-if="publicUrl">
-          <a class="public-url" :href="publicUrl">{{ publicUrl }}</a>
-          <button
-            class="secondary-button"
-            data-testid="photo-copy-link"
-            type="button"
-            @click="copyPublicUrl"
-          >
-            <Clipboard :size="20" aria-hidden="true" />
-            {{ t('photo.copyLink') }}
-          </button>
-          <p v-if="copyStatus === 'copied'" role="status">
-            {{ t('photo.copied') }}
-          </p>
-          <p v-else-if="copyStatus === 'failed'" class="error" role="alert">
-            {{ t('photo.copyFailed') }}
-          </p>
           <img
             v-if="qrCodeUrl"
             class="qr-code"
@@ -210,18 +169,57 @@ onBeforeUnmount(() => {
         <p v-else class="share-unavailable">
           {{ t('photo.shareUnavailable') }}
         </p>
+        <ActionButton data-testid="photo-print" @click="printPhoto">
+          <Printer :size="20" aria-hidden="true" />
+          {{ t('photo.print') }}
+        </ActionButton>
+        <ActionButton
+          as="a"
+          data-testid="photo-download"
+          :href="data.downloadUrl"
+          download
+        >
+          <Download :size="20" aria-hidden="true" />
+          {{ t('photo.download') }}
+        </ActionButton>
+        <ActionButton
+          v-if="kioskMode"
+          data-testid="photo-kiosk-reset"
+          @click="resetKiosk"
+        >
+          {{ t('photo.newPicture') }}
+        </ActionButton>
+        <p v-if="printFailed" class="error" role="alert">
+          {{ t('photo.printFailed') }}
+        </p>
+        <template v-if="publicUrl">
+          <ActionButton
+            data-testid="photo-copy-link"
+            variant="secondary"
+            @click="copyPublicUrl"
+          >
+            <Clipboard :size="20" aria-hidden="true" />
+            {{ t('photo.copyLink') }}
+          </ActionButton>
+          <p v-if="copyStatus === 'copied'" role="status">
+            {{ t('photo.copied') }}
+          </p>
+          <p v-else-if="copyStatus === 'failed'" class="error" role="alert">
+            {{ t('photo.copyFailed') }}
+          </p>
+        </template>
       </aside>
     </section>
 
     <section v-else class="unavailable" data-testid="photo-unavailable">
       <h2>{{ t('photo.unavailableTitle') }}</h2>
       <p>{{ t('photo.unavailableDescription') }}</p>
-      <button type="button" @click="retryPhoto">
+      <ActionButton @click="retryPhoto">
         {{ t('photo.retry') }}
-      </button>
-      <button v-if="kioskMode" type="button" @click="resetKiosk">
+      </ActionButton>
+      <ActionButton v-if="kioskMode" @click="resetKiosk">
         {{ t('photo.newPicture') }}
-      </button>
+      </ActionButton>
       <NuxtLink v-else to="/">{{ t('photo.newPicture') }}</NuxtLink>
     </section>
   </main>
@@ -229,7 +227,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .photo-page {
-  width: min(1180px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
   padding: 0 var(--page-gutter) var(--space-7);
 }
@@ -245,58 +243,39 @@ onBeforeUnmount(() => {
 .photo-workspace {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: var(--space-6);
-  align-items: start;
+  gap: var(--space-3);
+  align-items: stretch;
 }
 .image-region {
   display: grid;
-  min-height: 360px;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
   place-items: center;
+  overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
-  border-radius: var(--card-radius);
+  border-radius: var(--space-3);
 }
 .image-region img {
   display: block;
-  max-width: 100%;
-  max-height: min(70dvh, 720px);
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .share-panel {
   display: grid;
+  min-height: 0;
+  align-content: start;
   gap: var(--space-3);
   padding: var(--space-5);
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
-  border-radius: var(--card-radius);
-}
-button,
-.action-button {
-  display: inline-flex;
-  min-height: var(--control-height);
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  color: var(--color-surface);
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  background: var(--color-action-primary);
-  border: 1px solid var(--color-action-primary);
-  border-radius: 999px;
-}
-.secondary-button {
-  color: var(--color-text);
-  background: transparent;
-}
-.public-url {
-  overflow-wrap: anywhere;
-  color: var(--color-text);
+  border-radius: var(--space-3);
 }
 .qr-code {
   width: min(256px, 100%);
   height: auto;
+  justify-self: center;
   padding: var(--space-2);
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
