@@ -1,5 +1,6 @@
 import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 import sharp from 'sharp'
+import { themePrompts } from './theme-prompts'
 
 const leonardoInitImageUrl = 'https://cloud.leonardo.ai/api/rest/v1/init-image'
 const leonardoGenerationUrl =
@@ -11,27 +12,6 @@ const leonardoStyle = '111dc692-d470-4eec-b791-3475abac4c46'
 const leonardoRequestTimeoutMs = 15_000
 const maxGeneratedOutputBytes = 8_000_000
 const maxProviderErrorMessageLength = 300
-
-const themePrompts: Record<ThemeDescriptor['id'], string> = {
-  'block-world':
-    'Reimagine the people in the reference photo as a cheerful block-built adventure team in a colorful landscape. Keep every person recognizable and preserve the group composition.',
-  'kids-on-bikes':
-    'Reimagine the people in the reference photo as a close-knit 1980s mystery-adventure team with bicycles, flashlights and cinematic small-town atmosphere. Keep every person recognizable and preserve the group composition.',
-  'life-simulation':
-    'Reimagine the people in the reference photo as a playful life-simulation household in a bright stylized neighborhood. Keep every person recognizable and preserve the group composition.',
-  'mech-pilots':
-    'Reimagine the people in the reference photo as an elite team of futuristic mech pilots in a cinematic hangar. Keep every person recognizable and preserve the group composition.',
-  'red-carpet':
-    'Reimagine the people in the reference photo as a glamorous ensemble arriving together on a film-premiere red carpet. Keep every person recognizable and preserve the group composition.',
-  samurai:
-    'Reimagine the people in the reference photo as a dignified samurai team in a cinematic historical landscape. Keep every person recognizable and preserve the group composition.',
-  'space-cowboys':
-    'Reimagine the people in the reference photo as a charismatic crew of space cowboys on a vivid frontier planet. Keep every person recognizable and preserve the group composition.',
-  treehouse:
-    'Reimagine the people in the reference photo as an inventive woodland team gathered around an extraordinary treehouse. Keep every person recognizable and preserve the group composition.',
-  wasteland:
-    'Reimagine the people in the reference photo as a resilient post-apocalyptic survivor team in a cinematic wasteland. Keep every person recognizable and preserve the group composition.',
-}
 
 interface GenerationSubmission {
   generationId: string
