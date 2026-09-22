@@ -68,6 +68,20 @@ export async function storeSourceImage(storageKey: string, bytes: Uint8Array) {
   await writeFile(path, bytes, { flag: 'wx' })
 }
 
+export async function storeGeneratedImage(
+  storageKey: string,
+  bytes: Uint8Array,
+) {
+  if (getStorageDriver() === 'netlify') {
+    await getNetlifySourceStore().set(storageKey, new Blob([toBlobBody(bytes)]))
+    return
+  }
+
+  const path = getSourcePath(storageKey)
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, bytes)
+}
+
 export async function deleteSourceImage(storageKey: string) {
   if (getStorageDriver() === 'netlify') {
     await getNetlifySourceStore().delete(storageKey)
@@ -75,4 +89,8 @@ export async function deleteSourceImage(storageKey: string) {
   }
 
   await rm(getSourcePath(storageKey), { force: true })
+}
+
+export async function deleteGeneratedImage(storageKey: string) {
+  await deleteSourceImage(storageKey)
 }

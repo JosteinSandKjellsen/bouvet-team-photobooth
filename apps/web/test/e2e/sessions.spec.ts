@@ -241,6 +241,17 @@ test('queues one generation only for the current session approved source', async
   expect(repeated.status()).toBe(202)
   expect(await repeated.json()).toEqual(generation)
 
+  const unauthenticatedStatus = await request.get(
+    '/api/sessions/current/generation',
+  )
+  expect(unauthenticatedStatus.status()).toBe(401)
+
+  const pendingStatus = await request.get('/api/sessions/current/generation', {
+    headers: { cookie },
+  })
+  expect(pendingStatus.status()).toBe(200)
+  expect(await pendingStatus.json()).toEqual(generation)
+
   const database = getTestDb()
   const stored = await database.imageGeneration.findUniqueOrThrow({
     select: { id: true, status: true },
@@ -263,6 +274,146 @@ test('queues one generation only for the current session approved source', async
     providerGenerationId: `deterministic-${generation.jobId}`,
     status: 'SUBMITTED',
   })
+
+  const submittedStatus = await request.get(
+    '/api/sessions/current/generation',
+    { headers: { cookie } },
+  )
+  expect(submittedStatus.status()).toBe(200)
+  expect(await submittedStatus.json()).toEqual({
+    jobId: generation.jobId,
+    status: 'submitted',
+  })
+
+  await submitGeneration(request)
+  const generatedImage = await database.generatedImage.findUniqueOrThrow({
+    select: { status: true, storageKey: true },
+    where: { generationId: generation.jobId },
+  })
+  expect(generatedImage.status).toBe('ACTIVE')
+  expect(
+    existsSync(
+      resolve('test-results/source-storage', generatedImage.storageKey),
+    ),
+  ).toBe(true)
+  await expect(
+    database.imageGeneration.findUniqueOrThrow({
+      select: { status: true },
+      where: { id: generation.jobId },
+    }),
+  ).resolves.toEqual({ status: 'SUCCEEDED' })
+  await expect(
+    database.sourceImage.findUniqueOrThrow({
+      select: { status: true },
+      where: { id: sourceId },
+    }),
+  ).resolves.toEqual({ status: 'DELETE_PENDING' })
+
+  await sweepCleanup(request)
+  await expect(
+    database.sourceImage.findUniqueOrThrow({
+      select: { status: true },
+      where: { id: sourceId },
+    }),
+  ).resolves.toEqual({ status: 'DELETED' })
+
+  const succeededStatus = await request.get(
+    '/api/sessions/current/generation',
+    { headers: { cookie } },
+  )
+  expect(succeededStatus.status()).toBe(200)
+  expect(await succeededStatus.json()).toEqual({
+    jobId: generation.jobId,
+    status: 'succeeded',
+  })
+})
+
+test('requeues only confirmed retryable generation failures', async ({
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  const origin = String(testInfo.project.use.baseURL)
+  const created = await request.post('/api/sessions', {
+    data: { themeId: 'samurai' },
+    headers: { origin },
+  })
+  const setCookie = created.headers()['set-cookie']
+  if (!setCookie) throw new Error('Expected a session cookie')
+  const [cookie] = setCookie.split(';', 1)
+  if (!cookie) throw new Error('Expected a session cookie value')
+
+  const sourceId = await uploadSyntheticSourceForSession(
+    request,
+    origin,
+    cookie,
+  )
+  const generated = await request.post('/api/sessions/current/generate', {
+    headers: { cookie, origin },
+  })
+  expect(generated.status()).toBe(202)
+  const generation = (await generated.json()) as { jobId: string }
+
+  const database = getTestDb()
+  await database.imageGeneration.update({
+    data: { status: 'FAILED' },
+    where: { id: generation.jobId },
+  })
+  await database.backgroundJob.updateMany({
+    data: {
+      completedAt: new Date(),
+      lastErrorCode: 'PROVIDER_REJECTED',
+      status: 'FAILED',
+    },
+    where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
+  })
+
+  const retried = await request.post('/api/sessions/current/retry', {
+    headers: { cookie, origin },
+  })
+  expect(retried.status()).toBe(202)
+  expect(await retried.json()).toEqual({
+    jobId: generation.jobId,
+    status: 'pending',
+  })
+  await expect(
+    database.imageGeneration.findUniqueOrThrow({
+      select: { status: true },
+      where: { id: generation.jobId },
+    }),
+  ).resolves.toEqual({ status: 'PENDING' })
+  await expect(
+    database.backgroundJob.findFirstOrThrow({
+      select: { lastErrorCode: true, status: true },
+      where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
+    }),
+  ).resolves.toEqual({ lastErrorCode: null, status: 'QUEUED' })
+
+  await database.imageGeneration.update({
+    data: { status: 'FAILED' },
+    where: { id: generation.jobId },
+  })
+  await database.backgroundJob.updateMany({
+    data: { lastErrorCode: 'SUBMISSION_OUTCOME_UNKNOWN', status: 'FAILED' },
+    where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
+  })
+  const uncertain = await request.post('/api/sessions/current/retry', {
+    headers: { cookie, origin },
+  })
+  expect(uncertain.status()).toBe(409)
+
+  await database.backgroundJob.updateMany({
+    data: { lastErrorCode: 'PROVIDER_REJECTED' },
+    where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
+  })
+  await database.sourceImage.update({
+    data: { deleteAfter: new Date(Date.now() - 1_000) },
+    where: { id: sourceId },
+  })
+  const expired = await request.post('/api/sessions/current/retry', {
+    headers: { cookie, origin },
+  })
+  expect(expired.status()).toBe(409)
 })
 
 test('rejects corrupt and oversized source bytes', async ({

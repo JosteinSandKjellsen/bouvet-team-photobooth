@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { db, deleteSourceImage } = vi.hoisted(() => ({
+const { db, deleteGeneratedImage, deleteSourceImage } = vi.hoisted(() => ({
   db: {
     $transaction: vi.fn(),
     backgroundJob: {
       create: vi.fn(),
       findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    generatedImage: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
     sourceImage: {
@@ -14,11 +19,15 @@ const { db, deleteSourceImage } = vi.hoisted(() => ({
       updateMany: vi.fn(),
     },
   },
+  deleteGeneratedImage: vi.fn(),
   deleteSourceImage: vi.fn(),
 }))
 
 vi.mock('../../server/utils/db', () => ({ db }))
-vi.mock('../../server/utils/source-storage', () => ({ deleteSourceImage }))
+vi.mock('../../server/utils/source-storage', () => ({
+  deleteGeneratedImage,
+  deleteSourceImage,
+}))
 
 const { runExpiredSourceCleanup } =
   await import('../../server/utils/source-cleanup')
@@ -29,21 +38,28 @@ beforeEach(() => {
   vi.clearAllMocks()
   db.$transaction.mockImplementation((operation) => operation(db))
   db.sourceImage.updateMany.mockResolvedValue({ count: 1 })
+  db.generatedImage.findMany.mockResolvedValue([])
+  db.generatedImage.updateMany.mockResolvedValue({ count: 1 })
   db.backgroundJob.create.mockResolvedValue({})
   db.backgroundJob.updateMany.mockResolvedValue({ count: 1 })
+  deleteGeneratedImage.mockResolvedValue(undefined)
   deleteSourceImage.mockResolvedValue(undefined)
 })
 
 describe('runExpiredSourceCleanup', () => {
   it('queues, leases, removes, and tombstones one expired source', async () => {
-    db.backgroundJob.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
-      {
-        aggregateId: '11111111-1111-4111-8111-111111111111',
-        attempt: 0,
-        id: '22222222-2222-4222-8222-222222222222',
-        maxAttempts: 5,
-      },
-    ])
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          aggregateId: '11111111-1111-4111-8111-111111111111',
+          attempt: 0,
+          id: '22222222-2222-4222-8222-222222222222',
+          maxAttempts: 5,
+        },
+      ])
+      .mockResolvedValueOnce([])
     db.sourceImage.findMany.mockResolvedValueOnce([
       { id: '11111111-1111-4111-8111-111111111111' },
     ])
@@ -81,6 +97,8 @@ describe('runExpiredSourceCleanup', () => {
           maxAttempts: 5,
         },
       ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     db.sourceImage.findMany.mockResolvedValueOnce([])
 

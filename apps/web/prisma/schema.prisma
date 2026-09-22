@@ -10,6 +10,7 @@ datasource db {
 }
 
 enum AssetStatus {
+  PENDING
   ACTIVE
   DELETE_PENDING
   DELETED
@@ -20,12 +21,15 @@ enum GenerationStatus {
   SUBMITTING
   SUBMISSION_UNKNOWN
   SUBMITTED
+  SUCCEEDED
   FAILED
 }
 
 enum BackgroundJobKind {
   GENERATE_IMAGE
+  RECONCILE_GENERATION
   DELETE_SOURCE_IMAGE
+  DELETE_GENERATED_IMAGE
 }
 
 enum BackgroundJobStatus {
@@ -66,6 +70,24 @@ model SourceImage {
   @@index([status, deleteAfter])
 }
 
+model GeneratedImage {
+  id           String          @id @default(uuid()) @db.Uuid
+  generationId String          @unique @db.Uuid
+  generation   ImageGeneration @relation(fields: [generationId], references: [id], onDelete: Restrict)
+  storageKey   String          @unique
+  contentType  String
+  byteSize     Int
+  width        Int
+  height       Int
+  status       AssetStatus     @default(PENDING)
+  deleteAfter  DateTime        @db.Timestamptz(3)
+  deletedAt    DateTime?       @db.Timestamptz(3)
+  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@index([status, deleteAfter])
+}
+
 model ImageGeneration {
   id                   String           @id @db.Uuid
   sourceImageId        String           @unique @db.Uuid
@@ -73,6 +95,7 @@ model ImageGeneration {
   idempotencyKey       String           @unique
   providerGenerationId String?          @unique
   status               GenerationStatus @default(PENDING)
+  generatedImage       GeneratedImage?
   createdAt            DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime         @updatedAt @db.Timestamptz(3)
 

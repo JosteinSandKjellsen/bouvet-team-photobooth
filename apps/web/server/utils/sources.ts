@@ -10,6 +10,10 @@ const MAX_PROCESSED_DIMENSION = 1_600
 const MAX_PROCESSED_BYTES = 4_000_000
 
 const allowedMimeTypes = new Set(['jpeg', 'png', 'webp'])
+const retryableGenerationErrorCodes = new Set([
+  'PROVIDER_REJECTED',
+  'PROVIDER_RETRYABLE_FAILURE',
+])
 
 function invalidImage() {
   return createError({ statusCode: 400, statusMessage: 'Invalid image' })
@@ -68,6 +72,84 @@ export async function createGenerationForSource(sessionId: string) {
       statusMessage: 'Generation service is unavailable',
     })
   }
+}
+
+export async function retryGenerationForSource(sessionId: string) {
+  const now = new Date()
+  const source = await db.sourceImage.findFirst({
+    where: {
+      deleteAfter: { gt: now },
+      sessionId,
+      status: 'ACTIVE',
+    },
+    select: { id: true },
+  })
+  if (!source) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Approved source is unavailable',
+    })
+  }
+
+  const generation = await db.imageGeneration.findUnique({
+    where: { sourceImageId: source.id },
+    select: { id: true, status: true },
+  })
+  if (!generation || generation.status !== 'FAILED') {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Generation cannot retry',
+    })
+  }
+
+  const job = await db.backgroundJob.findFirst({
+    where: {
+      aggregateId: generation.id,
+      kind: 'GENERATE_IMAGE',
+      status: 'FAILED',
+    },
+    select: { id: true, lastErrorCode: true },
+  })
+  if (!job || !retryableGenerationErrorCodes.has(job.lastErrorCode ?? '')) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Generation cannot retry',
+    })
+  }
+
+  const requeued = await db.$transaction(async (transaction) => {
+    const generationResult = await transaction.imageGeneration.updateMany({
+      where: { id: generation.id, status: 'FAILED' },
+      data: { status: 'PENDING' },
+    })
+    if (generationResult.count === 0) return false
+
+    const jobResult = await transaction.backgroundJob.updateMany({
+      where: {
+        id: job.id,
+        lastErrorCode: job.lastErrorCode,
+        status: 'FAILED',
+      },
+      data: {
+        completedAt: null,
+        lastError: null,
+        lastErrorCode: null,
+        leaseExpiresAt: null,
+        leaseOwner: null,
+        nextAttemptAt: now,
+        status: 'QUEUED',
+      },
+    })
+    return jobResult.count === 1
+  })
+  if (!requeued) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Generation cannot retry',
+    })
+  }
+
+  return { id: generation.id }
 }
 
 export async function createSourceImage(

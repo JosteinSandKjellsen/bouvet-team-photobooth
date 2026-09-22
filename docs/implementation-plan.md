@@ -410,9 +410,16 @@ remain gates for later milestones and public use.
 generation job. The authenticated scheduled worker claims and submits it through
 an explicitly enabled deterministic development/CI adapter, then records only
 the internal provider correlation. A recovered lease that had entered submission
-is held as `SUBMISSION_UNKNOWN`; it is never automatically resubmitted. This is
-not a Leonardo integration, output ingestion, publication, or an authorization
-to use participant images.
+is held as `SUBMISSION_UNKNOWN`; it is never automatically resubmitted. The
+private session capability can poll the generation's opaque job ID and sanitized
+application status without receiving a provider ID. A same-origin retry can
+requeue only classified, confirmed provider failures while the approved source
+remains active; uncertain submissions and expired sources cannot retry. A later
+deterministic worker sweep validates and stores one private application-owned
+output, marks the generation successful, and atomically enqueues source deletion.
+Generated outputs have durable expiry cleanup but are not publicly served. This
+is not a Leonardo integration, publication/counting, or an authorization to use
+participant images.
 
 Implement the Leonardo adapter, per-theme prompts, asynchronous submission,
 authenticated idempotent completion, confirmed reconciliation, durable output

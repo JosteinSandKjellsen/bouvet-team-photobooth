@@ -37,3 +37,14 @@ export interface GenerationAcceptedResponse {
   jobId: string
   status: 'pending'
 }
+
+export interface GenerationStatusResponse {
+  jobId: string
+  status:
+    | 'pending'
+    | 'submitting'
+    | 'submission_unknown'
+    | 'submitted'
+    | 'succeeded'
+    | 'failed'
+}
