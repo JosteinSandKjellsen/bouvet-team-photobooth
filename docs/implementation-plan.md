@@ -15,20 +15,34 @@ calls in that milestone. Later milestones require a separately selected scope.
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
 guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
-local capture/review are complete. M3 is selected and in progress: private
+local capture/review are complete. M3 is complete: private
 anonymous sessions, synthetic-image source validation/normalization, local
 development storage, and durable source-cleanup state/lease handling are
 implemented. The authenticated cleanup-worker adapter and configured active
 session admission limit are implemented. Netlify scheduler and site-wide Blob
 storage adapters have been observed on the deployed site: a synthetic source
 was normalized and stored privately, and a manually invoked `job-sweep`
-completed. Automated expiry deletion and lease recovery remain unobserved.
-Approved public-use limit values remain unresolved.
+completed. Approved public-use limit values remain unresolved.
+
+Automated expiry deletion and stale-lease recovery are now verified against an
+isolated local PostgreSQL instance (2026-09-22): `test/e2e/sessions.spec.ts`
+backdates a real source's `deleteAfter`/job `nextAttemptAt` through a direct
+Prisma connection, drives the batch enqueue-then-claim cycle across two real
+sweeps of `/api/internal/source-cleanup`, and confirms a source row reaches
+`DELETED` with its stored bytes removed. A second case seeds a `RUNNING`
+`BackgroundJob` with an expired lease to reproduce a crashed worker, confirms
+the next sweep reclaims it to `QUEUED` with a cleared lease, then confirms a
+subsequent sweep completes the deletion with an incremented attempt count.
+`BackgroundJob` rows are global and unscoped by session, so these three
+cleanup-sweep cases run once (desktop project only) instead of once per device
+project; running them on both projects raced against a concurrent sweep from
+the other project for the same claimable rows. This is only observed with
+Node-server/isolated-Postgres verification, not Netlify's hosted scheduler,
+Blob storage, or its function-instance concurrency model.
 
 Suggested next-session request:
 
-> Verify M3 expiry deletion and lease recovery against isolated non-production
-> infrastructure. Do not add provider behavior without selecting M4 or use
+> Select and implement M4 (Leonardo generation and recovery). Do not use
 > participant images before the privacy and retention gates are approved.
 
 ## Confirmed Product Decisions
@@ -364,7 +378,7 @@ source, call a provider or persist a picture. Component tests cover fake media,
 countdown timing/cancellation and stream cleanup; the production browser suite
 uses Chromium fake media for desktop and mobile capture/review/approval.
 
-### M3: Sessions, Source Storage And Jobs
+### M3: Sessions, Source Storage And Jobs (Complete 2026-09-22)
 
 **Depends on:** M1 contracts. May proceed alongside M2.
 
@@ -378,6 +392,15 @@ start. No actor/group/admin model or speculative infrastructure is required.
 oversized input; converge duplicate uploads; never publicly serve source bytes;
 recover jobs/cleanup after restart. Test real PostgreSQL and real Nitro endpoints
 with isolated storage/synthetic images. Approve retention before real-photo use.
+
+**Verification:** `pnpm check` and `pnpm test:e2e` passed on macOS under Node
+24.15.0. `TEST_DATABASE_URL` verification against isolated PostgreSQL passed
+three consecutive times with 13 Playwright tests: it covers private anonymous
+session access, origin protection, input normalization and limits, duplicate
+source convergence, authenticated cleanup, expiry deletion, and stale cleanup
+lease recovery. The Netlify scheduler and Blob adapters were manually tested.
+Public-use limits, real-photo retention approval, and provider-side deletion
+remain gates for later milestones and public use.
 
 ### M4: Generation And Recovery
 
