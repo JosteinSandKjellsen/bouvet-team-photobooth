@@ -22,6 +22,14 @@ async function uploadSyntheticSource(
   const [cookie] = setCookie.split(';', 1)
   if (!cookie) throw new Error('Expected a session cookie value')
 
+  return uploadSyntheticSourceForSession(request, origin, cookie)
+}
+
+async function uploadSyntheticSourceForSession(
+  request: APIRequestContext,
+  origin: string,
+  cookie: string,
+) {
   const image = await sharp({
     create: { background: 'white', channels: 3, height: 400, width: 400 },
   })
@@ -179,6 +187,64 @@ test('rejects source uploads without a private same-origin session', async ({
     multipart,
   })
   expect(forged.status()).toBe(403)
+})
+
+test('queues one generation only for the current session approved source', async ({
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  const origin = String(testInfo.project.use.baseURL)
+
+  const withoutSource = await request.post('/api/sessions/current/generate', {
+    headers: { origin },
+  })
+  expect(withoutSource.status()).toBe(401)
+
+  const created = await request.post('/api/sessions', {
+    data: { themeId: 'samurai' },
+    headers: { origin },
+  })
+  const setCookie = created.headers()['set-cookie']
+  if (!setCookie) throw new Error('Expected a session cookie')
+  const [cookie] = setCookie.split(';', 1)
+  if (!cookie) throw new Error('Expected a session cookie value')
+
+  const missingSource = await request.post('/api/sessions/current/generate', {
+    headers: { cookie, origin },
+  })
+  expect(missingSource.status()).toBe(409)
+
+  const sourceId = await uploadSyntheticSourceForSession(
+    request,
+    origin,
+    cookie,
+  )
+  const queued = await request.post('/api/sessions/current/generate', {
+    headers: { cookie, origin },
+  })
+  expect(queued.status()).toBe(202)
+  const generation = (await queued.json()) as { jobId: string; status: string }
+  expect(generation.status).toBe('pending')
+  expect(generation.jobId).toMatch(/^[0-9a-f-]{36}$/)
+
+  const repeated = await request.post('/api/sessions/current/generate', {
+    headers: { cookie, origin },
+  })
+  expect(repeated.status()).toBe(202)
+  expect(await repeated.json()).toEqual(generation)
+
+  const database = getTestDb()
+  const stored = await database.imageGeneration.findUniqueOrThrow({
+    select: { id: true, status: true },
+    where: { sourceImageId: sourceId },
+  })
+  expect(stored).toEqual({ id: generation.jobId, status: 'PENDING' })
+  await expect(
+    database.backgroundJob.count({
+      where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
+    }),
+  ).resolves.toBe(1)
 })
 
 test('rejects corrupt and oversized source bytes', async ({

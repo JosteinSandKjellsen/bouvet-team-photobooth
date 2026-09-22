@@ -15,7 +15,12 @@ enum AssetStatus {
   DELETED
 }
 
+enum GenerationStatus {
+  PENDING
+}
+
 enum BackgroundJobKind {
+  GENERATE_IMAGE
   DELETE_SOURCE_IMAGE
 }
 
@@ -52,8 +57,21 @@ model SourceImage {
   deletedAt   DateTime?   @db.Timestamptz(3)
   createdAt   DateTime    @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
+  generation  ImageGeneration?
 
   @@index([status, deleteAfter])
+}
+
+model ImageGeneration {
+  id             String      @id @db.Uuid
+  sourceImageId  String      @unique @db.Uuid
+  sourceImage    SourceImage @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
+  idempotencyKey String      @unique
+  status         GenerationStatus @default(PENDING)
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
+
+  @@index([status, createdAt])
 }
 
 model BackgroundJob {

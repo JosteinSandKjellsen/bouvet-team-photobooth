@@ -15,6 +15,61 @@ function invalidImage() {
   return createError({ statusCode: 400, statusMessage: 'Invalid image' })
 }
 
+export async function createGenerationForSource(sessionId: string) {
+  const source = await db.sourceImage.findFirst({
+    where: {
+      deleteAfter: { gt: new Date() },
+      sessionId,
+      status: 'ACTIVE',
+    },
+    select: { id: true },
+  })
+  if (!source) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Approved source is unavailable',
+    })
+  }
+
+  const generationId = randomUUID()
+  try {
+    return await db.$transaction(async (transaction) => {
+      const existing = await transaction.imageGeneration.findUnique({
+        where: { sourceImageId: source.id },
+        select: { id: true },
+      })
+      if (existing) return existing
+
+      const generation = await transaction.imageGeneration.create({
+        data: {
+          id: generationId,
+          idempotencyKey: `generate-image:${source.id}`,
+          sourceImageId: source.id,
+        },
+        select: { id: true },
+      })
+      await transaction.backgroundJob.create({
+        data: {
+          aggregateId: generation.id,
+          idempotencyKey: `generate-image:${generation.id}`,
+          kind: 'GENERATE_IMAGE',
+        },
+      })
+      return generation
+    })
+  } catch {
+    const existing = await db.imageGeneration.findUnique({
+      where: { sourceImageId: source.id },
+      select: { id: true },
+    })
+    if (existing) return existing
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Generation service is unavailable',
+    })
+  }
+}
+
 export async function createSourceImage(
   session: { expiresAt: Date; id: string },
   image: Uint8Array,

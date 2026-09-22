@@ -32,3 +32,8 @@ export interface SourceImageUploadResponse {
   sourceId: string
   width: number
 }
+
+export interface GenerationAcceptedResponse {
+  jobId: string
+  status: 'pending'
+}

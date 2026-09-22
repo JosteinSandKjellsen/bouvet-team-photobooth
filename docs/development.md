@@ -21,7 +21,11 @@ Check `node --version` once after selecting the runtime. A command such as
 `npx --package=node@24.15.0 -- node --version` is a temporary fallback, not a
 runtime switch: it uses npm's cache when available but leaves the parent shell
 on its previous Node version. Prefer a version manager over repeating that
-wrapper around individual checks.
+wrapper around individual checks. When a version manager is unavailable, run a
+root command through the portable shortcut instead, for example
+`pnpm node:24 -- check` or `pnpm node:24 -- test:db`. It resolves Node 24.15.0,
+confirms the selected executable, and passes that runtime to child `pnpm`
+processes without changing the parent shell.
 
 Run from the repository root. These commands work in PowerShell, Command Prompt
 and POSIX shells:
@@ -109,6 +113,7 @@ Run these from the repository root:
 | `pnpm lint:code`                    | Check code and import boundaries with ESLint.           |
 | `pnpm lint:markdown`                | Check Markdown structure, including Copilot files.      |
 | `pnpm format` / `pnpm format:check` | Format / check maintained source and docs.              |
+| `pnpm node:24 -- <command>`         | Run a root pnpm command with temporary Node 24.15.0.    |
 | `pnpm typecheck`                    | Check contracts, Vue, server, tests and configurations. |
 | `pnpm test` / `pnpm test:watch`     | Run component and harness tests / watch components.     |
 | `pnpm test:db`                      | Run database API tests against the local test database. |
