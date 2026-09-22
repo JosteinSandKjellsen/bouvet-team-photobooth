@@ -22,8 +22,11 @@ description: 'Verify a change before handoff or pull-request review with Markdow
 5. Review browser traces/screenshots when UI behavior changes using the
    [design checklist](../../../docs/design-playbook.md).
    Check mobile layout, keyboard access, image framing and error recovery. Only
-   claim comparison to reference screenshots actually available. The Node build is not evidence
-   of a working Netlify deployment or a completed external privacy review.
+   claim comparison to reference screenshots actually available. For an
+   end-to-end workflow, verify the intended terminal browser state; a successful
+   API response, database row, stored artifact or route transition to a placeholder
+   is not user-visible completion. The Node build is not evidence of a working
+   Netlify deployment or a completed external privacy review.
 6. For harness/docs changes, check reference coverage and metadata with
    `pnpm check:harness`; inspect heading anchors and Copilot discovery manually.
    See the [harness guide](../../../docs/ai-development.md) for representative prompts.

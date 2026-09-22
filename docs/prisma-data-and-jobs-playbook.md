@@ -2,21 +2,19 @@
 
 ## Applicability
 
-This is the approved future persistence and Netlify-first deployment baseline.
-The initial health-check scaffold does not install Prisma, connect a database,
-or deploy workers. Azure remains a future migration option. Read this together
-with the [camera](./camera-and-initial-image-playbook.md) and
+This is the approved persistence and Netlify-first deployment baseline. M3 and
+M4 implement PostgreSQL, Prisma, durable background jobs, local object storage,
+and Netlify storage/scheduler adapters. Deployment hardening and Azure migration
+remain future work. Read this together with the
+[camera](./camera-and-initial-image-playbook.md) and
 [Leonardo](./leonardo-integration-playbook.md) playbooks for image workflows.
 Resolve conflicts before implementation and recheck dated external facts when
 the relevant milestone begins.
 
 Examples below belong to `apps/web`: run their pnpm commands there, or use
-`pnpm --filter @bouvet-team-photobooth/web` from the repository root. Prisma,
-Netlify, and database scripts shown here are future examples, not installed
-scaffold functionality. The initial Node-server build used by Playwright is
-separate from a future Netlify deployment build and does not validate Functions.
-
-This document is a standalone greenfield implementation baseline for persistence in a Nuxt application. It is not a migration guide for an existing application. It covers PostgreSQL, Prisma ORM, CRUD operations, durable background jobs, image metadata, retention deletion, Netlify deployment, and a future move to Azure.
+`pnpm --filter @bouvet-team-photobooth/web` from the repository root. Statements
+about Background Functions, Azure adapters, and hosted deployment verification
+are future guidance unless explicitly labeled as implemented.
 
 ## 1. Decisions
 
@@ -24,18 +22,28 @@ Use these defaults unless a measured requirement justifies a change:
 
 - Use PostgreSQL on every platform.
 - Use Prisma ORM `7.10.0`, the latest stable release verified for this baseline.
-- Pin `prisma`, `@prisma/client`, and `@prisma/adapter-pg` to the same exact version.
-- Use the Node.js 24 LTS release line, with Node.js `24.15.0` as the minimum version for local development, CI, Netlify builds, and Netlify Functions.
-- Run Prisma only in a Node.js runtime, never in an edge runtime or browser bundle.
-- Put image bytes in object storage. PostgreSQL stores keys, metadata, state, and ownership only.
-- Treat PostgreSQL as the durable source of truth for jobs, retries, leases, and idempotency.
-- Keep Nuxt routes, Netlify Functions, and Azure Functions as thin adapters around shared services.
+- Pin `prisma`, `@prisma/client`, and `@prisma/adapter-pg` to the same exact
+  version.
+- Use the Node.js 24 LTS release line, with Node.js `24.15.0` as the minimum
+  version for local development, CI, Netlify builds, and Netlify Functions.
+- Run Prisma only in a Node.js runtime, never in an edge runtime or browser
+  bundle.
+- Put image bytes in object storage. PostgreSQL stores keys, metadata, state,
+  and ownership only.
+- Treat PostgreSQL as the durable source of truth for jobs, retries, leases, and
+  idempotency.
+- Keep Nuxt routes and platform entry points thin around shared services.
 - Use a pooled runtime connection and a direct migration connection.
-- Instantiate one Prisma client per warm process and do not call `$disconnect()` after each request.
-- Never run migrations from a request handler, background worker, or application startup hook.
-- Do not adopt Prisma Accelerate for a new application because it is scheduled for retirement on December 1, 2026.
+- Instantiate one Prisma client per warm process and do not call `$disconnect()`
+  after each request.
+- Never run migrations from a request handler, background worker, or application
+  startup hook.
+- Do not adopt Prisma Accelerate for a new application because it is scheduled
+  for retirement on December 1, 2026.
 
-Prisma ORM 8 is currently published as a release candidate, not a stable production release. Re-evaluate it after general availability and after the application test suite passes against it.
+Prisma ORM 8 is currently published as a release candidate, not a stable
+production release. Re-evaluate it after general availability and after the
+application test suite passes against it.
 
 ## 2. Target architecture
 
@@ -43,52 +51,31 @@ Prisma ORM 8 is currently published as a release candidate, not a stable product
 flowchart LR
     Browser --> Nuxt[Nuxt server routes]
     Nuxt --> Services[Domain services]
-    Worker[Job worker adapter] --> Services
-    Scheduler[Scheduler adapter] --> Services
+    LocalWorker[Local polling worker] --> InternalRoutes[Protected sweep routes]
+    InternalRoutes --> Services
+    Scheduler[Netlify scheduled sweep] --> Services
     Services --> Prisma[Prisma data access]
     Prisma --> Pooler[PostgreSQL pooler]
     Pooler --> Postgres[(PostgreSQL)]
-    Services --> Objects[Object storage adapter]
+    Services --> Objects[Local files or Netlify Blobs]
     Services --> Provider[External image provider]
-    Nuxt -. best-effort wake-up .-> Worker
-    Scheduler -. sweeps queued jobs .-> Worker
 ```
 
-The platform-specific surface is deliberately small:
+The implemented local worker calls the protected generation and source-cleanup
+routes on a fixed interval. The implemented Netlify Scheduled Function invokes
+the same domain services directly for bounded generation and cleanup sweeps.
+There is no separate Netlify Background Function or best-effort job notifier in
+the current implementation.
 
-```ts
-export interface ObjectStore {
-  put(
-    key: string,
-    body: Uint8Array,
-    metadata: Record<string, string>,
-  ): Promise<void>
-  get(key: string): Promise<Uint8Array | null>
-  delete(key: string): Promise<void>
-}
+The storage adapter supports local private files and Netlify Blobs. Deletion is
+idempotent, and PostgreSQL remains authoritative for retention state. Provider
+and platform-specific imports must remain in server-only adapters rather than
+browser code or public contracts.
 
-export interface JobNotifier {
-  notify(jobId: string): Promise<void>
-}
-```
-
-`ObjectStore.delete` must be idempotent: deleting an object that is already absent is successful. `JobNotifier.notify` is only a wake-up optimization. A scheduled database sweep must eventually find every queued job even when notification fails.
-
-These interfaces are illustrative. Extend the storage contract with the
-metadata, consistency, and bounded ingestion behavior required by the Leonardo
-workflow when implementing it; do not treat these examples as a complete SDK.
-
-Initial adapters:
-
-- Netlify Blobs implements `ObjectStore`.
-- A Netlify Background Function and Scheduled Function implement worker wake-up and sweeping.
-
-Azure adapters:
-
-- Azure Blob Storage implements `ObjectStore`.
-- Azure Functions queue and timer triggers implement worker wake-up and sweeping.
-
-No repository or domain service should import a Netlify or Azure SDK.
+Future adapters may add a Netlify Background Function for prompt wake-up, Azure
+Blob Storage, and Azure Functions queue and timer triggers. A notification path
+would remain an optimization; scheduled database sweeps must still recover every
+eligible job.
 
 ## 3. Version and package policy
 
@@ -104,7 +91,10 @@ This compatibility baseline was verified on September 15, 2026:
 | `@netlify/blobs`     | `10.7.13`  | `>=22.12.0`                               |
 | `dotenv`             | `17.4.2`   | `>=12.0.0`                                |
 
-Node.js 24 is the common supported LTS line. Do not use Node.js 26 for this baseline while it is a Current release rather than an LTS release. Keep the application on one Node.js major version and re-evaluate the matrix before changing it.
+Node.js 24 is the common supported LTS line. Do not use Node.js 26 for this
+baseline while it is a Current release rather than an LTS release. Keep the
+application on one Node.js major version and re-evaluate the matrix before
+changing it.
 
 Declare the supported range in `package.json`:
 
@@ -116,13 +106,11 @@ Declare the supported range in `package.json`:
 }
 ```
 
-The scaffold uses root `.nvmrc` containing `24` and `engineStrict: true` in
-`pnpm-workspace.yaml` so pnpm 12 rejects an unsupported runtime. Non-registry
-settings no longer belong in `.npmrc`. At the Netlify
-milestone, add root `.node-version` containing the same major and check both
-selectors for drift. Netlify resolves that major to an available patch. Verify
-the minimum engine version locally, in CI, and in hosted builds; do not rely on
-the platform build-image default.
+The repository uses root `.nvmrc` and `.node-version` files containing `24` and
+`engineStrict: true` in `pnpm-workspace.yaml`, so pnpm 12 rejects an unsupported
+runtime. Netlify resolves that major to an available patch. Verify the minimum
+engine version locally, in CI, and in hosted builds; do not rely on the platform
+build-image default.
 
 Install matching stable packages:
 
@@ -264,142 +252,31 @@ Do not:
 
 ## 5. Baseline data model
 
-This model supports source uploads, image generations, application-owned output IDs, storage retention, and durable work.
+The authoritative implemented model is
+[`apps/web/prisma/schema.prisma`](../apps/web/prisma/schema.prisma). Do not copy
+the schema into this playbook; migrations and generated Prisma types must stay
+aligned with that source.
 
-It is an illustrative starting point, not a production-ready authorization or
-cleanup schema. Before implementing it, model actor ownership, retained cleanup
-identifiers and remote-deletion capability state required by the Leonardo
-playbook. Choose the authentication and retention policies explicitly rather
-than inferring them from this example.
+The implemented model contains private `Session` and `SourceImage` ownership,
+one `ImageGeneration` and `GeneratedImage` per source, daily credit budgets and
+idempotent reservations, and durable `BackgroundJob` rows. Generation states
+separate upload, confirmed submission, uncertain submission, and terminal
+outcomes. `RECONCILE_GENERATION` covers provider readiness polling and output
+ingestion, but readiness polling does not consume ingestion attempts.
 
-```prisma
-// prisma/schema.prisma
-
-enum AssetStatus {
-  ACTIVE
-  DELETE_PENDING
-  DELETED
-}
-
-enum GenerationStatus {
-  PENDING
-  SUBMITTED
-  PROCESSING
-  SUCCEEDED
-  FAILED
-  CANCELLED
-}
-
-enum JobKind {
-  GENERATE_IMAGE
-  POLL_GENERATION
-  INGEST_GENERATED_IMAGE
-  DELETE_SOURCE_IMAGE
-  DELETE_GENERATED_IMAGE
-}
-
-enum JobStatus {
-  QUEUED
-  RUNNING
-  SUCCEEDED
-  FAILED
-  CANCELLED
-}
-
-model SourceImage {
-  id               String            @id @default(uuid()) @db.Uuid
-  storageKey       String            @unique
-  providerSourceId String?           @unique
-  contentType      String
-  byteSize         Int
-  width            Int
-  height           Int
-  status           AssetStatus       @default(ACTIVE)
-  deleteAfter      DateTime          @db.Timestamptz(3)
-  deletedAt        DateTime?         @db.Timestamptz(3)
-  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
-  generations      ImageGeneration[]
-
-  @@index([status, deleteAfter])
-}
-
-model ImageGeneration {
-  id                   String             @id @default(uuid()) @db.Uuid
-  idempotencyKey       String             @unique
-  sourceImageId        String             @db.Uuid
-  sourceImage          SourceImage        @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
-  modelId               String
-  status                GenerationStatus   @default(PENDING)
-  providerGenerationId String?            @unique
-  errorCode             String?
-  errorMessage          String?            @db.Text
-  completedAt           DateTime?          @db.Timestamptz(3)
-  createdAt             DateTime           @default(now()) @db.Timestamptz(3)
-  updatedAt             DateTime           @updatedAt @db.Timestamptz(3)
-  generatedImages      GeneratedImage[]
-
-  @@index([sourceImageId])
-  @@index([status, updatedAt])
-}
-
-model GeneratedImage {
-  id           String          @id @default(uuid()) @db.Uuid
-  publicId     String          @unique
-  generationId String          @db.Uuid
-  generation   ImageGeneration @relation(fields: [generationId], references: [id], onDelete: Restrict)
-  storageKey   String          @unique
-  contentType  String
-  byteSize     Int
-  width        Int
-  height       Int
-  status       AssetStatus     @default(ACTIVE)
-  deleteAfter  DateTime        @db.Timestamptz(3)
-  deletedAt    DateTime?       @db.Timestamptz(3)
-  version      Int             @default(0)
-  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
-
-  @@index([generationId])
-  @@index([status, deleteAfter])
-}
-
-model BackgroundJob {
-  id               String     @id @default(uuid()) @db.Uuid
-  kind             JobKind
-  status           JobStatus  @default(QUEUED)
-  aggregateId      String     @db.Uuid
-  idempotencyKey   String     @unique
-  payload          Json?
-  attempt          Int        @default(0)
-  maxAttempts      Int        @default(5)
-  nextAttemptAt    DateTime   @default(now()) @db.Timestamptz(3)
-  leaseOwner       String?
-  leaseExpiresAt   DateTime?  @db.Timestamptz(3)
-  lastErrorCode    String?
-  lastErrorMessage String?    @db.Text
-  completedAt      DateTime?  @db.Timestamptz(3)
-  createdAt        DateTime   @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime   @updatedAt @db.Timestamptz(3)
-
-  @@index([status, nextAttemptAt, createdAt])
-  @@index([status, leaseExpiresAt])
-  @@index([kind, aggregateId])
-}
-```
-
-Rules for this schema:
+Rules for the implemented schema:
 
 - `GeneratedImage.id` is an internal persistence ID. `GeneratedImage.publicId`
   is a separately generated opaque public lookup ID with at least 128 bits of
   entropy; neither is a provider ID.
 - Provider IDs and provider URLs are internal and must never become public identifiers.
 - `storageKey` is an object key, not a public URL.
-- `BackgroundJob.payload` contains small non-secret inputs only. Store large data in object storage and reference it by key.
-- `aggregateId` identifies the domain row targeted by the job. The worker validates that the row exists and matches `kind`.
+- `aggregateId` identifies the domain row targeted by the job. The worker
+  validates that the row exists and matches `kind`.
 - `idempotencyKey` represents one logical effect, not one invocation.
 - Store all times in UTC.
-- Use `Restrict` by default. Add cascade deletion only when deletion of the parent must always and unconditionally delete its children.
+- Use `Restrict` by default. Add cascade deletion only when deletion of the
+  parent must always and unconditionally delete its children.
 
 ## 6. CRUD patterns
 
@@ -410,6 +287,7 @@ Validate authorization and input before calling these functions. Never pass an H
 ```ts
 const source = await db.sourceImage.create({
   data: {
+    sessionId,
     storageKey,
     contentType,
     byteSize,
@@ -443,7 +321,6 @@ const image = await db.generatedImage.findFirst({
     width: true,
     height: true,
     deleteAfter: true,
-    version: true,
   },
 })
 ```
@@ -461,23 +338,21 @@ await db.generatedImage.update({
 })
 ```
 
-For a read-modify-write flow, use optimistic concurrency control:
+For a guarded state transition, include the expected current state:
 
 ```ts
 const result = await db.generatedImage.updateMany({
   where: {
     id: imageId,
     status: 'ACTIVE',
-    version: expectedVersion,
   },
   data: {
     deleteAfter: validatedDeleteAfter,
-    version: { increment: 1 },
   },
 })
 
 if (result.count !== 1) {
-  throw new Error('Image was deleted or changed by another request')
+  throw new Error('Image is no longer active')
 }
 ```
 
@@ -498,16 +373,14 @@ await db.$transaction(async (tx) => {
     where: {
       id: imageId,
       status: 'ACTIVE',
-      version: expectedVersion,
     },
     data: {
       status: 'DELETE_PENDING',
-      version: { increment: 1 },
     },
   })
 
   if (changed.count !== 1) {
-    throw new Error('Image was deleted or changed by another request')
+    throw new Error('Image is no longer active')
   }
 
   await tx.backgroundJob.create({
@@ -569,7 +442,10 @@ Platform retries are delivery hints. The `BackgroundJob` row is authoritative.
 
 ### Enqueue
 
-Create the domain transition and job row in one short database transaction. Commit first, then call `JobNotifier.notify(job.id)` as a best-effort wake-up. If notification fails, leave the job queued; the scheduler will find it.
+Create the domain transition and job row in one short database transaction. The
+implemented local worker and Netlify Scheduled Function find eligible queued
+jobs through bounded sweeps. A future notifier may wake a worker after commit,
+but notification failure must leave the job queued for the next sweep.
 
 ### Claim with a lease
 
@@ -635,7 +511,7 @@ const completed = await db.backgroundJob.updateMany({
     leaseOwner: null,
     leaseExpiresAt: null,
     lastErrorCode: null,
-    lastErrorMessage: null,
+    lastError: null,
   },
 })
 
@@ -661,6 +537,20 @@ Classify errors before rescheduling:
 - Truncate stored error messages and never store secrets or full provider responses.
 
 For a retry, move the row back to `QUEUED`, set `nextAttemptAt`, clear the lease, and retain the last safe error summary. Use a compare-and-set that matches the current lease owner.
+
+### Separate readiness from operation attempts
+
+When work depends on an external callback or provider status, waiting is not an
+operation failure. Do not claim the operation or increment its `attempt` until
+its persisted readiness prerequisite exists. If the same job schedules status
+polls, move `nextAttemptAt` forward while it remains `QUEUED` and leave the
+operation attempt count unchanged.
+
+The first verified completion may activate a waiting job or recover one that
+failed only before its readiness gate existed. A duplicate completion must not
+revive an operation that exhausted retries after readiness. Test this boundary
+by sweeping repeatedly before completion and asserting that attempts remain
+unchanged, then recording completion and proving exactly one operation claim.
 
 ### Recover expired leases
 
@@ -698,7 +588,11 @@ If object deletion succeeds and the database update fails, retrying is safe beca
 
 ### Source images
 
-Use the same state machine for application-owned source objects. Provider-side deletion is separate from application storage deletion and must only be implemented when the provider publishes and verifies a supported delete operation.
+Use the same state machine for application-owned source objects. Provider-side
+deletion is separate from application storage deletion. Leonardo documents v1
+init-image deletion, but the adapter and durable cleanup state are not yet
+implemented; generated-image deletion remains unverified. Implement only
+documented operations and retain provider IDs until deletion is confirmed.
 
 Release temporary upload buffers after transfer, but keep durable source
 objects needed by generation until output ingestion succeeds. Define bounded
@@ -722,9 +616,16 @@ Hard-delete `DELETED` rows only after a configured tombstone period. Delete chil
 
 ### Runtime and build contract
 
-Build Nuxt with Nitro's `netlify` preset so Nuxt server routes run in Netlify Node Functions. Netlify auto-detects Nitro during a hosted build. Keep `dist` as the publish directory and do not select the `netlify_edge` preset for this application because that would move the Nuxt server into the Deno-based Edge Functions runtime.
+Build Nuxt with Nitro's `netlify` preset so Nuxt server routes run in Netlify
+Node Functions. The current Nuxt config selects it when `NETLIFY` is present,
+and the root Netlify config publishes `apps/web/dist`. Do not select the
+`netlify_edge` preset for this application because that would move the Nuxt
+server into the Deno-based Edge Functions runtime.
 
-Use `@netlify/nuxt` for local access to Netlify platform primitives from `nuxt dev`:
+`@netlify/nuxt` is pinned for the Netlify integration baseline but is not
+registered in the current Nuxt module list. The implemented storage adapter
+uses `@netlify/blobs` directly. Register the module only when a locally tested
+platform primitive requires it:
 
 ```ts
 // nuxt.config.ts
@@ -733,7 +634,12 @@ export default defineNuxtConfig({
 })
 ```
 
-The module does not make Node-only packages edge-compatible. Keep standalone background and scheduled adapters in the default `netlify/functions` directory, outside the `dist` publish directory. Name their entry files `job-worker.mts` and `job-sweep.mts` to match the configuration below. Nitro owns its generated internal functions; do not point the user-functions directory at generated Nitro output.
+The module does not make Node-only packages edge-compatible. Keep standalone
+scheduled adapters in the configured `apps/web/netlify/functions` directory,
+outside the `dist` publish directory. The implemented entry file is
+`job-sweep.mts`; a future Background Function would belong beside it. Nitro owns
+its generated internal functions, so do not point the user-functions directory
+at generated Nitro output.
 
 Use the modern Netlify Functions API: a default export that accepts web-standard `Request` and Netlify `Context` values and returns `Response` where a response is applicable. Do not start a greenfield application with the deprecated AWS Lambda compatibility handler signature. Netlify has announced that deploys containing Lambda compatibility mode functions will no longer be accepted on or after July 1, 2027.
 
@@ -743,29 +649,33 @@ Use this baseline configuration:
 # netlify.toml
 [build]
   command = "pnpm build"
-  publish = "dist"
+  publish = "apps/web/dist"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "apps/web/netlify/functions"
   node_bundler = "esbuild"
-
-[functions."job-worker"]
-  background = true
 
 [functions."job-sweep"]
   schedule = "*/10 * * * *"
 ```
 
-The `background = true` property is preferred for new functions; the older `-background` filename suffix remains supported but should not be the baseline. A schedule may instead be exported in a TypeScript function's `config`, but define it in only one place. Schedules use UTC.
+The current deployment has no Background Function. If one is added later,
+`background = true` is preferred; the older `-background` filename suffix
+remains supported but should not be the baseline. A schedule may instead be
+exported in a TypeScript function's `config`, but define it in only one place.
+Schedules use UTC.
 
 The `.node-version` file controls the Netlify build. A valid build version normally becomes the Functions runtime version as well. Node.js 24 is a valid AWS Lambda runtime and therefore resolves to the Node.js 24 Functions runtime. If a build uses a Node release that is not an eligible AWS Lambda runtime, Netlify falls back to Node.js 24 for Functions. If the runtime must be pinned independently, set `AWS_LAMBDA_JS_RUNTIME=nodejs24.x` through the Netlify UI, CLI, or API and redeploy; Netlify does not accept that setting from `netlify.toml`. Confirm both the build version and Functions runtime in deploy logs after every Node upgrade.
 
-Do not set `NODE_ENV=production` as a Netlify build environment variable. Netlify would omit `devDependencies` during installation, including the Prisma CLI and `@netlify/nuxt` used by this baseline. Nuxt still produces a production build through `nuxt build`.
+Do not set `NODE_ENV=production` as a Netlify build environment variable.
+Netlify would omit build-time `devDependencies`, including the Prisma CLI. Nuxt
+still produces a production build through `nuxt build`.
 
 Scope environment variables as follows:
 
 - Make the pooled, least-privilege `DATABASE_URL` available to Builds and Functions. The build needs it while loading `prisma.config.ts` for client generation; never expose it through Nuxt public runtime configuration or a `NUXT_PUBLIC_` variable.
-- Make provider credentials and internal wake-up secrets available to Functions only unless a documented build step needs them.
+- Make provider credentials and internal sweep secrets available to Functions
+  only unless a documented build step needs them.
 - Keep `DIRECT_URL` out of Netlify. Provide it only to the dedicated CI/CD migration job.
 - Store production values in Netlify environment variables, not in committed `.env` files or `netlify.toml`.
 
@@ -773,15 +683,18 @@ Review every build plugin because variables scoped to Builds are available to th
 
 ### Workload placement
 
-Run Prisma, `pg`, image processing libraries such as Sharp, and all domain services in Node Functions only. Use the platform as follows:
+Run Prisma, `pg`, image processing libraries such as Sharp, and all domain services in Node Functions only. The implemented Netlify adapter currently uses the platform as follows:
 
-- Nuxt server route: validate requests, create domain and job rows, send a best-effort wake-up, and return quickly.
-- Background Function: process a supplied `jobId` or claim queued jobs for a bounded duration.
-- Scheduled Function: recover leases, enqueue retention work, and wake queued jobs.
+- Nuxt server route: validate requests, create domain and job rows, and return quickly.
+- Scheduled Function: directly run bounded generation and source-cleanup sweeps.
 - Netlify Blobs site-wide store: persist source and generated image bytes across deploys.
 - PostgreSQL: store all durable state.
 
-Treat every direct HTTP invocation of the background worker as untrusted. Require an internal bearer or HMAC credential for the wake-up endpoint, validate the `jobId` format, and re-read the authoritative job row before doing work. The scheduled database sweep remains the correctness mechanism if an authenticated wake-up is lost.
+Treat every direct HTTP invocation of the Nitro sweep endpoints as untrusted.
+Require an internal bearer credential and re-read authoritative rows before doing
+work. The scheduled database sweep remains the deployment correctness mechanism.
+A future Background Function must preserve these boundaries and accept only
+small correlation data such as a validated job ID.
 
 Edge Functions run on Deno rather than Node.js. They have a 20 MB compressed code limit, 512 MB memory for the deployed set, 50 ms CPU time per request, and a 40-second response-header timeout. Use them only for small request-layer concerns such as redirects, geolocation, or lightweight rate limiting. Do not import Prisma, `pg`, Sharp, the generated Prisma client, or database-backed domain services into an Edge Function.
 
@@ -790,7 +703,8 @@ Edge Functions run on Deno rather than Node.js. They have a 20 MB compressed cod
 Account for these Netlify constraints:
 
 - Synchronous Functions have a non-configurable 60-second execution limit.
-- Background Functions have a 15-minute execution limit and return `202` immediately.
+- A future Background Function would have a 15-minute execution limit and return
+  `202` immediately.
 - Background Function payloads are limited to 256 KB, so send only a job ID and correlation data.
 - Background Functions retry failures after one minute and then two minutes. The database attempt count remains authoritative.
 - Background Functions are available on credit-based plans, including Free, Personal, and Pro, and on Enterprise; confirm that expected execution fits the selected plan's usage and billing model.
@@ -824,9 +738,12 @@ For each release candidate:
 
 1. Install and test under the Node.js version selected by `.node-version`.
 2. Run `prisma validate`, `prisma generate`, type checking, tests, and `nuxt build`.
-3. Run the application through `nuxt dev` with `@netlify/nuxt`, then test the native functions with Netlify's local function tooling where needed.
-4. Inspect the deploy summary and Functions page. Confirm the Nuxt server and job adapters deploy as Node Functions, `job-worker` is marked as background, and `job-sweep` is marked as scheduled.
-5. Invoke the scheduled function with **Run now** and submit a test job. Verify enqueue, `202` wake-up, claim, completion, retry, and lease recovery in logs and PostgreSQL.
+3. Run the application through `nuxt dev`, then test native functions with
+   Netlify's local function tooling where needed.
+4. Inspect the deploy summary and Functions page. Confirm the Nuxt server
+   deploys as Node Functions and `job-sweep` is marked as scheduled.
+5. Invoke the scheduled function with **Run now** and submit a test job. Verify
+   enqueue, claim, completion, retry, and lease recovery in logs and PostgreSQL.
 6. Smoke-test image upload, processing, read, and deletion in the Linux production runtime, including any native image-processing dependency.
 
 ## 11. Azure migration path
@@ -835,15 +752,15 @@ Keep the Prisma schema provider as `postgresql`. Move the database to Azure Data
 
 Recommended Azure mapping:
 
-| Current responsibility | Netlify                       | Azure target                                  |
-| ---------------------- | ----------------------------- | --------------------------------------------- |
-| Nuxt application       | Netlify Nuxt/Nitro            | Azure App Service or Azure Container Apps     |
-| Background execution   | Background Function           | Azure Functions queue trigger                 |
-| Scheduled sweep        | Scheduled Function            | Azure Functions timer trigger                 |
-| Object storage         | Netlify Blobs                 | Azure Blob Storage                            |
-| Database               | Pooled PostgreSQL             | Azure Database for PostgreSQL Flexible Server |
-| Logs and metrics       | Netlify logs/provider         | Application Insights and Azure Monitor        |
-| Secrets                | Netlify environment variables | Managed identity and Key Vault references     |
+| Current responsibility | Netlify                                                     | Azure target                                  |
+| ---------------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| Nuxt application       | Netlify Nuxt/Nitro                                          | Azure App Service or Azure Container Apps     |
+| Background execution   | Scheduled Function bounded sweep; no background adapter yet | Azure Functions queue trigger                 |
+| Scheduled sweep        | Scheduled Function                                          | Azure Functions timer trigger                 |
+| Object storage         | Netlify Blobs                                               | Azure Blob Storage                            |
+| Database               | Pooled PostgreSQL                                           | Azure Database for PostgreSQL Flexible Server |
+| Logs and metrics       | Netlify logs/provider                                       | Application Insights and Azure Monitor        |
+| Secrets                | Netlify environment variables                               | Managed identity and Key Vault references     |
 
 For Azure Functions, use the Node.js v4 programming model. Function triggers call the same job services used on Netlify. Queue messages carry a `jobId`, not the whole job payload. Assume duplicate and out-of-order delivery.
 

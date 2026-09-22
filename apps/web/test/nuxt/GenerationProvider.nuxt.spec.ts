@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  createGenerationSourceUpload,
+  getGenerationCompletion,
   getGeneratedOutput,
   submitGeneration,
+  uploadGenerationSource,
 } from '../../server/utils/generation-provider'
 
 afterEach(() => {
@@ -11,23 +14,40 @@ afterEach(() => {
 })
 
 describe('generation provider', () => {
-  it('submits one private Flare generation with a server-owned theme prompt', async () => {
+  it('uploads the source before submitting one private Nano Banana generation', async () => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     process.env.LEONARDO_API_KEY = 'test-api-key'
     const providerFetch = vi
       .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uploadInitImage: {
+              fields: JSON.stringify({ key: 'source-key', policy: 'policy' }),
+              id: 'source-id',
+              url: 'https://uploads.example/source',
+            },
+          }),
+          { headers: { 'Content-Type': 'application/json' }, status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
       .mockResolvedValue(
         new Response(
-          JSON.stringify({ apiCreditCost: 23, generationId: 'provider-id' }),
+          JSON.stringify({
+            generate: { apiCreditCost: 23, generationId: 'provider-id' },
+          }),
           { headers: { 'Content-Type': 'application/json' }, status: 200 },
         ),
       )
     vi.stubGlobal('fetch', providerFetch)
 
+    const upload = await createGenerationSourceUpload()
+    await uploadGenerationSource(upload, new Uint8Array([1, 2, 3]))
     await expect(
       submitGeneration({
         generationId: 'application-id',
-        sourceImage: new Uint8Array([1, 2, 3]),
+        providerSourceImageId: upload.providerSourceImageId,
         themeId: 'space-cowboys',
       }),
     ).resolves.toEqual({
@@ -35,30 +55,108 @@ describe('generation provider', () => {
       providerGenerationId: 'provider-id',
     })
 
-    expect(providerFetch).toHaveBeenCalledOnce()
-    const [url, request] = providerFetch.mock.calls[0] as [string, RequestInit]
-    expect(url).toBe('https://cloud.leonardo.ai/api/rest/v2/generations')
-    expect(request.method).toBe('POST')
-    expect(request.headers).toEqual({
+    expect(providerFetch).toHaveBeenCalledTimes(3)
+    const [initUrl, initRequest] = providerFetch.mock.calls[0] as [
+      string,
+      RequestInit,
+    ]
+    expect(initUrl).toBe('https://cloud.leonardo.ai/api/rest/v1/init-image')
+    expect(initRequest).toMatchObject({
+      body: JSON.stringify({ extension: 'jpg' }),
+      method: 'POST',
+    })
+    expect(initRequest.headers).toEqual({
       Accept: 'application/json',
       Authorization: 'Bearer test-api-key',
       'Content-Type': 'application/json',
     })
-    expect(JSON.parse(request.body as string)).toEqual({
-      model: 'openai/gpt-image-2.5-flare',
+
+    const [uploadUrl, uploadRequest] = providerFetch.mock.calls[1] as [
+      string,
+      RequestInit,
+    ]
+    expect(uploadUrl).toBe('https://uploads.example/source')
+    expect(uploadRequest.method).toBe('POST')
+    expect(uploadRequest.headers).toBeUndefined()
+    expect(uploadRequest.redirect).toBe('error')
+    expect(uploadRequest.body).toBeInstanceOf(FormData)
+    const formData = uploadRequest.body as FormData
+    expect([...formData.keys()]).toEqual(['key', 'policy', 'file'])
+    const file = formData.get('file')
+    expect(file).toBeInstanceOf(Blob)
+    await expect((file as Blob).arrayBuffer()).resolves.toEqual(
+      Uint8Array.of(1, 2, 3).buffer,
+    )
+
+    const [generationUrl, generationRequest] = providerFetch.mock.calls[2] as [
+      string,
+      RequestInit,
+    ]
+    expect(generationUrl).toBe(
+      'https://cloud.leonardo.ai/api/rest/v2/generations',
+    )
+    expect(generationRequest.method).toBe('POST')
+    expect(JSON.parse(generationRequest.body as string)).toEqual({
+      model: 'nano-banana-2-lite',
       parameters: {
         guidances: {
-          image_reference: [{ image: { data: 'AQID', type: 'BASE64' } }],
+          image_reference: [{ image: { id: 'source-id', type: 'UPLOADED' } }],
         },
         height: 768,
         prompt:
           'Reimagine the people in the reference photo as a charismatic crew of space cowboys on a vivid frontier planet. Keep every person recognizable and preserve the group composition.',
-        prompt_enhance: 'AUTO',
+        prompt_enhance: 'OFF',
         quantity: 1,
+        style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
         width: 1376,
       },
       public: false,
     })
+  })
+
+  it('rejects malformed init-image responses before uploading bytes', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          uploadInitImage: {
+            fields: '{invalid-json',
+            id: 'source-id',
+            url: 'https://uploads.example/source',
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(createGenerationSourceUpload()).rejects.toThrow(
+      'Invalid generation source upload response',
+    )
+    expect(providerFetch).toHaveBeenCalledOnce()
+  })
+
+  it('requires a 204 response from the presigned upload', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      uploadGenerationSource(
+        {
+          fields: { key: 'source-key' },
+          providerSourceImageId: 'source-id',
+          uploadUrl: 'https://uploads.example/source',
+        },
+        Uint8Array.of(1, 2, 3),
+      ),
+    ).rejects.toThrow('Generation source upload failed (status=200)')
+    const [, request] = providerFetch.mock.calls[0] as [string, RequestInit]
+    expect(request.headers).toBeUndefined()
   })
 
   it('rejects a malformed provider acceptance response', async () => {
@@ -76,10 +174,126 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
-        sourceImage: new Uint8Array([1]),
+        providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),
     ).rejects.toThrow('Invalid generation provider response')
+  })
+
+  it('accepts a nested provider response with a null credit cost', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            generate: {
+              apiCreditCost: null,
+              generationId: 'provider-id',
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    )
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        providerSourceImageId: 'source-id',
+        themeId: 'wasteland',
+      }),
+    ).resolves.toEqual({
+      apiCreditCost: undefined,
+      providerGenerationId: 'provider-id',
+    })
+  })
+
+  it('classifies a non-JSON provider response as an uncertain outcome', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(new Response('upstream failure', { status: 200 })),
+    )
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        providerSourceImageId: 'source-id',
+        themeId: 'wasteland',
+      }),
+    ).rejects.toThrow(
+      'Invalid generation provider response (status=200, type=non-json)',
+    )
+  })
+
+  it('rejects a GraphQL error array returned with HTTP 200', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify([
+            {
+              extensions: { code: 'BAD_USER_INPUT' },
+              locations: [{ column: 1, line: 1 }],
+              message: 'Invalid generation request',
+              path: ['createGeneration'],
+            },
+          ]),
+          { headers: { 'x-request-id': 'request-id' }, status: 200 },
+        ),
+      ),
+    )
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        providerSourceImageId: 'source-id',
+        themeId: 'wasteland',
+      }),
+    ).rejects.toThrow(
+      'Invalid generation provider response (requestId=request-id, arrayLength=1, firstItemKeys=extensions|locations|message|path, errorCode=BAD_USER_INPUT, errorMessage=Invalid generation request)',
+    )
+  })
+
+  it('redacts provider values while reporting a malformed array', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify([
+            {
+              extensions: { code: 'invalid-code-secret' },
+              message:
+                'Rejected "private prompt" at https://secret.example/value with AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+              privateValue: 'secret',
+            },
+          ]),
+          {
+            headers: { 'x-request-id': 'request-id' },
+            status: 200,
+          },
+        ),
+      ),
+    )
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        providerSourceImageId: 'source-id',
+        themeId: 'wasteland',
+      }),
+    ).rejects.toThrow(
+      'Invalid generation provider response (requestId=request-id, arrayLength=1, firstItemKeys=extensions|message|privateValue, errorMessage=Rejected <redacted> at <redacted-url> with <redacted-value>)',
+    )
   })
 
   it('downloads a completed JPEG only from Leonardo CDN without credentials', async () => {
@@ -113,6 +327,68 @@ describe('generation provider', () => {
       redirect: 'error',
     })
     expect(request.headers).not.toHaveProperty('Authorization')
+  })
+
+  it('reads the completed output URL from the Leonardo generation status', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          generations_by_pk: {
+            generated_images: [
+              {
+                id: 'image-id',
+                url: 'https://cdn.leonardo.ai/generations/provider-id.jpg',
+              },
+            ],
+            id: 'provider-id',
+            status: 'COMPLETE',
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(getGenerationCompletion('provider-id')).resolves.toEqual({
+      providerOutputUrl: 'https://cdn.leonardo.ai/generations/provider-id.jpg',
+      status: 'COMPLETE',
+    })
+    expect(providerFetch).toHaveBeenCalledWith(
+      'https://cloud.leonardo.ai/api/rest/v1/generations/provider-id',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/json',
+          Authorization: 'Bearer test-api-key',
+        },
+        method: 'GET',
+      }),
+    )
+  })
+
+  it('keeps a pending Leonardo generation pending without an output URL', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            generations_by_pk: {
+              generated_images: [],
+              id: 'provider-id',
+              status: 'PENDING',
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    )
+
+    await expect(getGenerationCompletion('provider-id')).resolves.toEqual({
+      status: 'PENDING',
+    })
   })
 
   it('rejects a completed output outside the Leonardo CDN', async () => {

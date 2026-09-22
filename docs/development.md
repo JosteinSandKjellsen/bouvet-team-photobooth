@@ -36,12 +36,14 @@ pnpm prepare
 pnpm dev
 ```
 
-Open <http://127.0.0.1:3000>. Use `pnpm dev --port 3001` if that port is occupied.
-For a custom port, invoke Nuxt directly instead:
+Open <http://127.0.0.1:3000>. If that port is occupied, invoke Nuxt directly:
 `pnpm --filter @bouvet-team-photobooth/web exec nuxt dev --host 127.0.0.1 --port 3001`.
 Nested script forwarding treats `pnpm dev -- --port 3001` as a Nuxt project-path
-argument rather than a port option. The current M1 theme-selection shell requires
-no environment variables or credentials. `GET /api/health` returns
+argument rather than a port option. Set `NUXT_SESSION_ORIGIN` and
+`LOCAL_GENERATION_WORKER_ORIGIN` to that same origin before using the private
+capture flow on a custom port. The default M1 theme-selection shell requires no
+environment variables or credentials; enabled M2-M4 features use the local
+PostgreSQL and `.env` configuration below. `GET /api/health` returns
 `{"status":"ok"}`: process liveness, not database or provider readiness.
 
 ## Local PostgreSQL
@@ -59,7 +61,7 @@ docker compose ps
 The service listens only on `127.0.0.1:54329`. It creates the `photobooth`
 development database and the separate `photobooth_test` database for automated
 tests. The example local credentials are intentionally non-secret and must not
-be used outside a developer machine. Future Prisma commands use `DATABASE_URL`
+be used outside a developer machine. Prisma commands use `DATABASE_URL`
 for runtime traffic, `DIRECT_URL` for schema changes, and
 `TEST_DATABASE_URL` only for isolated tests.
 
@@ -77,6 +79,25 @@ server flag remains the enforcement boundary. Do not enable either value for
 participant images until the retention, disclosure and provider gates in the
 [implementation plan](./implementation-plan.md) are approved. The isolated
 database test runner enables both values only for its synthetic camera input.
+
+For local synthetic-image testing, enable both flags in the ignored `.env` file
+and run `pnpm local:worker` in a second terminal after `pnpm dev`. The worker
+uses the existing authenticated internal endpoints to submit queued generations,
+reconcile completed output, and process cleanup. It defaults to
+`NUXT_SESSION_ORIGIN` and a two-second interval; set
+`LOCAL_GENERATION_WORKER_ORIGIN` or
+`LOCAL_GENERATION_WORKER_INTERVAL_MS` only when a different local target is
+needed.
+
+To exercise Leonardo locally, set `GENERATION_PROVIDER=leonardo`, supply an
+approved local `LEONARDO_API_KEY`, and run the local worker. The worker polls the
+authenticated v1 get-generation endpoint as a fallback, so localhost does not
+require a public callback URL. To test the primary webhook path, also set a unique
+`NUXT_LEONARDO_WEBHOOK_TOKEN` and configure a temporary public HTTPS callback at
+`/api/internal/leonardo-completion` using that bearer token. This consumes
+approved credits and is limited to synthetic images. The output remains private
+and the browser redirects to the M5 placeholder page because public result
+serving is not implemented yet.
 
 Approved source images use the `local` storage driver by default and are written
 under `apps/web/.local/sources`, which is ignored by Git. Netlify Blob storage

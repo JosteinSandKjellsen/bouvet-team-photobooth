@@ -10,15 +10,15 @@ records verified increments without authorizing later scope.
 
 The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
-guidance. M0 documentation/harness alignment, M1 product shell/themes and M2
-local capture/review are complete. M3 is complete: private
-anonymous sessions, synthetic-image source validation/normalization, local
-development storage, and durable source-cleanup state/lease handling are
-implemented. The authenticated cleanup-worker adapter and configured active
-session admission limit are implemented. Netlify scheduler and site-wide Blob
-storage adapters have been observed on the deployed site: a synthetic source
-was normalized and stored privately, and a manually invoked `job-sweep`
-completed. Approved public-use limit values remain unresolved.
+guidance. M0 documentation/harness alignment, M1 product shell/themes, M2
+local capture/review, M3 private source handling, and M4 private generation and
+recovery are complete. M3 provides private anonymous sessions, synthetic-image
+source validation/normalization, local development storage, durable
+source-cleanup state/lease handling, an authenticated cleanup worker, and an
+active session admission limit. Netlify scheduler and site-wide Blob storage
+adapters have been observed on the deployed site: a synthetic source was
+normalized and stored privately, and a manually invoked `job-sweep` completed.
+Approved public-use limit values remain unresolved.
 
 Automated expiry deletion and stale-lease recovery are now verified against an
 isolated local PostgreSQL instance (2026-09-22): `test/e2e/sessions.spec.ts`
@@ -50,15 +50,28 @@ its relative `/photo/<id>` path. The scheduled worker can now also read the
 active application-owned source, validate its server-owned theme, reserve
 credits, and submit it to the Leonardo adapter when
 `GENERATION_PROVIDER=leonardo` is explicitly configured. This integration is
-covered with mocked provider calls; no live Leonardo request or callback has
-been observed.
+covered with mocked provider calls. Earlier explicitly enabled Flare requests
+returned HTTP-success GraphQL error arrays with no provider generation ID; those
+generations remain `SUBMISSION_UNKNOWN` and were not resubmitted. After matching
+the documented Nano Banana 2 Lite request and response contracts, approved live
+requests using synthetic sources were accepted, polled as `COMPLETE` through the
+authenticated v1 get-generation endpoint, and ingested into private application
+storage without another paid submission. No live completion callback has been
+observed.
+
+The completed M4 browser handoff is verified against the isolated PostgreSQL
+database (2026-09-22): approved synthetic camera capture creates its private
+session, stores its approved source, starts one duplicate-safe generation,
+polls sanitized status, and resumes a live generation after page reload. The
+same suite verifies classified retry behavior, uncertainty handling, output
+ingestion, and source cleanup. `pnpm node:24 -- test:db` passed 17 tests with 7
+intentional project/global skips.
 
 Suggested next-session request:
 
-> Continue M4 only with an approved private capture-to-generation handoff.
-> Publish and count only in the separate approved public-result increment.
-> Keep participant images disabled until the privacy and retention gates are
-> approved.
+> Approve M5 before implementing public result serving, sharing, download,
+> printing, or kiosk reset. Keep participant images disabled until the privacy
+> and retention gates are approved.
 
 ## Confirmed Product Decisions
 
@@ -77,7 +90,8 @@ Suggested next-session request:
 - The cumulative completed-picture total for the current event survives photo
   expiry as an aggregate without permanent photo/session links.
 - Retention durations remain undecided and must be approved before real-photo
-  testing. Provider-side deletion is a separate unresolved verification gate.
+  testing. Leonardo init-image deletion is documented but not implemented;
+  generated-image deletion remains an unresolved provider capability.
 
 Technical approaches below are implementation recommendations, not claims that
 provider capabilities, privacy policies or deployment readiness were verified.
@@ -264,14 +278,22 @@ state are implementation details, not public DTOs. Do not freeze unused DTOs in 
 - Delete application sources after durable output success; bound failed/abandoned
   source retention. Configure separate session, result, tombstone and minimal
   operational cleanup-ledger windows before real-photo use.
+- Every confirmed Leonardo source upload must enter durable provider cleanup as
+  the final action after durable output ingestion or confirmed terminal failure
+  after permitted retries. Do not delete an upload for `SUBMISSION_UNKNOWN` until
+  reconciliation or an approved manual decision establishes that it is safe.
+  Exhausted provider-cleanup attempts must retain the external ID for alerting
+  and manual resolution.
 - Expired metadata, image/download and gallery reads must stop immediately even
   if physical deletion is queued. Bound cache lifetimes, delete stored bytes and
   associated data automatically, retain only required temporary cleanup state,
   and never repopulate expired results from Leonardo.
 - Local deletion, `public: false` and signed URLs do not prove provider erasure.
-  Provider deletion remains unverified. If guaranteed remote erasure is required,
-  unsupported deletion blocks real-photo use/launch. A privacy owner must approve
-  any residual-retention policy; an agent cannot waive it.
+  Leonardo documents v1 init-image deletion, but its cleanup job still requires
+  implementation and live verification. Generated-image deletion remains
+  unverified. If guaranteed remote erasure is required, any unsupported deletion
+  blocks real-photo use/launch. A privacy owner must approve any
+  residual-retention policy; an agent cannot waive it.
 - Copies visitors download or print cannot be remotely erased by the application.
 
 ### Exclusions
@@ -422,10 +444,10 @@ remain gates for later milestones and public use.
 **Depends on:** M2, M3 and verified provider schema/completion/cost contracts.
 
 **Current increment (2026-09-22):** approved sources now create one durable
-generation job. The authenticated scheduled worker claims and submits it through
-an explicitly enabled deterministic development/CI adapter, then records only
-the internal provider correlation. A recovered lease that had entered submission
-is held as `SUBMISSION_UNKNOWN`; it is never automatically resubmitted. The
+generation job. A generation sweep claims and submits it through an explicitly
+enabled deterministic development/CI adapter, then records only the internal
+provider correlation. A recovered lease that had entered submission is held as
+`SUBMISSION_UNKNOWN`; it is never automatically resubmitted. The
 private session capability can poll the generation's opaque job ID and sanitized
 application status without receiving a provider ID. A same-origin retry can
 requeue only classified, confirmed provider failures while the approved source
@@ -433,20 +455,52 @@ remains active; uncertain submissions and expired sources cannot retry. A later
 deterministic worker sweep validates and stores one private application-owned
 output, marks the generation successful, and atomically enqueues source deletion.
 Generated outputs have durable expiry cleanup but are not publicly served. This
-is not a Leonardo integration, publication/counting, or an authorization to use
-participant images. A server-only, contract-tested Leonardo Flare adapter now
-constructs one private v2 generation request from application-owned source bytes
-and one of nine server-owned theme prompts. It enforces the 1376 by 768 baseline,
-quantity one, BASE64 reference shape, bearer authentication, a bounded request
-timeout, and runtime validation of `generationId` and optional `apiCreditCost`.
-The scheduled worker remains deterministic-only, so this adapter cannot yet make
-a paid workflow request; no live Leonardo call has been made. An authenticated
-Leonardo completion callback validates a complete event, one HTTPS
+is not publication/counting or an authorization to use participant images. A
+server-only, contract-tested Leonardo adapter now
+initializes one v1 source-image upload, sends the application-owned JPEG to the
+returned presigned URL without Leonardo credentials, persists the private
+`initImageId`, and constructs one private v2 generation request using an
+`UPLOADED` reference and one of nine server-owned theme prompts. It enforces the
+1376 by 768 baseline, quantity one, bearer authentication only for Leonardo API
+requests, bounded request timeouts, and runtime validation of upload metadata,
+`generationId`, and optional `apiCreditCost`. A confirmed upload is durably
+resumable before generation submission; uncertain upload and generation outcomes
+are terminal and are never submitted or resubmitted automatically. The
+documented v1 init-image deletion call and its durable cleanup state are not yet
+implemented.
+The generation sweep can submit through the adapter only when the Leonardo
+provider is explicitly configured. Its active root model discriminator is
+`nano-banana-2-lite`, with the Dynamic style, prompt enhancement off, and the
+documented v2 `UPLOADED` reference shape captured from a working Leonardo page
+request on 2026-09-22. Earlier Flare submissions using both inline bytes and an
+uploaded source ID returned HTTP-success GraphQL error arrays rather than a
+generation acceptance. The application retained each affected local synthetic
+submission as `SUBMISSION_UNKNOWN` rather than resubmitting it. Provider transport,
+non-success, malformed JSON, and malformed HTTP-success responses are typed as
+uncertain outcomes. The claimed job boundary immediately persists the sanitized
+diagnostic and quarantines the generation instead of allowing the internal
+sweep endpoint to fail as an unhandled exception. Live Nano requests returned a
+nested `generate` object with a nullable credit cost. The earlier parser first
+required top-level fields and then rejected the documented `null` cost, so it
+discarded the generation IDs and quarantined those jobs. Those paid requests
+remain uncertain and will not be retried. The adapter now runtime-validates both
+the Nano recipe's nested response and the OpenAPI top-level compatibility shape,
+normalizing a null cost without discarding the generation ID.
+An authenticated Leonardo completion callback validates a complete event, one HTTPS
 `cdn.leonardo.ai` output and its bearer token before storing only the private
 output URL and idempotently retaining the reconciliation job. The output adapter
 fetches that URL without credentials, redirects or unbounded body reads, then
 the existing worker validates and stores the application-owned JPEG before
-source cleanup. No live Leonardo request or callback has been observed.
+source cleanup. No live Leonardo completion callback has been observed. The
+worker now uses the official v1 get-generation operation as a fallback for due
+Leonardo reconciliation jobs. A pending provider status schedules another poll
+without consuming an output-ingestion attempt; only a submitted generation with
+a validated output URL can be claimed for ingestion. A first completion can
+revive a reconciliation job that failed before this readiness gate existed,
+while duplicate completion events cannot revive a genuinely exhausted download.
+Approved live Nano requests using synthetic sources were accepted, reconciled as
+complete through this endpoint, and ingested into private application storage
+without another paid submission.
 
 A PostgreSQL-backed UTC-day ledger now atomically reserves 50 credits before a
 Leonardo submission, up to an approved 10,000-credit daily cap. Replaying a
@@ -459,7 +513,8 @@ server-owned selected theme, reserves credits, and passes the bytes and theme to
 the asynchronous provider adapter. Local source failures are classified before
 any reservation or provider request; uncertain provider acceptance still holds
 for reconciliation rather than resubmission. Focused tests mock the provider;
-no paid request has been made.
+separately approved live submissions using synthetic sources have also completed
+through private ingestion.
 
 Each durable stored output now receives one application-owned, 256-bit opaque
 result identifier. The private session status response exposes only its relative
@@ -525,16 +580,28 @@ stage. Configure approved retention, inactivity/grace periods, public limits,
 event budget/identifier, canonical HTTPS origin and print format. Verify processor
 terms, artwork rights and group likeness/print quality against approved settings.
 
+Implement Leonardo's authenticated
+`DELETE /api/rest/v1/init-image/{initImageId}` operation as a dedicated cleanup
+job and exercise both terminal paths: successful output ingestion and confirmed
+generation failure after retries. The job must validate the nullable response,
+be idempotent after repeated-delete behavior is verified, retry only classified
+transient failures, preserve its external ID after exhausted cleanup, and never
+treat `SUBMISSION_UNKNOWN` as safe to delete without reconciliation or approved
+manual intervention.
+
 Deploy the existing Netlify-first adapters, workers/scheduler and migrations with
 isolated non-production storage. Add an operator runbook to this plan; split it
 into another document only when actual operational content warrants that.
 
-**Acceptance:** observe scheduled expiry, lease recovery and object/cache/metadata
-cleanup in the target environment; exercise late callbacks, offline/reconnect,
-reset at every stage, repeated groups and budget saturation. Test physical kiosk
-camera/printing and Android/iOS camera/download behavior, including phone return
-after suspension. Record approvals and evidence. Node browser tests alone do not
-prove deployed jobs, hardware behavior or privacy compliance.
+**Acceptance:** observe scheduled expiry, lease recovery and
+object/cache/metadata cleanup in the target environment. When Leonardo provides
+the required operation, verify provider-source deletion after both success and
+confirmed terminal failure, including retry exhaustion and manual escalation.
+Exercise late callbacks, offline/reconnect, reset at every stage, repeated groups
+and budget saturation. Test physical kiosk camera/printing and Android/iOS
+camera/download behavior, including phone return after suspension. Record
+approvals and evidence. Node browser tests alone do not prove deployed jobs,
+hardware behavior or privacy compliance.
 
 ## Owning Files And Reuse
 
@@ -560,7 +627,7 @@ relative `useFetch` loading/error/retry states, `@lucide/vue` icons and existing
   `apps/web/server`; public artwork goes under `apps/web/public/themes`.
 - [Contract exports](../packages/contracts/src/index.ts) remain type-only. Add
   minimal producer/consumer DTOs with their implementing slice.
-- Future Prisma schema/migrations belong to `apps/web/prisma`; platform worker
+- Prisma schema/migrations belong to `apps/web/prisma`; platform worker
   adapters follow the data playbook. Do not edit generated `.nuxt`/`.output`.
 - [Nuxt tests](../apps/web/test/nuxt) and [browser tests](../apps/web/test/e2e)
   keep their current separation. Retain the isolated production-server behavior

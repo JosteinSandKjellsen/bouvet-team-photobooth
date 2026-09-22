@@ -9,9 +9,11 @@ clear public-sharing information, bounded retention and private source handling.
 
 The solution is one Nuxt 4/Vue frontend and Nitro backend in a pnpm workspace,
 with type-only shared API contracts. Use Node 24 LTS (at least 24.15.0).
-The implemented app includes the M1 theme-selection shell and credential-free
-health endpoint; camera capture, generation, persistence and deployment are not
-implemented.
+The implemented app includes M1-M4: theme selection, local capture/review,
+private anonymous sessions and source storage, durable generation jobs, and
+completion reconciliation. These paths remain feature-gated for synthetic
+testing. M5 public result serving, M6 gallery behavior and public-launch approval
+are not implemented; deployment adapters do not prove deployment readiness.
 Follow the [product experience playbook](../docs/product-experience-playbook.md)
 and [implementation plan](../docs/implementation-plan.md) for the selected
 milestone and unresolved gates; the product vision does not authorize extra work.
@@ -77,7 +79,8 @@ into small, reusable harness improvements.
 
 Run commands from the repository root with the pinned pnpm version. Bootstrap
 with `pnpm install --frozen-lockfile` and `pnpm prepare`. Nuxt's generated types
-and lint config must exist before checks. The demo requires no credentials.
+and lint config must exist before checks. The default M1 demo requires no
+credentials; enabled M2-M4 paths use the configuration in `.env.example`.
 
 At the start of a terminal session, check `node --version`. If it is not Node 24,
 select Node 24 once through an installed version manager before running checks.

@@ -2,11 +2,11 @@
 
 ## Applicability
 
-This is the approved baseline for future camera and source-upload features, not
-an instruction to add them to the initial health-check scaffold. Load it before
-planning or changing those features. Resolve conflicting requirements with the
+This is the approved baseline for the implemented M2-M4 camera, source-upload
+and provider-upload behavior, and for future changes to those features. Load it
+before planning or changing them. Resolve conflicting requirements with the
 product owner before implementation. The source verification dates below are
-historical; recheck provider capabilities when implementing the feature.
+historical; recheck provider capabilities before changing the integration.
 
 This document defines the implementation baseline for capturing, validating,
 compressing, and uploading a source image for Leonardo image guidance. It was
@@ -46,7 +46,7 @@ const MEBIBYTE = 1024 * 1024
 const INITIAL_IMAGE_LIMITS = {
   maxInboundBytes: 20 * MEBIBYTE,
   maxApplicationRequestBytes: 4_000_000,
-  maxDecodedPixels: 24_000_000,
+  maxDecodedPixels: 16_000_000,
   maxDimension: 8_192,
   maxLeonardoUploadBytes: 5 * MEBIBYTE,
   targetLeonardoUploadBytes: 4 * MEBIBYTE,
@@ -61,7 +61,7 @@ These values are an implementation baseline, not Leonardo guarantees:
 
 - `maxInboundBytes` rejects unusually large input before decoding.
 - `maxApplicationRequestBytes` limits the entire processed-image multipart
-  request through the future Netlify Function, including fields and envelope.
+  request through the Nitro capture endpoint, including fields and envelope.
   It is 4 MB in decimal bytes, not 4 MiB. The original file is processed in the
   browser; the 20 MiB inbound ceiling is not a server request allowance.
 - `maxDecodedPixels` and `maxDimension` limit decompression-bomb exposure.

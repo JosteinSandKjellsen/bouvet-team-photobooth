@@ -2,12 +2,21 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
 import { reserveGenerationCredits } from './generation-budget'
-import { getGeneratedOutput, submitGeneration } from './generation-provider'
+import { recordGenerationCompletion } from './generation-completion'
+import {
+  createGenerationSourceUpload,
+  GenerationSubmissionOutcomeUnknownError,
+  getGenerationCompletion,
+  getGeneratedOutput,
+  submitGeneration,
+  uploadGenerationSource,
+} from './generation-provider'
 import { getSourceImage, storeGeneratedImage } from './source-storage'
 import { isThemeId } from './themes'
 
 const submissionBatchSize = 10
 const submissionLeaseMs = 60_000
+const completionPollDelayMs = 5_000
 
 export async function runGenerationSubmission(now = new Date()) {
   const provider = process.env.GENERATION_PROVIDER
@@ -25,11 +34,91 @@ export async function runGenerationSubmission(now = new Date()) {
 
 async function reconcileSubmittedGenerations(now: Date) {
   await recoverReconciliationJobs(now)
+  await pollSubmittedGenerations(now)
 
   const owner = randomUUID()
   const jobs = await claimReconciliationJobs(owner, now)
   for (const job of jobs) {
     await reconcileClaimedGeneration(job, owner, now)
+  }
+}
+
+async function pollSubmittedGenerations(now: Date) {
+  if (process.env.GENERATION_PROVIDER !== 'leonardo') return
+
+  const jobs = await db.backgroundJob.findMany({
+    where: {
+      kind: 'RECONCILE_GENERATION',
+      nextAttemptAt: { lte: now },
+      status: { in: ['FAILED', 'QUEUED'] },
+    },
+    orderBy: [{ nextAttemptAt: 'asc' }, { createdAt: 'asc' }],
+    select: { aggregateId: true, id: true, status: true },
+    take: submissionBatchSize,
+  })
+  if (jobs.length === 0) return
+
+  const generations = await db.imageGeneration.findMany({
+    where: {
+      id: { in: jobs.map((job) => job.aggregateId) },
+      providerGenerationId: { not: null },
+      providerOutputUrl: null,
+      status: 'SUBMITTED',
+    },
+    select: { id: true, providerGenerationId: true },
+  })
+  const jobsByGenerationId = new Map(jobs.map((job) => [job.aggregateId, job]))
+  const nextAttemptAt = new Date(now.getTime() + completionPollDelayMs)
+
+  for (const generation of generations) {
+    const job = jobsByGenerationId.get(generation.id)
+    if (!job || !generation.providerGenerationId) continue
+
+    let completion: Awaited<ReturnType<typeof getGenerationCompletion>>
+    try {
+      completion = await getGenerationCompletion(
+        generation.providerGenerationId,
+      )
+    } catch {
+      await db.backgroundJob.updateMany({
+        where: { id: job.id, status: job.status },
+        data: {
+          lastErrorCode: 'COMPLETION_POLL_FAILED',
+          nextAttemptAt,
+        },
+      })
+      continue
+    }
+
+    if (completion.status === 'COMPLETE') {
+      await recordGenerationCompletion(
+        generation.providerGenerationId,
+        completion.providerOutputUrl,
+      )
+      continue
+    }
+    if (completion.status === 'PENDING') {
+      await db.backgroundJob.updateMany({
+        where: { id: job.id, status: job.status },
+        data: { lastErrorCode: null, nextAttemptAt },
+      })
+      continue
+    }
+
+    await db.$transaction(async (transaction) => {
+      await transaction.backgroundJob.updateMany({
+        where: { id: job.id, status: job.status },
+        data: {
+          completedAt: now,
+          lastErrorCode: 'PROVIDER_GENERATION_FAILED',
+          status: 'FAILED',
+        },
+      })
+      await transaction.imageGeneration.updateMany({
+        where: { id: generation.id, status: 'SUBMITTED' },
+        data: { status: 'FAILED' },
+      })
+    })
   }
 }
 
@@ -46,20 +135,48 @@ async function recoverUncertainSubmissions(now: Date) {
   })
 
   for (const job of jobs) {
+    const generation = await db.imageGeneration.findUnique({
+      where: { id: job.aggregateId },
+      select: { status: true },
+    })
+    if (
+      generation?.status === 'PENDING' ||
+      generation?.status === 'READY_TO_SUBMIT'
+    ) {
+      await db.backgroundJob.updateMany({
+        where: { id: job.id, leaseExpiresAt: { lt: now }, status: 'RUNNING' },
+        data: {
+          leaseExpiresAt: null,
+          leaseOwner: null,
+          nextAttemptAt: now,
+          status: 'QUEUED',
+        },
+      })
+      continue
+    }
+
+    const submissionWasUncertain = generation?.status === 'SUBMITTING'
     await db.$transaction(async (transaction) => {
       const recovered = await transaction.backgroundJob.updateMany({
         where: { id: job.id, leaseExpiresAt: { lt: now }, status: 'RUNNING' },
         data: {
           completedAt: now,
-          lastErrorCode: 'SUBMISSION_OUTCOME_UNKNOWN',
+          lastErrorCode: submissionWasUncertain
+            ? 'SUBMISSION_OUTCOME_UNKNOWN'
+            : 'SOURCE_UPLOAD_OUTCOME_UNKNOWN',
           status: 'FAILED',
         },
       })
       if (recovered.count === 0) return
 
       await transaction.imageGeneration.updateMany({
-        where: { id: job.aggregateId, status: 'SUBMITTING' },
-        data: { status: 'SUBMISSION_UNKNOWN' },
+        where: {
+          id: job.aggregateId,
+          status: submissionWasUncertain ? 'SUBMITTING' : 'UPLOADING',
+        },
+        data: {
+          status: submissionWasUncertain ? 'SUBMISSION_UNKNOWN' : 'FAILED',
+        },
       })
     })
   }
@@ -137,9 +254,25 @@ async function claimReconciliationJobs(owner: string, now: Date) {
     select: { aggregateId: true, attempt: true, id: true, maxAttempts: true },
     take: submissionBatchSize,
   })
+  if (jobs.length === 0) return []
+
+  const readyGenerations = await db.imageGeneration.findMany({
+    where: {
+      id: { in: jobs.map((job) => job.aggregateId) },
+      ...(process.env.GENERATION_PROVIDER === 'leonardo'
+        ? { providerOutputUrl: { not: null } }
+        : {}),
+      status: 'SUBMITTED',
+    },
+    select: { id: true },
+  })
+  const readyGenerationIds = new Set(
+    readyGenerations.map((generation) => generation.id),
+  )
   const leaseExpiresAt = new Date(now.getTime() + submissionLeaseMs)
   const claimed = []
   for (const job of jobs) {
+    if (!readyGenerationIds.has(job.aggregateId)) continue
     const result = await db.backgroundJob.updateMany({
       where: { id: job.id, status: 'QUEUED' },
       data: {
@@ -159,15 +292,11 @@ async function submitClaimedGeneration(
   owner: string,
   now: Date,
 ) {
-  const prepared = await db.imageGeneration.updateMany({
-    where: { id: job.aggregateId, status: 'PENDING' },
-    data: { status: 'SUBMITTING' },
-  })
-  if (prepared.count === 0) return
-
   const generation = await db.imageGeneration.findUnique({
     where: { id: job.aggregateId },
     select: {
+      providerSourceImageId: true,
+      providerSourceUploadedAt: true,
       sourceImage: {
         select: {
           deleteAfter: true,
@@ -176,8 +305,24 @@ async function submitClaimedGeneration(
           storageKey: true,
         },
       },
+      status: true,
     },
   })
+  if (!generation) return
+
+  const usesLeonardo = process.env.GENERATION_PROVIDER === 'leonardo'
+  let generationStatus = generation.status
+  if (generationStatus === 'PENDING') {
+    const prepared = await db.imageGeneration.updateMany({
+      where: { id: job.aggregateId, status: 'PENDING' },
+      data: { status: usesLeonardo ? 'UPLOADING' : 'SUBMITTING' },
+    })
+    if (prepared.count === 0) return
+    generationStatus = usesLeonardo ? 'UPLOADING' : 'SUBMITTING'
+  } else if (!(usesLeonardo && generationStatus === 'READY_TO_SUBMIT')) {
+    return
+  }
+
   const source = generation?.sourceImage
   const themeId = source?.session.themeId
   if (
@@ -196,20 +341,22 @@ async function submitClaimedGeneration(
     return
   }
 
-  let sourceImage: Uint8Array
-  try {
-    sourceImage = await getSourceImage(source.storageKey)
-  } catch {
-    await failGenerationForUnavailableSource(
-      job.id,
-      job.aggregateId,
-      owner,
-      now,
-    )
-    return
+  let sourceImage: Uint8Array | undefined
+  if (!usesLeonardo || generationStatus === 'UPLOADING') {
+    try {
+      sourceImage = await getSourceImage(source.storageKey)
+    } catch {
+      await failGenerationForUnavailableSource(
+        job.id,
+        job.aggregateId,
+        owner,
+        now,
+      )
+      return
+    }
   }
 
-  if (process.env.GENERATION_PROVIDER === 'leonardo') {
+  if (usesLeonardo) {
     const reserved = await reserveGenerationCredits(job.aggregateId, now)
     if (!reserved) {
       await failGenerationForDailyCap(job.id, job.aggregateId, owner, now)
@@ -217,11 +364,105 @@ async function submitClaimedGeneration(
     }
   }
 
-  const result = await submitGeneration({
-    generationId: job.aggregateId,
-    sourceImage,
-    themeId,
-  })
+  let providerSourceImageId = generation.providerSourceImageId ?? undefined
+  let sourceUploadConfirmed = Boolean(generation.providerSourceUploadedAt)
+  if (usesLeonardo && generationStatus === 'UPLOADING') {
+    let upload: Awaited<ReturnType<typeof createGenerationSourceUpload>>
+    try {
+      upload = await createGenerationSourceUpload()
+    } catch (error) {
+      await failGenerationForSourceUpload(
+        job.id,
+        job.aggregateId,
+        owner,
+        now,
+        getErrorMessage(error),
+      )
+      return
+    }
+
+    const persisted = await db.imageGeneration.updateMany({
+      where: {
+        id: job.aggregateId,
+        providerSourceImageId: null,
+        status: 'UPLOADING',
+      },
+      data: { providerSourceImageId: upload.providerSourceImageId },
+    })
+    if (persisted.count === 0) return
+
+    try {
+      await uploadGenerationSource(upload, sourceImage as Uint8Array)
+    } catch (error) {
+      await failGenerationForSourceUpload(
+        job.id,
+        job.aggregateId,
+        owner,
+        now,
+        getErrorMessage(error),
+      )
+      return
+    }
+
+    const uploaded = await db.imageGeneration.updateMany({
+      where: {
+        id: job.aggregateId,
+        providerSourceImageId: upload.providerSourceImageId,
+        status: 'UPLOADING',
+      },
+      data: {
+        providerSourceUploadedAt: new Date(),
+        status: 'READY_TO_SUBMIT',
+      },
+    })
+    if (uploaded.count === 0) return
+    providerSourceImageId = upload.providerSourceImageId
+    sourceUploadConfirmed = true
+    generationStatus = 'READY_TO_SUBMIT'
+  }
+
+  if (usesLeonardo) {
+    if (
+      generationStatus !== 'READY_TO_SUBMIT' ||
+      !providerSourceImageId ||
+      !sourceUploadConfirmed
+    ) {
+      await failGenerationForSourceUpload(
+        job.id,
+        job.aggregateId,
+        owner,
+        now,
+        'Generation source upload state is invalid',
+      )
+      return
+    }
+
+    const submitting = await db.imageGeneration.updateMany({
+      where: { id: job.aggregateId, status: 'READY_TO_SUBMIT' },
+      data: { status: 'SUBMITTING' },
+    })
+    if (submitting.count === 0) return
+  }
+
+  let result: Awaited<ReturnType<typeof submitGeneration>>
+  try {
+    result = await submitGeneration({
+      generationId: job.aggregateId,
+      providerSourceImageId,
+      themeId,
+    })
+  } catch (error) {
+    if (!(error instanceof GenerationSubmissionOutcomeUnknownError)) throw error
+
+    await quarantineUncertainSubmission(
+      job.id,
+      job.aggregateId,
+      owner,
+      now,
+      error.message,
+    )
+    return
+  }
   await db.$transaction(async (transaction) => {
     const completed = await transaction.backgroundJob.updateMany({
       where: {
@@ -256,6 +497,74 @@ async function submitClaimedGeneration(
   })
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error
+    ? error.message
+    : 'Generation source upload failed'
+}
+
+async function failGenerationForSourceUpload(
+  jobId: string,
+  generationId: string,
+  owner: string,
+  now: Date,
+  diagnostic: string,
+) {
+  const completed = await db.backgroundJob.updateMany({
+    where: {
+      id: jobId,
+      leaseExpiresAt: { gt: now },
+      leaseOwner: owner,
+      status: 'RUNNING',
+    },
+    data: {
+      completedAt: now,
+      lastError: diagnostic,
+      lastErrorCode: 'SOURCE_UPLOAD_FAILED',
+      leaseExpiresAt: null,
+      leaseOwner: null,
+      status: 'FAILED',
+    },
+  })
+  if (completed.count === 0) return
+
+  await db.imageGeneration.updateMany({
+    where: {
+      id: generationId,
+      status: { in: ['READY_TO_SUBMIT', 'UPLOADING'] },
+    },
+    data: { status: 'FAILED' },
+  })
+}
+
+async function quarantineUncertainSubmission(
+  jobId: string,
+  generationId: string,
+  owner: string,
+  now: Date,
+  diagnostic: string,
+) {
+  await db.$transaction(async (transaction) => {
+    const quarantined = await transaction.backgroundJob.updateMany({
+      where: { id: jobId, leaseOwner: owner, status: 'RUNNING' },
+      data: {
+        completedAt: now,
+        lastError: diagnostic,
+        lastErrorCode: 'SUBMISSION_OUTCOME_UNKNOWN',
+        leaseExpiresAt: null,
+        leaseOwner: null,
+        status: 'FAILED',
+      },
+    })
+    if (quarantined.count === 0) return
+
+    await transaction.imageGeneration.updateMany({
+      where: { id: generationId, status: 'SUBMITTING' },
+      data: { status: 'SUBMISSION_UNKNOWN' },
+    })
+  })
+}
+
 async function failGenerationForDailyCap(
   jobId: string,
   generationId: string,
@@ -278,7 +587,10 @@ async function failGenerationForDailyCap(
   if (completed.count === 0) return
 
   await db.imageGeneration.updateMany({
-    where: { id: generationId, status: 'SUBMITTING' },
+    where: {
+      id: generationId,
+      status: { in: ['READY_TO_SUBMIT', 'SUBMITTING', 'UPLOADING'] },
+    },
     data: { status: 'FAILED' },
   })
 }
@@ -305,7 +617,10 @@ async function failGenerationForUnavailableSource(
   if (completed.count === 0) return
 
   await db.imageGeneration.updateMany({
-    where: { id: generationId, status: 'SUBMITTING' },
+    where: {
+      id: generationId,
+      status: { in: ['READY_TO_SUBMIT', 'SUBMITTING', 'UPLOADING'] },
+    },
     data: { status: 'FAILED' },
   })
 }

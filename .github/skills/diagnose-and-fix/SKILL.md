@@ -16,7 +16,10 @@ description: 'Diagnose runtime failures, regressions, failing tests, and fronten
    Ask before changing requirements. Do not reproduce a paid submission by
    blindly retrying it; uncertain acceptance requires reconciliation or review.
 4. Add or run the cheapest discriminating test. Make a small repair and rerun
-   that exact check before investigating unrelated surfaces.
+   that exact check before investigating unrelated surfaces. For an HTTP-success
+   provider response that fails parsing, capture a sanitized fixture from the
+   observed response and preserve its wrapper, nullability and optional fields in
+   the regression. A top-level key list does not establish the nested contract.
 5. If the check falsifies the hypothesis, follow the nearest controlling call.
    Preserve the reproduction and do not weaken assertions to hide the failure.
 6. Run the relevant checks from the [development guide](../../../docs/development.md), including

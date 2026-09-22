@@ -23,6 +23,22 @@ export async function recordGenerationCompletion(
         where: { id: generation.id },
         data: { providerOutputUrl },
       })
+
+      await transaction.backgroundJob.updateMany({
+        where: {
+          idempotencyKey: `reconcile-generation:${generation.id}`,
+          status: 'FAILED',
+        },
+        data: {
+          attempt: 0,
+          completedAt: null,
+          lastError: null,
+          lastErrorCode: null,
+          leaseExpiresAt: null,
+          leaseOwner: null,
+          status: 'QUEUED',
+        },
+      })
     }
 
     await transaction.backgroundJob.upsert({

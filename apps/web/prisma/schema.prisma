@@ -18,6 +18,8 @@ enum AssetStatus {
 
 enum GenerationStatus {
   PENDING
+  UPLOADING
+  READY_TO_SUBMIT
   SUBMITTING
   SUBMISSION_UNKNOWN
   SUBMITTED
@@ -90,16 +92,18 @@ model GeneratedImage {
 }
 
 model ImageGeneration {
-  id                   String           @id @db.Uuid
-  sourceImageId        String           @unique @db.Uuid
-  sourceImage          SourceImage      @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
-  idempotencyKey       String           @unique
-  providerGenerationId String?          @unique
-  providerOutputUrl    String?
-  status               GenerationStatus @default(PENDING)
-  generatedImage       GeneratedImage?
-  createdAt            DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt            DateTime         @updatedAt @db.Timestamptz(3)
+  id                       String           @id @db.Uuid
+  sourceImageId            String           @unique @db.Uuid
+  sourceImage              SourceImage      @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
+  idempotencyKey           String           @unique
+  providerSourceImageId    String?          @unique
+  providerSourceUploadedAt DateTime?        @db.Timestamptz(3)
+  providerGenerationId     String?          @unique
+  providerOutputUrl        String?
+  status                   GenerationStatus @default(PENDING)
+  generatedImage           GeneratedImage?
+  createdAt                DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([status, createdAt])
 }

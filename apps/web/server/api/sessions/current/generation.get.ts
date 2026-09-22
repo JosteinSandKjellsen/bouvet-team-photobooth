@@ -5,10 +5,12 @@ import { getCurrentSession, sessionCookieName } from '../../../utils/sessions'
 const generationStatuses = {
   FAILED: 'failed',
   PENDING: 'pending',
+  READY_TO_SUBMIT: 'submitting',
   SUBMISSION_UNKNOWN: 'submission_unknown',
   SUBMITTED: 'submitted',
   SUBMITTING: 'submitting',
   SUCCEEDED: 'succeeded',
+  UPLOADING: 'submitting',
 } as const
 
 export default defineEventHandler(
