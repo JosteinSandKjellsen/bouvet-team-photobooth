@@ -11,11 +11,15 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   runtimeConfig: {
+    captureGenerationEnabled: false,
     cleanupWorkerToken: '',
     leonardoWebhookToken: '',
     sessionMaxActive: '',
     sessionOrigin: '',
     sessionTtlMs: '',
+    public: {
+      captureGenerationEnabled: false,
+    },
   },
   typescript: {
     strict: true,

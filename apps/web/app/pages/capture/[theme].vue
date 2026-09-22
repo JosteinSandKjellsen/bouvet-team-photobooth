@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { ThemesResponse } from '@bouvet-team-photobooth/contracts'
+import type {
+  GenerationAcceptedResponse,
+  GenerationStatusResponse,
+  ThemesResponse,
+} from '@bouvet-team-photobooth/contracts'
 import { Camera, RotateCcw, SwitchCamera } from '@lucide/vue'
 import { themeMessages } from '~/utils/themeMessages'
 
@@ -8,6 +12,7 @@ defineOptions({ name: 'ThemeCapturePage' })
 const route = useRoute()
 const { t } = useI18n()
 const { data } = await useFetch<ThemesResponse>('/api/themes')
+const { public: publicConfig } = useRuntimeConfig()
 const selectedTheme = computed(() =>
   data.value?.themes.find((theme) => theme.id === route.params.theme),
 )
@@ -15,6 +20,13 @@ const camera = useLocalCameraCapture()
 const videoElement = ref<HTMLVideoElement | null>(null)
 const videoReady = ref(false)
 const locallyApproved = ref(false)
+const submissionError = ref(false)
+const submitting = ref(false)
+const generationStatus = ref<GenerationStatusResponse['status'] | null>(null)
+const captureGenerationEnabled = computed(
+  () => String(publicConfig.captureGenerationEnabled) === 'true',
+)
+let pollTimer: ReturnType<typeof setTimeout> | undefined
 const countdown = useCaptureCountdown({
   onComplete: () => void captureImage(),
 })
@@ -22,6 +34,7 @@ const countdown = useCaptureCountdown({
 watch(videoElement, (video) => void camera.connectVideo(video))
 
 function startCamera() {
+  clearGenerationState()
   locallyApproved.value = false
   videoReady.value = false
   void camera.activate()
@@ -64,13 +77,119 @@ function cancelCountdownOnHiddenTab() {
 }
 
 function retake() {
+  clearGenerationState()
   locallyApproved.value = false
   camera.reset()
   startCamera()
 }
 
-function approvePicture() {
-  locallyApproved.value = true
+function clearGenerationState() {
+  if (pollTimer) {
+    clearTimeout(pollTimer)
+    pollTimer = undefined
+  }
+  generationStatus.value = null
+  submissionError.value = false
+  submitting.value = false
+}
+
+function schedulePoll() {
+  if (pollTimer) {
+    clearTimeout(pollTimer)
+  }
+  if (
+    generationStatus.value === 'failed' ||
+    generationStatus.value === 'succeeded'
+  ) {
+    return
+  }
+
+  pollTimer = setTimeout(() => void loadGenerationStatus(), 2_000)
+}
+
+async function loadGenerationStatus() {
+  try {
+    const generation = await $fetch<GenerationStatusResponse>(
+      '/api/sessions/current/generation',
+    )
+    generationStatus.value = generation.status
+    submissionError.value = false
+
+    if (generation.status === 'succeeded' && generation.resultPath) {
+      await navigateTo(generation.resultPath)
+      return
+    }
+    schedulePoll()
+  } catch {
+    submissionError.value = true
+    if (locallyApproved.value) {
+      pollTimer = setTimeout(() => void loadGenerationStatus(), 2_000)
+    }
+  }
+}
+
+async function approvePicture() {
+  const source = camera.source.value
+  const theme = selectedTheme.value
+  if (!source || !theme || submitting.value) {
+    return
+  }
+
+  if (!captureGenerationEnabled.value) {
+    locallyApproved.value = true
+    return
+  }
+
+  submitting.value = true
+  submissionError.value = false
+
+  try {
+    await $fetch('/api/sessions', {
+      body: { themeId: theme.id },
+      method: 'POST',
+    })
+    const formData = new FormData()
+    formData.set('image', source, 'capture.jpg')
+    await $fetch('/api/sessions/current/capture', {
+      body: formData,
+      method: 'POST',
+    })
+    locallyApproved.value = true
+    const generation = await $fetch<GenerationStatusResponse>(
+      '/api/sessions/current/generate',
+      { method: 'POST' },
+    )
+    generationStatus.value = generation.status
+    schedulePoll()
+  } catch {
+    submissionError.value = true
+    if (locallyApproved.value) {
+      schedulePoll()
+    }
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function retryGeneration() {
+  if (submitting.value || generationStatus.value !== 'failed') {
+    return
+  }
+
+  submitting.value = true
+  submissionError.value = false
+  try {
+    const generation = await $fetch<GenerationAcceptedResponse>(
+      '/api/sessions/current/retry',
+      { method: 'POST' },
+    )
+    generationStatus.value = generation.status
+    schedulePoll()
+  } catch {
+    submissionError.value = true
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(() =>
@@ -79,6 +198,7 @@ onMounted(() =>
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', cancelCountdownOnHiddenTab)
   countdown.cancel()
+  clearGenerationState()
   camera.reset()
 })
 </script>
@@ -208,18 +328,47 @@ onBeforeUnmount(() => {
           <button
             data-testid="capture-use-picture"
             type="button"
+            :disabled="submitting"
             @click="approvePicture"
           >
             {{ t('capture.review.usePicture') }}
           </button>
         </div>
         <p
-          v-else-if="locallyApproved"
+          v-else-if="locallyApproved && !captureGenerationEnabled"
           class="approval"
           data-testid="capture-approved"
           role="status"
         >
           {{ t('capture.review.locallyApproved') }}
+        </p>
+        <div
+          v-else-if="locallyApproved"
+          class="approval"
+          data-testid="capture-generating"
+          role="status"
+        >
+          <p>{{ t(`capture.generating.${generationStatus ?? 'pending'}`) }}</p>
+          <button
+            v-if="generationStatus === 'failed'"
+            data-testid="capture-retry-generation"
+            type="button"
+            :disabled="submitting"
+            @click="retryGeneration"
+          >
+            {{ t('common.actions.retry') }}
+          </button>
+          <p v-if="submissionError" class="error" role="alert">
+            {{ t('capture.errors.generationUnavailable') }}
+          </p>
+        </div>
+        <p
+          v-else-if="submissionError"
+          class="error"
+          data-testid="capture-generation-error"
+          role="alert"
+        >
+          {{ t('capture.errors.generationUnavailable') }}
         </p>
       </section>
     </template>

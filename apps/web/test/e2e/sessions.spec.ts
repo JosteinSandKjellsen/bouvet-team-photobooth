@@ -62,6 +62,40 @@ async function submitGeneration(request: APIRequestContext) {
   expect(submitted.status()).toBe(204)
 }
 
+test('submits an approved browser capture through the private generation flow', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  const mutationRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.method() !== 'GET') {
+      mutationRequests.push(
+        `${request.method()} ${new URL(request.url()).pathname}`,
+      )
+    }
+  })
+
+  await page.goto('/capture/samurai')
+  await page.getByTestId('capture-activate-camera').click()
+  await expect(page.getByTestId('capture-video')).toBeVisible()
+  await expect(page.getByTestId('capture-take-photo')).toBeEnabled()
+  await page.getByTestId('capture-take-photo').click()
+  await expect(page.getByTestId('capture-retake')).toBeVisible({
+    timeout: 5_000,
+  })
+  await page.getByTestId('capture-use-picture').click()
+
+  await expect(page.getByTestId('capture-generating')).toBeVisible()
+  expect(mutationRequests).toEqual(
+    expect.arrayContaining([
+      'POST /api/sessions',
+      'POST /api/sessions/current/capture',
+      'POST /api/sessions/current/generate',
+    ]),
+  )
+})
+
 test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   request: _request,
 }, testInfo) => {

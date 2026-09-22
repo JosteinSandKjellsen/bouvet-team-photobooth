@@ -4,6 +4,7 @@ const port = Number(process.env.E2E_PORT ?? 3100)
 if (!Number.isInteger(port) || port < 1024 || port > 65535) {
   throw new Error('E2E_PORT must be an integer between 1024 and 65535')
 }
+const captureGenerationEnabled = Boolean(process.env.TEST_DATABASE_URL)
 const baseURL = `http://127.0.0.1:${port}`
 
 export default defineConfig({
@@ -29,7 +30,9 @@ export default defineConfig({
       ...process.env,
       NITRO_HOST: '127.0.0.1',
       NITRO_PORT: String(port),
+      NUXT_CAPTURE_GENERATION_ENABLED: String(captureGenerationEnabled),
       NUXT_LEONARDO_WEBHOOK_TOKEN: 'test-leonardo-webhook-token',
+      NUXT_PUBLIC_CAPTURE_GENERATION_ENABLED: String(captureGenerationEnabled),
       NUXT_SESSION_MAX_ACTIVE: '100',
       NUXT_SESSION_ORIGIN: baseURL,
       NUXT_SESSION_TTL_MS: '300000',

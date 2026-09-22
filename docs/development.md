@@ -70,6 +70,14 @@ must be scheduled by the deployment platform; its local token and capacity are
 not approved production values. Configure distinct secret and numeric values
 before public use.
 
+Browser capture-to-generation is disabled by default. It requires both
+`NUXT_CAPTURE_GENERATION_ENABLED=true` on the server and
+`NUXT_PUBLIC_CAPTURE_GENERATION_ENABLED=true` for the browser flow; the private
+server flag remains the enforcement boundary. Do not enable either value for
+participant images until the retention, disclosure and provider gates in the
+[implementation plan](./implementation-plan.md) are approved. The isolated
+database test runner enables both values only for its synthetic camera input.
+
 Approved source images use the `local` storage driver by default and are written
 under `apps/web/.local/sources`, which is ignored by Git. Netlify Blob storage
 is only for hosted deployments: set `SOURCE_STORAGE_DRIVER=netlify` and provide

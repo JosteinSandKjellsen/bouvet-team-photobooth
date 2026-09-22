@@ -50,6 +50,11 @@ export function getSessionSettings(event: H3Event) {
   return { sessionMaxActive, sessionOrigin, sessionTtlMs }
 }
 
+export function isCaptureGenerationEnabled(event: H3Event) {
+  const { captureGenerationEnabled } = useRuntimeConfig(event)
+  return captureGenerationEnabled
+}
+
 export function requireSameOrigin(event: H3Event, sessionOrigin: string) {
   if (getRequestHeader(event, 'origin') !== sessionOrigin) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' })

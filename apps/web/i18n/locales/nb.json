@@ -39,9 +39,18 @@
       "usePicture": "Bruk bildet",
       "locallyApproved": "Bildet er godkjent. Det blir ikke lastet opp før neste del av løsningen er klar."
     },
+    "generating": {
+      "pending": "Bildet er klart for behandling.",
+      "submitting": "Bildet sendes til behandling.",
+      "submission_unknown": "Vi bekrefter fortsatt behandlingen av bildet.",
+      "submitted": "Bildet behandles.",
+      "failed": "Behandlingen av bildet kunne ikke fullføres.",
+      "succeeded": "Bildet er klart. Åpner resultatet."
+    },
     "errors": {
       "cameraInUse": "Kameraet er i bruk av en annen app. Lukk den og prøv igjen.",
       "cameraUnavailable": "Kameraet er ikke tilgjengelig akkurat nå. Prøv igjen.",
+      "generationUnavailable": "Vi kunne ikke bekrefte behandlingen av bildet. Prøv på nytt senere.",
       "imageTooLarge": "Bildet kunne ikke klargjøres. Prøv igjen.",
       "permissionDenied": "Vi fikk ikke tilgang til kameraet. Tillat tilgang i nettleseren og prøv igjen.",
       "unsupportedMedia": "Denne nettleseren kan ikke bruke kameraet her."

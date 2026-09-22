@@ -2,6 +2,7 @@ import type { SourceImageUploadResponse } from '@bouvet-team-photobooth/contract
 import {
   getCurrentSession,
   getSessionSettings,
+  isCaptureGenerationEnabled,
   requireSameOrigin,
   sessionCookieName,
 } from '../../../utils/sessions'
@@ -11,6 +12,12 @@ export default defineEventHandler(
   async (event): Promise<SourceImageUploadResponse> => {
     const settings = getSessionSettings(event)
     requireSameOrigin(event, settings.sessionOrigin)
+    if (!isCaptureGenerationEnabled(event)) {
+      throw createError({
+        statusCode: 503,
+        statusMessage: 'Capture generation is disabled',
+      })
+    }
 
     const capability = getCookie(event, sessionCookieName)
     if (!capability) {

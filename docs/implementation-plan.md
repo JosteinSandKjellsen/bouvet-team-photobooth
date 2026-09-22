@@ -467,6 +467,15 @@ result identifier. The private session status response exposes only its relative
 returns a provider URL, storage key or internal database ID. This does not
 publish, count or serve the output. Those remain separate approved increments.
 
+The capture route now starts its private session only after a browser image is
+approved, then uploads that in-memory JPEG, requests the duplicate-safe
+generation and polls its sanitized status. It exposes a retry only after the
+server classifies the generation as failed; an uncertain submission keeps
+polling and is not resubmitted. This path requires both explicit server and
+browser runtime enablement flags and otherwise remains local-only. The
+database-backed Playwright suite exercises it with fake synthetic camera input;
+it is not authorization to enable participant-image processing.
+
 Use deterministic provider adapters behind real application APIs for development
 and CI. No paid CI calls or browser happy-path API mocks. Unknown acceptance
 holds/reconciles; ingestion failures retry the same output, not generation.

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+const hasTestDatabase = Boolean(process.env.TEST_DATABASE_URL)
+
 test('serves the real health contract', async ({ request }) => {
   const response = await request.get('/api/health')
   expect(response.status()).toBe(200)
@@ -23,6 +25,22 @@ test('serves the nine public theme descriptors', async ({ request }) => {
       { id: 'samurai', image: '/themes/samurai.svg' },
     ],
   })
+})
+
+test('blocks private capture mutations until explicitly enabled', async ({
+  request,
+}, testInfo) => {
+  test.skip(hasTestDatabase, 'the database suite enables synthetic capture')
+  const headers = { origin: String(testInfo.project.use.baseURL) }
+
+  for (const path of [
+    '/api/sessions/current/capture',
+    '/api/sessions/current/generate',
+    '/api/sessions/current/retry',
+  ]) {
+    const response = await request.post(path, { headers })
+    expect(response.status()).toBe(503)
+  }
 })
 
 test('selects a Norwegian theme and handles an invalid capture route', async ({
