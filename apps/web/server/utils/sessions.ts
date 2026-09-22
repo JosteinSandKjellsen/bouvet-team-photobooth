@@ -13,9 +13,10 @@ const hashCapability = (capability: string) =>
   createHash('sha256').update(capability).digest('hex')
 
 const isSerializationConflict = (error: unknown) => {
-  if (typeof error !== 'object' || error === null || !('cause' in error)) {
-    return false
-  }
+  if (typeof error !== 'object' || error === null) return false
+
+  if ('code' in error && error.code === 'P2034') return true
+  if (!('cause' in error)) return false
 
   const cause = error.cause
   return (

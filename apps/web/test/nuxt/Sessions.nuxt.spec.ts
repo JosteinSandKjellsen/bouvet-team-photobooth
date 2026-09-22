@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('createSession', () => {
   it('retries a transient serialization conflict', async () => {
     db.$transaction
-      .mockRejectedValueOnce({ cause: { originalCode: '40001' } })
+      .mockRejectedValueOnce({ code: 'P2034' })
       .mockImplementationOnce((operation) => operation(db))
     db.session.count.mockResolvedValue(0)
     db.session.create.mockResolvedValue({

@@ -53,6 +53,13 @@ async function sweepCleanup(request: APIRequestContext) {
   expect(swept.status()).toBe(204)
 }
 
+async function submitGeneration(request: APIRequestContext) {
+  const submitted = await request.post('/api/internal/generation-submission', {
+    headers: { authorization: 'Bearer test-cleanup-worker-token' },
+  })
+  expect(submitted.status()).toBe(204)
+}
+
 test('creates a private session and keeps its capability out of JSON', async ({
   request,
 }, testInfo) => {
@@ -245,6 +252,17 @@ test('queues one generation only for the current session approved source', async
       where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },
     }),
   ).resolves.toBe(1)
+
+  await submitGeneration(request)
+  await expect(
+    database.imageGeneration.findUniqueOrThrow({
+      select: { providerGenerationId: true, status: true },
+      where: { id: generation.jobId },
+    }),
+  ).resolves.toEqual({
+    providerGenerationId: `deterministic-${generation.jobId}`,
+    status: 'SUBMITTED',
+  })
 })
 
 test('rejects corrupt and oversized source bytes', async ({

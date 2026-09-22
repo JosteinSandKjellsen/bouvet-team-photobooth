@@ -32,6 +32,7 @@ export default defineConfig({
       NUXT_SESSION_MAX_ACTIVE: '100',
       NUXT_SESSION_ORIGIN: baseURL,
       NUXT_SESSION_TTL_MS: '300000',
+      GENERATION_PROVIDER: 'deterministic',
       SOURCE_STORAGE_DIR: 'test-results/source-storage',
     },
     reuseExistingServer: false,

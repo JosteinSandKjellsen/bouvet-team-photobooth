@@ -406,6 +406,14 @@ remain gates for later milestones and public use.
 
 **Depends on:** M2, M3 and verified provider schema/completion/cost contracts.
 
+**Current increment (2026-09-22):** approved sources now create one durable
+generation job. The authenticated scheduled worker claims and submits it through
+an explicitly enabled deterministic development/CI adapter, then records only
+the internal provider correlation. A recovered lease that had entered submission
+is held as `SUBMISSION_UNKNOWN`; it is never automatically resubmitted. This is
+not a Leonardo integration, output ingestion, publication, or an authorization
+to use participant images.
+
 Implement the Leonardo adapter, per-theme prompts, asynchronous submission,
 authenticated idempotent completion, confirmed reconciliation, durable output
 ingestion, sanitized status/retry and result redirect. Reserve spend atomically;
