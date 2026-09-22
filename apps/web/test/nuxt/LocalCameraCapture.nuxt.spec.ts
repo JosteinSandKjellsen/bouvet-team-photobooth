@@ -52,6 +52,62 @@ describe('useLocalCameraCapture', () => {
     expect(camera.state.value).toBe('idle')
   })
 
+  it('automatically starts only when camera permission is already granted', async () => {
+    const query = vi.fn().mockResolvedValue({ state: 'granted' })
+    vi.stubGlobal('navigator', {
+      mediaDevices: { getUserMedia },
+      permissions: { query },
+    })
+    const camera = useLocalCameraCapture()
+
+    await expect(camera.activateIfPermissionGranted()).resolves.toBe(true)
+
+    expect(query).toHaveBeenCalledWith({ name: 'camera' })
+    expect(getUserMedia).toHaveBeenCalledOnce()
+    expect(camera.state.value).toBe('streaming')
+  })
+
+  it('keeps the camera idle when permission has not been granted', async () => {
+    const query = vi.fn().mockResolvedValue({ state: 'prompt' })
+    vi.stubGlobal('navigator', {
+      mediaDevices: { getUserMedia },
+      permissions: { query },
+    })
+    const camera = useLocalCameraCapture()
+
+    await expect(camera.activateIfPermissionGranted()).resolves.toBe(false)
+
+    expect(getUserMedia).not.toHaveBeenCalled()
+    expect(camera.state.value).toBe('idle')
+  })
+
+  it('offers camera switching only when multiple video inputs are available', async () => {
+    const enumerateDevices = vi
+      .fn()
+      .mockResolvedValue([
+        { kind: 'videoinput' },
+        { kind: 'videoinput' },
+        { kind: 'audioinput' },
+      ])
+    vi.stubGlobal('navigator', {
+      mediaDevices: { enumerateDevices, getUserMedia },
+    })
+    const camera = useLocalCameraCapture()
+
+    await camera.activate()
+
+    expect(enumerateDevices).toHaveBeenCalledOnce()
+    expect(camera.canSwitchCamera.value).toBe(true)
+  })
+
+  it('hides camera switching when device enumeration is unavailable', async () => {
+    const camera = useLocalCameraCapture()
+
+    await camera.activate()
+
+    expect(camera.canSwitchCamera.value).toBe(false)
+  })
+
   it('retries with baseline constraints after detailed constraints are rejected', async () => {
     getUserMedia
       .mockRejectedValueOnce(

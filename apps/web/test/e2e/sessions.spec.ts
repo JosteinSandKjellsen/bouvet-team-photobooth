@@ -76,8 +76,8 @@ test('submits an approved browser capture through the private generation flow', 
     }
   })
 
+  await page.context().grantPermissions(['camera'])
   await page.goto('/capture/samurai')
-  await page.getByTestId('capture-activate-camera').click()
   await expect(page.getByTestId('capture-video')).toBeVisible()
   await expect(page.getByTestId('capture-take-photo')).toBeEnabled()
   await page.getByTestId('capture-take-photo').click()
@@ -87,6 +87,14 @@ test('submits an approved browser capture through the private generation flow', 
   await page.getByTestId('capture-use-picture').click()
 
   await expect(page.getByTestId('capture-generating')).toBeVisible()
+  await expect(page.getByTestId('capture-processing-overlay')).toBeVisible()
+  await expect(page.getByTestId('capture-generation-progress')).toHaveAttribute(
+    'data-stage',
+    'preparing',
+  )
+  await expect(
+    page.getByTestId('capture-generation-progress-label'),
+  ).toHaveCount(1)
   expect(mutationRequests).toEqual(
     expect.arrayContaining([
       'POST /api/sessions',
@@ -97,11 +105,21 @@ test('submits an approved browser capture through the private generation flow', 
 
   await page.reload()
   await expect(page.getByTestId('capture-generating')).toBeVisible()
+  await expect(page.getByTestId('capture-generation-progress')).toHaveAttribute(
+    'data-stage',
+    'preparing',
+  )
   expect(
     mutationRequests.filter(
       (request) => request === 'POST /api/sessions/current/generate',
     ),
   ).toHaveLength(1)
+
+  await page.getByTestId('capture-back-to-themes').click()
+  await page.getByTestId('theme-samurai').click()
+  await expect(page.getByTestId('capture-video')).toBeVisible()
+  await expect(page.getByTestId('capture-generating')).toBeHidden()
+  expect(mutationRequests).toContain('POST /api/sessions/current/close')
 })
 
 test('atomically caps daily Leonardo reservations at 10000 credits', async ({

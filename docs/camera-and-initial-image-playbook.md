@@ -117,8 +117,9 @@ type CameraState =
 
 The normal flow is:
 
-1. Show an **Activate camera** action before requesting camera permission. Start
-   only after that explicit user action.
+1. After the visitor selects a theme, query camera permission. If it is already
+   granted, start the camera automatically; otherwise show an **Activate camera**
+   action and request permission only after that explicit user action.
 2. Verify `navigator.mediaDevices?.getUserMedia` exists and the page is in a
    secure context.
 3. Request the preferred camera with non-mandatory constraints.
@@ -153,9 +154,12 @@ Treat these as preferences. Retry with `{ video: true, audio: false }` when a
 browser rejects the detailed constraints. Do not identify mobile devices from
 the user-agent string.
 
-For camera switching, stop the current video track before requesting the other
-facing mode. Pass the next facing mode directly to the request instead of
-relying on an asynchronous state update.
+For camera switching, query `enumerateDevices()` after a camera stream has been
+approved and show a switch control only when at least two `videoinput` devices
+are available. Hide the control when enumeration is unavailable or fails. Stop
+the current video track before requesting the other facing mode. Pass the next
+facing mode directly to the request instead of relying on an asynchronous state
+update.
 
 Mirror the front-camera preview only when desired for user familiarity. Define
 whether the saved frame matches the mirrored preview and test that behavior.
@@ -164,7 +168,9 @@ composition.
 
 ### Activation rules
 
-- Never call `getUserMedia()` on page load or before a user gesture.
+- Never call `getUserMedia()` before theme selection. After theme selection,
+  call it automatically only when the browser reports camera permission as
+  `granted`; otherwise wait for the **Activate camera** action.
 - Explain why the camera is needed before opening the browser permission prompt.
 - Keep one active stream. Reuse it while the person remains in the camera flow
   instead of requesting permission for each photo.
@@ -416,7 +422,8 @@ sanitized failure category.
   cancellation, return focus to **Take photo**; after capture, move focus to the
   preview actions.
 - Explain why camera access is requested before triggering the browser prompt.
-- Do not start the camera automatically on page load.
+- Do not start the camera automatically before theme selection. After selection,
+  automatic startup is permitted only for already-granted camera permission.
 - Show the exact preview that will be submitted.
 - Stop camera tracks as soon as they are no longer needed.
 - Do not persist the source longer than the generation workflow requires.
@@ -425,8 +432,9 @@ sanitized failure category.
 
 Cover at least:
 
-- Camera permission granted, denied, dismissed, unavailable, and unsupported.
-- Camera activation occurs only after the explicit activation action.
+- Camera permission granted auto-starts after theme selection; prompt, denied,
+  dismissed, unavailable, and unsupported states retain the explicit activation
+  action and recovery behavior.
 - Front and rear camera switching without leaked media tracks.
 - Component unmount, navigation, retake, and cancel all stop tracks.
 - Capture waits for non-zero video dimensions.
@@ -472,8 +480,9 @@ Cover at least:
 - Request the Leonardo presigned upload only after validation and compression.
 - Do not send Leonardo authorization to the presigned storage URL.
 - Persist initImageId only after the storage upload returns HTTP 204.
-- Activate the camera only after an explicit user action and keep at most one
-  active stream.
+- Start the camera automatically only after theme selection when permission is
+  already granted; otherwise activate it only after an explicit user action.
+  Keep at most one active stream.
 - Start an uncached three-second countdown for each accepted Take photo action.
 - Display 3, 2, 1 and capture once at or after the monotonic deadline.
 - Cancel the countdown on user cancellation, hidden document, ended track,

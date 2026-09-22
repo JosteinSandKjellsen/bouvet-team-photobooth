@@ -139,7 +139,7 @@ professional and technologically capable.
 
 ```mermaid
 flowchart TD
-    Theme[Select theme] --> Camera[Activate camera and position group]
+    Theme[Select theme] --> Camera[Open camera and position group]
     Camera --> Countdown[3-2-1 countdown and capture]
     Countdown --> Review{Use picture?}
     Review -- Retake --> Camera
@@ -160,8 +160,10 @@ trigger another paid request.
 
 Camera requirements:
 
-- Explain purpose and privacy before requesting permission, after an explicit
-  user gesture. Display positioning guidance and one clear capture action.
+- Explain purpose and privacy before requesting permission. When permission is
+  not already granted, request it after an explicit activation action; otherwise
+  start the camera after theme selection. Display positioning guidance and one
+  clear capture action.
 - Support fixed kiosk and mobile cameras.
 - Reject invalid themes before camera or session work. Explain missing support,
   permission denial, camera-in-use and other recoverable failures.

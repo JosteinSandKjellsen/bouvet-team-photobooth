@@ -3,6 +3,7 @@ import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 import { themeMessages } from '~/utils/themeMessages'
 
 defineProps<{
+  disabled?: boolean
   themes: ThemeDescriptor[]
 }>()
 
@@ -21,6 +22,7 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
       v-for="theme in themes"
       :key="theme.id"
       :data-testid="`theme-${theme.id}`"
+      :disabled="disabled"
       type="button"
       class="theme-card"
       @click="emit('select', theme.id)"

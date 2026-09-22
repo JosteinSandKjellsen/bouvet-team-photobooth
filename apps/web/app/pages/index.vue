@@ -18,9 +18,24 @@ const themes = computed(() => data.value?.themes ?? [])
 const loading = computed(
   () => status.value === 'idle' || status.value === 'pending',
 )
+const selectingTheme = ref(false)
+const selectionError = ref(false)
 
 const selectTheme = async (themeId: ThemeDescriptor['id']) => {
-  await navigateTo(`/capture/${themeId}`)
+  if (selectingTheme.value) {
+    return
+  }
+
+  selectingTheme.value = true
+  selectionError.value = false
+  try {
+    await $fetch('/api/sessions/current/close', { method: 'POST' })
+    await navigateTo(`/capture/${themeId}`)
+  } catch {
+    selectionError.value = true
+  } finally {
+    selectingTheme.value = false
+  }
 }
 </script>
 
@@ -43,7 +58,14 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
       {{ t('themeSelection.empty') }}
     </p>
     <section v-else aria-labelledby="theme-heading">
-      <ThemeGrid :themes="themes" @select="selectTheme" />
+      <p v-if="selectionError" class="message" role="alert">
+        {{ t('themeSelection.sessionResetError') }}
+      </p>
+      <ThemeGrid
+        :disabled="selectingTheme"
+        :themes="themes"
+        @select="selectTheme"
+      />
       <div class="actions">
         <NuxtLink to="/overview">{{
           t('themeSelection.overviewLink')

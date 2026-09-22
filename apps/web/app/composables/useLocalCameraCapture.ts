@@ -77,6 +77,7 @@ async function encodeJpeg(canvas: HTMLCanvasElement) {
 }
 
 export function useLocalCameraCapture() {
+  const availableVideoInputCount = ref(0)
   const error = ref<CameraError | null>(null)
   const previewUrl = ref<string | null>(null)
   const source = ref<Blob | null>(null)
@@ -90,6 +91,7 @@ export function useLocalCameraCapture() {
       Boolean(navigator.mediaDevices?.getUserMedia) &&
       window.isSecureContext,
   )
+  const canSwitchCamera = computed(() => availableVideoInputCount.value > 1)
 
   function clearPreview() {
     if (previewUrl.value) {
@@ -107,6 +109,7 @@ export function useLocalCameraCapture() {
   function reset() {
     stopStream()
     clearPreview()
+    availableVideoInputCount.value = 0
     error.value = null
     state.value = 'idle'
   }
@@ -115,6 +118,16 @@ export function useLocalCameraCapture() {
     stopStream()
     if (state.value === 'streaming' || state.value === 'requestingPermission') {
       state.value = 'idle'
+    }
+  }
+
+  async function detectAvailableVideoInputs() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices?.()
+      availableVideoInputCount.value =
+        devices?.filter((device) => device.kind === 'videoinput').length ?? 0
+    } catch {
+      availableVideoInputCount.value = 0
     }
   }
 
@@ -154,6 +167,7 @@ export function useLocalCameraCapture() {
         })
       }
       facingMode.value = nextFacingMode
+      await detectAvailableVideoInputs()
       stream.getVideoTracks().forEach((track) => {
         track.addEventListener('ended', () => {
           if (state.value === 'streaming') {
@@ -171,6 +185,25 @@ export function useLocalCameraCapture() {
       state.value = 'error'
       return false
     }
+  }
+
+  async function activateIfPermissionGranted() {
+    if (!isCameraSupported.value || state.value !== 'idle') {
+      return false
+    }
+
+    try {
+      const permission = await navigator.permissions?.query({
+        name: 'camera' as PermissionName,
+      })
+      if (permission?.state !== 'granted') {
+        return false
+      }
+    } catch {
+      return false
+    }
+
+    return activate()
   }
 
   async function connectVideo(video: HTMLVideoElement | null) {
@@ -235,6 +268,8 @@ export function useLocalCameraCapture() {
 
   return {
     activate,
+    activateIfPermissionGranted,
+    canSwitchCamera,
     capture,
     connectVideo,
     error,

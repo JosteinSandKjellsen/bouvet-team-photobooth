@@ -28,16 +28,16 @@ applicable technical playbooks for implementation constraints.
 Identifiers make product requirements traceable to the selected milestone. They
 describe expected behavior, not implemented functionality.
 
-| ID    | Requirement                                                                                                                         | Milestone |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| PX-01 | The product exposes exactly `/`, `/capture/[theme]`, `/photo/[id]`, and `/overview`; capture substates remain on the capture route. | M1        |
-| PX-02 | Visitors choose one of nine configured fictional themes before capture.                                                             | M1        |
-| PX-03 | Camera capture uses an explicit permission gesture, a three-second countdown, review/retake, and approval before upload.            | M2        |
-| PX-04 | Private anonymous sessions protect upload, generation, retry, and status operations.                                                | M3        |
-| PX-05 | Generation is asynchronous, duplicate-safe, and does not blindly resubmit uncertain paid requests.                                  | M4        |
-| PX-06 | Public results provide a generated image, QR code, readable URL, download, and kiosk print without exposing sources.                | M5        |
-| PX-07 | The public overview shows completed pictures with stable cursor navigation and an event aggregate that survives expiry.             | M6        |
-| PX-08 | Retention, public-origin, abuse, spend, hardware, and provider-erasure gates are resolved before their applicable real-world use.   | M7        |
+| ID    | Requirement                                                                                                                                                                                                                       | Milestone |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| PX-01 | The product exposes exactly `/`, `/capture/[theme]`, `/photo/[id]`, and `/overview`; capture substates remain on the capture route.                                                                                               | M1        |
+| PX-02 | Visitors choose one of nine configured fictional themes before capture.                                                                                                                                                           | M1        |
+| PX-03 | Camera capture starts automatically after theme selection when the browser has already granted permission; otherwise it uses an explicit permission gesture, a three-second countdown, review/retake, and approval before upload. | M2        |
+| PX-04 | Private anonymous sessions protect upload, generation, retry, and status operations.                                                                                                                                              | M3        |
+| PX-05 | Generation is asynchronous, duplicate-safe, and does not blindly resubmit uncertain paid requests.                                                                                                                                | M4        |
+| PX-06 | Public results provide a generated image, QR code, readable URL, download, and kiosk print without exposing sources.                                                                                                              | M5        |
+| PX-07 | The public overview shows completed pictures with stable cursor navigation and an event aggregate that survives expiry.                                                                                                           | M6        |
+| PX-08 | Retention, public-origin, abuse, spend, hardware, and provider-erasure gates are resolved before their applicable real-world use.                                                                                                 | M7        |
 
 ## Routes And Journey
 
@@ -50,7 +50,7 @@ describe expected behavior, not implemented functionality.
 
 ```mermaid
 flowchart TD
-    Theme[Select theme] --> Camera[Activate camera and position group]
+    Theme[Select theme] --> Camera[Open camera and position group]
     Camera --> Countdown[3-2-1 countdown and capture]
     Countdown --> Review{Use picture?}
     Review -- Retake --> Camera
@@ -89,7 +89,8 @@ branding rights.
 ## Capture And Generation
 
 - Explain purpose, processing provider, public publication, retention, and the
-  removal contact before requesting camera access, after a user gesture.
+  removal contact before requesting camera access. When permission has not
+  already been granted, request it only after the visitor activates the camera.
 - Support fixed kiosk and mobile cameras.
 - Reject invalid theme slugs before camera or session work. Explain unavailable
   cameras, permission denial, camera-in-use, and other recoverable failures.

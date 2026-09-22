@@ -15,6 +15,7 @@
     "description": "I Bouvet jobber vi i team med forskjellige fag, styrker og personligheter. Velg teammiljøet deres, så sender vi dere på oppdrag.",
     "overviewLink": "Se teambilder fra arrangementet",
     "loadError": "Universene kunne ikke lastes inn.",
+    "sessionResetError": "Vi kunne ikke starte et nytt teambilde. Prøv igjen.",
     "empty": "Ingen universer er tilgjengelige akkurat nå."
   },
   "capture": {
@@ -45,7 +46,19 @@
       "submission_unknown": "Vi bekrefter fortsatt behandlingen av bildet.",
       "submitted": "Bildet behandles.",
       "failed": "Behandlingen av bildet kunne ikke fullføres.",
-      "succeeded": "Bildet er klart. Åpner resultatet."
+      "succeeded": "Bildet er klart. Åpner resultatet.",
+      "overlay": {
+        "title": "Lager teambilde",
+        "description": "Vi samler teamet i et nytt univers."
+      },
+      "progress": {
+        "label": "Fremdrift for teambildet",
+        "sourceReady": "Bilde klart",
+        "preparing": "Pakker romdrakter",
+        "checking": "Sjekker stjernene",
+        "building": "Bygger univers",
+        "teamReady": "Team klart"
+      }
     },
     "errors": {
       "cameraInUse": "Kameraet er i bruk av en annen app. Lukk den og prøv igjen.",

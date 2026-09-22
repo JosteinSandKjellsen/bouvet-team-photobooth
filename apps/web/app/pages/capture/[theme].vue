@@ -4,7 +4,7 @@ import type {
   GenerationStatusResponse,
   ThemesResponse,
 } from '@bouvet-team-photobooth/contracts'
-import { Camera, RotateCcw, SwitchCamera } from '@lucide/vue'
+import { Camera, Check, RotateCcw, SwitchCamera, X } from '@lucide/vue'
 import { themeMessages } from '~/utils/themeMessages'
 
 defineOptions({ name: 'ThemeCapturePage' })
@@ -27,6 +27,40 @@ const generationStatus = ref<GenerationStatusResponse['status'] | null>(null)
 const captureGenerationEnabled = computed(
   () => String(publicConfig.captureGenerationEnabled) === 'true',
 )
+const generationProgressStage = computed(() => {
+  if (!locallyApproved.value || !captureGenerationEnabled.value) {
+    return null
+  }
+
+  switch (generationStatus.value) {
+    case 'succeeded':
+      return 'complete'
+    case 'submitted':
+      return 'building'
+    case 'submitting':
+    case 'submission_unknown':
+      return 'checking'
+    case 'failed':
+      return 'failed'
+    default:
+      return 'preparing'
+  }
+})
+const generationProgressLabelKey = computed(() => {
+  switch (generationProgressStage.value) {
+    case 'checking':
+      return 'capture.generating.progress.checking'
+    case 'building':
+      return 'capture.generating.progress.building'
+    case 'complete':
+      return 'capture.generating.progress.teamReady'
+    case 'failed':
+    case 'preparing':
+      return 'capture.generating.progress.preparing'
+    default:
+      return null
+  }
+})
 let pollTimer: ReturnType<typeof setTimeout> | undefined
 let isActive = true
 const countdown = useCaptureCountdown({
@@ -152,6 +186,15 @@ async function resumeGeneration() {
   }
 }
 
+async function initializeCapture() {
+  await resumeGeneration()
+  if (!isActive || locallyApproved.value) {
+    return
+  }
+
+  await camera.activateIfPermissionGranted()
+}
+
 async function approvePicture() {
   const source = camera.source.value
   const theme = selectedTheme.value
@@ -219,7 +262,7 @@ async function retryGeneration() {
 onMounted(() =>
   document.addEventListener('visibilitychange', cancelCountdownOnHiddenTab),
 )
-onMounted(() => void resumeGeneration())
+onMounted(() => void initializeCapture())
 onBeforeUnmount(() => {
   isActive = false
   document.removeEventListener('visibilitychange', cancelCountdownOnHiddenTab)
@@ -248,6 +291,27 @@ onBeforeUnmount(() => {
             :src="camera.previewUrl.value ?? undefined"
             :alt="t('capture.review.previewAlt')"
           />
+          <div
+            v-if="locallyApproved && captureGenerationEnabled"
+            class="processing-overlay"
+            data-testid="capture-processing-overlay"
+            aria-hidden="true"
+          >
+            <div class="processing-overlay__content">
+              <div class="universe-loader">
+                <span class="universe-loader__ring ring--outer" />
+                <span class="universe-loader__ring ring--middle" />
+                <span class="universe-loader__ring ring--inner" />
+                <span class="universe-loader__dot" />
+              </div>
+              <p class="processing-overlay__title">
+                {{ t('capture.generating.overlay.title') }}
+              </p>
+              <p class="processing-overlay__description">
+                {{ t('capture.generating.overlay.description') }}
+              </p>
+            </div>
+          </div>
         </div>
         <div
           v-else-if="
@@ -295,6 +359,123 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
+        <ol
+          v-if="generationProgressStage"
+          class="generation-progress"
+          data-testid="capture-generation-progress"
+          :data-stage="generationProgressStage"
+          :aria-label="t('capture.generating.progress.label')"
+        >
+          <li class="generation-progress__step is-complete">
+            <span class="generation-progress__indicator" aria-hidden="true">
+              <Check :size="18" stroke-width="3" />
+            </span>
+          </li>
+          <li
+            class="generation-progress__step"
+            :class="{
+              'is-active': generationProgressStage === 'preparing',
+              'is-complete': ['checking', 'building', 'complete'].includes(
+                generationProgressStage,
+              ),
+              'is-failed': generationProgressStage === 'failed',
+            }"
+          >
+            <span class="generation-progress__indicator" aria-hidden="true">
+              <Check
+                v-if="
+                  ['checking', 'building', 'complete'].includes(
+                    generationProgressStage,
+                  )
+                "
+                :size="18"
+                stroke-width="3"
+              />
+              <X
+                v-else-if="generationProgressStage === 'failed'"
+                :size="18"
+                stroke-width="3"
+              />
+            </span>
+            <span
+              v-if="
+                generationProgressStage === 'preparing' ||
+                generationProgressStage === 'failed'
+              "
+              class="generation-progress__step-label"
+            >
+              {{ t('capture.generating.progress.preparing') }}
+            </span>
+          </li>
+          <li
+            class="generation-progress__step"
+            :class="{
+              'is-active': generationProgressStage === 'checking',
+              'is-complete': ['building', 'complete'].includes(
+                generationProgressStage,
+              ),
+            }"
+          >
+            <span class="generation-progress__indicator" aria-hidden="true">
+              <Check
+                v-if="
+                  ['building', 'complete'].includes(generationProgressStage)
+                "
+                :size="18"
+                stroke-width="3"
+              />
+            </span>
+            <span
+              v-if="generationProgressStage === 'checking'"
+              class="generation-progress__step-label"
+            >
+              {{ t('capture.generating.progress.checking') }}
+            </span>
+          </li>
+          <li
+            class="generation-progress__step"
+            :class="{
+              'is-active': generationProgressStage === 'building',
+              'is-complete': generationProgressStage === 'complete',
+            }"
+          >
+            <span class="generation-progress__indicator" aria-hidden="true">
+              <Check
+                v-if="generationProgressStage === 'complete'"
+                :size="18"
+                stroke-width="3"
+              />
+            </span>
+            <span
+              v-if="generationProgressStage === 'building'"
+              class="generation-progress__step-label"
+            >
+              {{ t('capture.generating.progress.building') }}
+            </span>
+          </li>
+          <li
+            class="generation-progress__step"
+            :class="{
+              'is-active': generationProgressStage === 'complete',
+            }"
+          >
+            <span class="generation-progress__indicator" aria-hidden="true" />
+            <span
+              v-if="generationProgressStage === 'complete'"
+              class="generation-progress__step-label"
+            >
+              {{ t('capture.generating.progress.teamReady') }}
+            </span>
+          </li>
+        </ol>
+        <p
+          v-if="generationProgressLabelKey"
+          class="generation-progress__mobile-label"
+          data-testid="capture-generation-progress-label"
+        >
+          {{ t(generationProgressLabelKey) }}
+        </p>
+
         <p v-if="camera.error.value" class="error" role="alert">
           {{ t(`capture.errors.${camera.error.value}`) }}
         </p>
@@ -332,6 +513,7 @@ onBeforeUnmount(() => {
               {{ t('capture.ready.takePhoto') }}
             </button>
             <button
+              v-if="camera.canSwitchCamera.value"
               class="secondary-button icon-button"
               type="button"
               :aria-label="t('capture.ready.switchCamera')"
@@ -406,7 +588,9 @@ onBeforeUnmount(() => {
         {{ t('capture.invalidTheme') }}
       </h1>
     </template>
-    <NuxtLink to="/">{{ t('common.actions.backToThemes') }}</NuxtLink>
+    <NuxtLink data-testid="capture-back-to-themes" to="/">{{
+      t('common.actions.backToThemes')
+    }}</NuxtLink>
   </main>
 </template>
 
@@ -481,6 +665,182 @@ img {
   font-size: 72px;
   font-weight: 700;
 }
+.processing-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 72%);
+}
+.processing-overlay__content {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  text-align: center;
+}
+.universe-loader {
+  position: relative;
+  width: 132px;
+  aspect-ratio: 1;
+  margin-bottom: var(--space-1);
+}
+.universe-loader__ring {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  animation: orbit 2.8s linear infinite;
+}
+.universe-loader__ring::after {
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  width: 18px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  content: '';
+  transform: translateY(-50%);
+}
+.ring--outer {
+  --loader-rotation: -45deg;
+  inset: 0;
+  border-top-color: var(--color-brand-accent);
+  border-right-color: var(--color-brand-accent);
+}
+.ring--outer::after {
+  background: var(--color-brand-accent);
+}
+.ring--middle {
+  --loader-rotation: 70deg;
+  inset: 20px;
+  border-right-color: var(--color-loader-blush);
+  border-bottom-color: var(--color-loader-blush);
+  animation-duration: 2.1s;
+  animation-direction: reverse;
+}
+.ring--middle::after {
+  background: var(--color-loader-blush);
+}
+.ring--inner {
+  --loader-rotation: 20deg;
+  inset: 40px;
+  border-bottom-color: var(--color-loader-coral);
+  border-left-color: var(--color-loader-coral);
+  animation-duration: 1.6s;
+}
+.ring--inner::after {
+  background: var(--color-loader-coral);
+}
+.universe-loader__dot {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 16px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-loader-orange);
+  transform: translateX(-50%);
+}
+.processing-overlay__title,
+.processing-overlay__description {
+  margin: 0;
+}
+.processing-overlay__title {
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.processing-overlay__description {
+  color: var(--color-muted-text);
+  font-size: 16px;
+}
+@keyframes orbit {
+  from {
+    transform: rotate(var(--loader-rotation));
+  }
+  to {
+    transform: rotate(calc(var(--loader-rotation) + 360deg));
+  }
+}
+.generation-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.generation-progress__step {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: var(--space-2);
+  color: var(--color-muted-text);
+}
+.generation-progress__step:not(:last-child)::after {
+  position: absolute;
+  top: 17px;
+  left: calc(50% + 20px);
+  width: calc(100% - 40px);
+  height: 2px;
+  background: var(--color-divider);
+  content: '';
+}
+.generation-progress__step.is-complete:not(:last-child)::after {
+  background: var(--color-action-primary);
+}
+.generation-progress__indicator {
+  z-index: 1;
+  display: grid;
+  width: 36px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--color-muted-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+.generation-progress__step.is-complete,
+.generation-progress__step.is-active {
+  color: var(--color-text);
+}
+.generation-progress__step.is-complete .generation-progress__indicator {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-primary);
+  color: var(--color-surface);
+}
+.generation-progress__step.is-failed {
+  color: var(--color-action-primary);
+}
+.generation-progress__step.is-failed .generation-progress__indicator {
+  border-color: var(--color-action-primary);
+  color: var(--color-action-primary);
+}
+.generation-progress__step.is-active .generation-progress__indicator {
+  border: 3px solid var(--color-action-primary);
+}
+.generation-progress__step.is-active
+  .generation-progress__indicator:not(:has(svg))::after {
+  display: block;
+  width: 14px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-action-primary);
+  content: '';
+}
+.generation-progress__step-label,
+.generation-progress__mobile-label {
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+.generation-progress__mobile-label {
+  display: none;
+  margin: var(--space-2) 0 0;
+}
 .actions {
   display: flex;
   align-items: center;
@@ -547,6 +907,26 @@ a {
   }
   .icon-button {
     width: 100%;
+  }
+  .generation-progress__step {
+    font-size: 11px;
+  }
+  .generation-progress__step-label {
+    display: none;
+  }
+  .generation-progress__mobile-label {
+    display: block;
+  }
+  .universe-loader {
+    width: 112px;
+  }
+  .processing-overlay__title {
+    font-size: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .universe-loader__ring {
+    animation: none;
   }
 }
 </style>
