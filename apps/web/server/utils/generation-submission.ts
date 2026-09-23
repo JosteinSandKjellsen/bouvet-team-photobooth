@@ -716,10 +716,17 @@ async function reconcileClaimedGeneration(
     })
     if (completed.count === 0) return
 
-    await transaction.generatedImage.updateMany({
-      where: { id: image.id, status: 'PENDING' },
-      data: { status: 'ACTIVE' },
+    const published = await transaction.generatedImage.updateMany({
+      where: { id: image.id, publishedAt: null, status: 'PENDING' },
+      data: { publishedAt: now, status: 'ACTIVE' },
     })
+    if (published.count === 1) {
+      await transaction.eventAggregate.upsert({
+        where: { id: 'current' },
+        update: { completedPhotoCount: { increment: 1 } },
+        create: { id: 'current', completedPhotoCount: 1 },
+      })
+    }
     await transaction.imageGeneration.updateMany({
       where: { id: job.aggregateId, status: 'SUBMITTED' },
       data: { status: 'SUCCEEDED' },

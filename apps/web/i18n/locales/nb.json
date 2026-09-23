@@ -83,8 +83,14 @@
   },
   "overview": {
     "title": "Teambilder fra arrangementet",
-    "notReady": "Oversikten er ikke klar ennå.",
-    "notReadyDescription": "Ferdige teambilder blir vist her senere."
+    "loading": "Laster teambilder.",
+    "loadError": "Teambildene kunne ikke lastes inn.",
+    "empty": "Ingen teambilder er klare ennå.",
+    "completedCount": "Ingen teambilder ennå | Ett teambilde fra arrangementet | {count} teambilder fra arrangementet",
+    "imageAlt": "Ferdig teambilde fra arrangementet",
+    "navigation": "Bla i teambilder",
+    "older": "Eldre bilder",
+    "newer": "Nyere bilder"
   },
   "themes": {
     "wasteland": {

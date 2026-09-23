@@ -8,12 +8,12 @@ It is a playful team activity, not a personality assessment; privacy and photo
 expiration are part of the journey.
 
 Built as one Nuxt 4/Vue frontend and Nitro backend in a pnpm workspace, with
-type-only shared API contracts. **Currently implemented: M1-M5 theme selection,
+type-only shared API contracts. **Currently implemented: M1-M6 theme selection,
 local capture/review, private source storage, durable generation/completion
-reconciliation, and public result serving.** The capture-to-generation path is
-feature-gated and approved only for synthetic testing. M6 gallery behavior and
-public-launch approvals remain outstanding. The default M1 shell needs no
-credentials.
+reconciliation, public result serving, and public event gallery reads.** The
+capture-to-generation path is feature-gated and approved only for synthetic
+testing. Public-launch approvals and M7 event readiness remain outstanding. The
+default M1 shell needs no credentials.
 
 ## Quickstart
 

@@ -56,3 +56,21 @@ export interface PublicPhotoResponse {
   imageUrl: string
   width: number
 }
+
+export interface PublicPhotoListItem {
+  height: number
+  imageUrl: string
+  publicId: string
+  width: number
+}
+
+export interface PublicPhotoCountResponse {
+  completedCount: number
+}
+
+export interface PublicPhotoOverviewResponse {
+  completedCount: number
+  newerCursor?: string
+  olderCursor?: string
+  photos: PublicPhotoListItem[]
+}

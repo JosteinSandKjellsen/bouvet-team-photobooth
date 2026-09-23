@@ -85,10 +85,19 @@ model GeneratedImage {
   status       AssetStatus     @default(PENDING)
   deleteAfter  DateTime        @db.Timestamptz(3)
   deletedAt    DateTime?       @db.Timestamptz(3)
+  publishedAt  DateTime?       @db.Timestamptz(3)
   createdAt    DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
 
   @@index([status, deleteAfter])
+  @@index([status, publishedAt, id])
+}
+
+model EventAggregate {
+  id                  String   @id
+  completedPhotoCount Int      @default(0)
+  createdAt           DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @db.Timestamptz(3)
 }
 
 model ImageGeneration {

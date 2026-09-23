@@ -12,8 +12,8 @@ The [product experience playbook](./product-experience-playbook.md) and
 [design playbook](./design-playbook.md) record canonical product and visual
 guidance. M0 documentation/harness alignment, M1 product shell/themes, M2
 local capture/review, M3 private source handling, M4 private generation and
-recovery, and M5 public results/kiosk presentation are complete for synthetic
-testing. M3 provides private anonymous sessions, synthetic-image source
+recovery, M5 public results/kiosk presentation, and M6 public event overview
+are complete for synthetic testing. M3 provides private anonymous sessions, synthetic-image source
 validation/normalization, local development storage, durable source-cleanup
 state/lease handling, an authenticated cleanup worker, and an active session
 admission limit. Netlify scheduler and site-wide Blob storage adapters have
@@ -78,10 +78,19 @@ home; phone pages do not reset automatically. The canonical public photo origin
 must be configured outside localhost synthetic testing. `pnpm node:24 --
 test:db` passed 17 tests with 7 intentional project/global skips.
 
+The completed M6 handoff provides public `recent` and `count` reads, six-item
+keyset pagination using completion time and a public-ID tie-breaker, and a
+current-event aggregate which increments only on durable output publication and
+does not decrement on expiry. The overview refreshes only its first page and
+does not return source, session, provider, or storage fields. The database and
+browser flow covers equal publication times, cursor navigation, expiry, and
+aggregate retention using synthetic outputs.
+
 Suggested next-session request:
 
-> Approve M6 before implementing the public event overview, gallery reads, or
-> completed-picture aggregate. Keep participant images disabled until the
+> Approve M7 readiness and deployment work only after its deployment
+> authorization and public-launch privacy, retention, budget, artwork, and
+> public-origin gates are resolved. Keep participant images disabled until the
 > privacy and retention gates are approved.
 
 ## Confirmed Product Decisions

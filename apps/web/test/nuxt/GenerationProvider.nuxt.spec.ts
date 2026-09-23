@@ -6,6 +6,7 @@ import {
   submitGeneration,
   uploadGenerationSource,
 } from '../../server/utils/generation-provider'
+import { spaceCowboysPrompt } from '../../server/utils/theme-prompts/space-cowboys'
 
 afterEach(() => {
   delete process.env.GENERATION_PROVIDER
@@ -103,8 +104,7 @@ describe('generation provider', () => {
           image_reference: [{ image: { id: 'source-id', type: 'UPLOADED' } }],
         },
         height: 768,
-        prompt:
-          'Reimagine the people in the reference photo as a charismatic crew of space cowboys on a vivid frontier planet. Keep every person recognizable and preserve the group composition.',
+        prompt: spaceCowboysPrompt,
         prompt_enhance: 'OFF',
         quantity: 1,
         style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],

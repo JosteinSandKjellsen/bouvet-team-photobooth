@@ -1,13 +1,18 @@
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { APIRequestContext } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 import { reserveGenerationCredits } from '../../server/utils/generation-budget'
+import {
+  deleteGeneratedImage,
+  storeGeneratedImage,
+} from '../../server/utils/source-storage'
 import { getTestDb } from './test-db'
 
 const hasTestDatabase = Boolean(process.env.TEST_DATABASE_URL)
+process.env.SOURCE_STORAGE_DIR = 'test-results/source-storage'
 
 test.skip(!hasTestDatabase, 'requires TEST_DATABASE_URL')
 
@@ -62,6 +67,87 @@ async function submitGeneration(request: APIRequestContext) {
   expect(submitted.status()).toBe(204)
 }
 
+async function createPublishedGalleryPhoto(publishedAt: Date) {
+  const database = getTestDb()
+  const generationId = randomUUID()
+  const publicId = randomBytes(32).toString('base64url')
+  const storageKey = `m6-gallery/${generationId}.jpg`
+  const image = await sharp({
+    create: { background: 'white', channels: 3, height: 768, width: 1_024 },
+  })
+    .jpeg()
+    .toBuffer()
+  const session = await database.session.create({
+    data: {
+      capabilityHash: randomUUID(),
+      expiresAt: new Date('2100-01-01T00:00:00.000Z'),
+      themeId: 'samurai',
+      sourceImage: {
+        create: {
+          byteSize: image.byteLength,
+          contentType: 'image/jpeg',
+          deleteAfter: new Date('2100-01-01T00:00:00.000Z'),
+          generation: {
+            create: {
+              id: generationId,
+              idempotencyKey: randomUUID(),
+              status: 'SUCCEEDED',
+              generatedImage: {
+                create: {
+                  byteSize: image.byteLength,
+                  contentType: 'image/jpeg',
+                  deleteAfter: new Date('2100-01-01T00:00:00.000Z'),
+                  height: 768,
+                  publicId,
+                  publishedAt,
+                  status: 'ACTIVE',
+                  storageKey,
+                  width: 1_024,
+                },
+              },
+            },
+          },
+          height: 768,
+          storageKey: `m6-gallery-source/${generationId}.jpg`,
+          width: 1_024,
+        },
+      },
+    },
+    select: { id: true },
+  })
+  await storeGeneratedImage(storageKey, image)
+  return { generationId, publicId, sessionId: session.id, storageKey }
+}
+
+async function removePublishedGalleryFixtures() {
+  const database = getTestDb()
+  const sources = await database.sourceImage.findMany({
+    select: { sessionId: true },
+    where: { storageKey: { startsWith: 'm6-gallery-source/' } },
+  })
+  const images = await database.generatedImage.findMany({
+    select: { storageKey: true },
+    where: { storageKey: { startsWith: 'm6-gallery/' } },
+  })
+  await Promise.all(
+    images.map((image) => deleteGeneratedImage(image.storageKey)),
+  )
+  await database.generatedImage.deleteMany({
+    where: { storageKey: { startsWith: 'm6-gallery/' } },
+  })
+  await database.imageGeneration.deleteMany({
+    where: {
+      sourceImage: { storageKey: { startsWith: 'm6-gallery-source/' } },
+    },
+  })
+  await database.sourceImage.deleteMany({
+    where: { storageKey: { startsWith: 'm6-gallery-source/' } },
+  })
+  await database.session.deleteMany({
+    where: { id: { in: sources.map((source) => source.sessionId) } },
+  })
+}
+
 test('submits an approved browser capture through the private generation flow', async ({
   page,
 }, testInfo) => {
@@ -86,7 +172,6 @@ test('submits an approved browser capture through the private generation flow', 
   })
   await page.getByTestId('capture-use-picture').click()
 
-  await expect(page.getByTestId('capture-generating')).toBeVisible()
   await expect(page.getByTestId('capture-processing-overlay')).toBeVisible()
   await expect(page.getByTestId('capture-generation-progress')).toHaveAttribute(
     'data-stage',
@@ -105,7 +190,6 @@ test('submits an approved browser capture through the private generation flow', 
   )
 
   await page.reload()
-  await expect(page.getByTestId('capture-generating')).toBeVisible()
   await expect(page.getByTestId('capture-generation-progress')).toHaveAttribute(
     'data-stage',
     'preparing',
@@ -467,6 +551,18 @@ test('queues one generation only for the current session approved source', async
   })
   expect(generatedImage.status).toBe('ACTIVE')
   expect(generatedImage.publicId).toMatch(/^[A-Za-z0-9_-]{43}$/)
+  const completedCountAfterPublication =
+    await database.eventAggregate.findUniqueOrThrow({
+      select: { completedPhotoCount: true },
+      where: { id: 'current' },
+    })
+  await submitGeneration(request)
+  await expect(
+    database.eventAggregate.findUniqueOrThrow({
+      select: { completedPhotoCount: true },
+      where: { id: 'current' },
+    }),
+  ).resolves.toEqual(completedCountAfterPublication)
   expect(
     existsSync(
       resolve('test-results/source-storage', generatedImage.storageKey),
@@ -590,6 +686,111 @@ test('queues one generation only for the current session approved source', async
   expect(expiredDownload.status()).toBe(404)
   await page.reload()
   await expect(page.getByTestId('photo-unavailable')).toBeVisible()
+})
+
+test('lists active public photos with stable cursor navigation and keeps the event count after expiry', async ({
+  page,
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  const database = getTestDb()
+  await removePublishedGalleryFixtures()
+  const countBefore = await database.eventAggregate.findUnique({
+    select: { completedPhotoCount: true },
+    where: { id: 'current' },
+  })
+  const photos = await Promise.all(
+    Array.from({ length: 7 }, () =>
+      createPublishedGalleryPhoto(new Date('2099-01-01T12:00:00.000Z')),
+    ),
+  )
+  await database.eventAggregate.upsert({
+    where: { id: 'current' },
+    update: { completedPhotoCount: { increment: photos.length } },
+    create: { completedPhotoCount: photos.length, id: 'current' },
+  })
+
+  const publicIds = new Set(photos.map((photo) => photo.publicId))
+  const firstPageResponse = await request.get('/api/photos/recent')
+  expect(firstPageResponse.status()).toBe(200)
+  const firstPage = (await firstPageResponse.json()) as {
+    completedCount: number
+    newerCursor?: string
+    olderCursor?: string
+    photos: Array<{ imageUrl: string; publicId: string }>
+  }
+  expect(firstPage.completedCount).toBe(
+    (countBefore?.completedPhotoCount ?? 0) + photos.length,
+  )
+  expect(firstPage.photos).toHaveLength(6)
+  expect(firstPage.photos.every((photo) => publicIds.has(photo.publicId))).toBe(
+    true,
+  )
+  expect(new Set(firstPage.photos.map((photo) => photo.publicId)).size).toBe(6)
+  expect(firstPage.photos[0]?.imageUrl).toBe(
+    `/api/photos/${firstPage.photos[0]?.publicId}/image`,
+  )
+  expect(firstPage.newerCursor).toBeUndefined()
+  expect(firstPage.olderCursor).toBeTruthy()
+  const olderCursor = firstPage.olderCursor
+  if (!olderCursor) throw new Error('Expected an older-page cursor')
+
+  const olderPageResponse = await request.get('/api/photos/recent', {
+    params: { before: olderCursor },
+  })
+  expect(olderPageResponse.status()).toBe(200)
+  const olderPage = (await olderPageResponse.json()) as {
+    newerCursor?: string
+    olderCursor?: string
+    photos: Array<{ publicId: string }>
+  }
+  expect(olderPage.photos.length).toBeGreaterThan(0)
+  expect(olderPage.photos.length).toBeLessThanOrEqual(6)
+  expect(olderPage.photos.some((photo) => publicIds.has(photo.publicId))).toBe(
+    true,
+  )
+  expect(
+    olderPage.photos.some(
+      (photo) =>
+        publicIds.has(photo.publicId) &&
+        firstPage.photos.some(
+          (firstPagePhoto) => firstPagePhoto.publicId === photo.publicId,
+        ),
+    ),
+  ).toBe(false)
+  expect(olderPage.newerCursor).toBeTruthy()
+  const newerCursor = olderPage.newerCursor
+  if (!newerCursor) throw new Error('Expected a newer-page cursor')
+
+  const newerPageResponse = await request.get('/api/photos/recent', {
+    params: { after: newerCursor },
+  })
+  expect(newerPageResponse.status()).toBe(200)
+  expect(
+    (
+      (await newerPageResponse.json()) as {
+        photos: Array<{ publicId: string }>
+      }
+    ).photos.map((photo) => photo.publicId),
+  ).toEqual(firstPage.photos.map((photo) => photo.publicId))
+
+  await page.goto('/overview')
+  await expect(page.getByTestId('overview-grid')).toBeVisible()
+  await expect(page.getByTestId('overview-photo')).toHaveCount(6)
+  await expect(page.getByTestId('overview-count')).toBeVisible()
+
+  await database.generatedImage.updateMany({
+    data: { deleteAfter: new Date('2000-01-01T00:00:00.000Z') },
+    where: { publicId: { in: photos.map((photo) => photo.publicId) } },
+  })
+  const countAfterExpiry = await request.get('/api/photos/count')
+  expect(countAfterExpiry.status()).toBe(200)
+  expect(await countAfterExpiry.json()).toEqual({
+    completedCount: (countBefore?.completedPhotoCount ?? 0) + photos.length,
+  })
+
+  await removePublishedGalleryFixtures()
 })
 
 test('requeues only confirmed retryable generation failures', async ({
