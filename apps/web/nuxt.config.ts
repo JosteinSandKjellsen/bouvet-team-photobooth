@@ -21,7 +21,7 @@ export default defineNuxtConfig({
       captureGenerationEnabled: false,
       kioskMode: false,
       kioskResetMs: '60000',
-      photoOrigin: '',
+      photoOrigin: process.env.NUXT_PUBLIC_PHOTO_ORIGIN ?? '',
     },
   },
   typescript: {

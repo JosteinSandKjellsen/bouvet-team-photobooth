@@ -2,6 +2,9 @@
   command = "pnpm build"
   publish = "apps/web/dist"
 
+[build.environment]
+  NUXT_PUBLIC_PHOTO_ORIGIN = "https://bouvet-team-photobooth.netlify.app"
+
 [functions]
   directory = "apps/web/netlify/functions"
   node_bundler = "esbuild"
