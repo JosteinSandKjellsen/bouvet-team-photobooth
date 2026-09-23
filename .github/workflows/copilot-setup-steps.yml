@@ -34,4 +34,5 @@ jobs:
         env:
           NUXT_TELEMETRY_DISABLED: '1'
       - run: pnpm prepare
+      - run: pnpm --filter @bouvet-team-photobooth/web db:generate
       - run: pnpm --filter @bouvet-team-photobooth/web exec playwright install --with-deps chromium

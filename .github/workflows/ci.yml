@@ -38,6 +38,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm prepare
+      - run: pnpm --filter @bouvet-team-photobooth/web db:generate
       - run: pnpm --filter @bouvet-team-photobooth/web exec playwright install --with-deps chromium
       - run: pnpm check
       - run: pnpm test:e2e
@@ -88,6 +89,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm prepare
+      - run: pnpm --filter @bouvet-team-photobooth/web db:generate
       - run: pnpm --filter @bouvet-team-photobooth/web exec playwright install --with-deps chromium
       - run: pnpm test:db
       - name: Upload browser failure evidence
