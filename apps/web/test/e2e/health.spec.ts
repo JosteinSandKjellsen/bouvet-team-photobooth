@@ -14,10 +14,10 @@ test('serves the nine public theme descriptors', async ({ request }) => {
   expect(response.status()).toBe(200)
   expect(await response.json()).toEqual({
     themes: [
-      { id: 'wasteland', image: '/themes/space-cowboys.jpg' },
+      { id: 'space-cowboys', image: '/themes/space-cowboys.jpg' },
       { id: 'treehouse', image: '/themes/treehouse.jpg' },
       { id: 'block-world', image: '/themes/block-world.jpg' },
-      { id: 'space-cowboys', image: '/themes/wasteland.jpg' },
+      { id: 'wasteland', image: '/themes/wasteland.jpg' },
       { id: 'life-simulation', image: '/themes/life-simulation.jpg' },
       { id: 'mech-pilots', image: '/themes/mech-pilots.jpg' },
       { id: 'kids-on-bikes', image: '/themes/kids-on-bikes.jpg' },
@@ -51,13 +51,13 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   await page.goto('/')
   const themeButtons = page.getByTestId(/^theme-/)
   await expect(themeButtons).toHaveCount(9)
-  const afterTheFall = page.getByTestId('theme-space-cowboys')
+  const afterTheFall = page.getByTestId('theme-wasteland')
   await expect(afterTheFall).toContainText('After the fall')
   await expect(afterTheFall.locator('img')).toHaveAttribute(
     'src',
     '/themes/wasteland.jpg',
   )
-  const spaceCowboys = page.getByTestId('theme-wasteland')
+  const spaceCowboys = page.getByTestId('theme-space-cowboys')
   await expect(spaceCowboys).toContainText('Space cowboys')
   await expect(spaceCowboys.locator('img')).toHaveAttribute(
     'src',
@@ -76,7 +76,7 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
     '/themes/red-carpet.jpg',
   )
   await spaceCowboys.click()
-  await expect(page).toHaveURL('/capture/wasteland')
+  await expect(page).toHaveURL('/capture/space-cowboys')
   await expect(page.getByTestId('capture-activate-camera')).toBeVisible()
   await page.goto('/capture/unknown')
   await expect(page.getByTestId('capture-invalid-theme')).toBeVisible()

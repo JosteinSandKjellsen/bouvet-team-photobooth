@@ -1,10 +1,10 @@
 import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 
 export const themes: ThemeDescriptor[] = [
-  { id: 'wasteland', image: '/themes/space-cowboys.jpg' },
+  { id: 'space-cowboys', image: '/themes/space-cowboys.jpg' },
   { id: 'treehouse', image: '/themes/treehouse.jpg' },
   { id: 'block-world', image: '/themes/block-world.jpg' },
-  { id: 'space-cowboys', image: '/themes/wasteland.jpg' },
+  { id: 'wasteland', image: '/themes/wasteland.jpg' },
   { id: 'life-simulation', image: '/themes/life-simulation.jpg' },
   { id: 'mech-pilots', image: '/themes/mech-pilots.jpg' },
   { id: 'kids-on-bikes', image: '/themes/kids-on-bikes.jpg' },

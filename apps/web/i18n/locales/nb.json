@@ -102,9 +102,9 @@
   },
   "themes": {
     "wasteland": {
-      "name": "Grensepatruljen",
-      "label": "Space cowboys",
-      "description": "Når bakloggene er like stor som galaksen."
+      "name": "Siste sprint",
+      "label": "After the fall",
+      "description": "Arver systemet ingen andre tør å deploye."
     },
     "treehouse": {
       "name": "Tretopplauget",
@@ -117,9 +117,9 @@
       "description": "Bryter problemet ned til alt passer sammen."
     },
     "spaceCowboys": {
-      "name": "Siste sprint",
-      "label": "After the fall",
-      "description": "Arver systemet ingen andre tør å deploye."
+      "name": "Grensepatruljen",
+      "label": "Space cowboys",
+      "description": "Når bakloggene er like stor som galaksen."
     },
     "lifeSimulation": {
       "name": "Livssimulatorene",

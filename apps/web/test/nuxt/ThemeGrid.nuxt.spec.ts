@@ -4,7 +4,7 @@ import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 import ThemeGrid from '~/components/ThemeGrid.vue'
 
 const themes: ThemeDescriptor[] = [
-  { id: 'wasteland', image: '/themes/space-cowboys.jpg' },
+  { id: 'wasteland', image: '/themes/wasteland.jpg' },
   { id: 'samurai', image: '/themes/samurai.svg' },
 ]
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined
