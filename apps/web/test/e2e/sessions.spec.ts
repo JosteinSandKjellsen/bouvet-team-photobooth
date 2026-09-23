@@ -779,6 +779,20 @@ test('lists active public photos with stable cursor navigation and keeps the eve
   await expect(page.getByTestId('overview-grid')).toBeVisible()
   await expect(page.getByTestId('overview-photo')).toHaveCount(6)
   await expect(page.getByTestId('overview-count')).toBeVisible()
+  const [galleryBounds, countBounds] = await Promise.all([
+    page.getByTestId('overview-grid').boundingBox(),
+    page.getByTestId('overview-count').boundingBox(),
+  ])
+  expect(galleryBounds).not.toBeNull()
+  expect(countBounds).not.toBeNull()
+  if (!galleryBounds || !countBounds) {
+    throw new Error('Expected visible overview layout bounds')
+  }
+  expect(countBounds.y).toBeCloseTo(galleryBounds.y, 1)
+  expect(countBounds.y + countBounds.height).toBeCloseTo(
+    galleryBounds.y + galleryBounds.height,
+    1,
+  )
 
   await database.generatedImage.updateMany({
     data: { deleteAfter: new Date('2000-01-01T00:00:00.000Z') },

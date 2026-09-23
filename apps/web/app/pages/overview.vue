@@ -100,31 +100,28 @@ onBeforeUnmount(clearRefreshTimer)
               }}</span>
             </NuxtLink>
           </section>
-
-          <nav
-            class="overview-navigation"
-            :aria-label="t('overview.navigation')"
-          >
-            <ActionButton
-              v-if="data.newerCursor"
-              as="link"
-              :to="`/overview?after=${data.newerCursor}`"
-              variant="navigation"
-            >
-              <ArrowLeft :size="24" aria-hidden="true" />
-              {{ t('overview.newer') }}
-            </ActionButton>
-            <ActionButton
-              v-if="data.olderCursor"
-              as="link"
-              :to="`/overview?before=${data.olderCursor}`"
-              variant="navigation"
-            >
-              {{ t('overview.older') }}
-              <ArrowRight :size="24" aria-hidden="true" />
-            </ActionButton>
-          </nav>
         </div>
+
+        <nav class="overview-navigation" :aria-label="t('overview.navigation')">
+          <ActionButton
+            v-if="data.newerCursor"
+            as="link"
+            :to="`/overview?after=${data.newerCursor}`"
+            variant="navigation"
+          >
+            <ArrowLeft :size="24" aria-hidden="true" />
+            {{ t('overview.newer') }}
+          </ActionButton>
+          <ActionButton
+            v-if="data.olderCursor"
+            as="link"
+            :to="`/overview?before=${data.olderCursor}`"
+            variant="navigation"
+          >
+            {{ t('overview.older') }}
+            <ArrowRight :size="24" aria-hidden="true" />
+          </ActionButton>
+        </nav>
 
         <aside v-if="data" class="count-panel" data-testid="overview-count">
           <p class="count-label">{{ t('overview.countLabel') }}</p>
@@ -175,11 +172,15 @@ onBeforeUnmount(clearRefreshTimer)
 }
 .overview-content {
   display: grid;
+  grid-template-areas:
+    'gallery count'
+    'navigation .';
   grid-template-columns: minmax(0, 3fr) minmax(230px, 0.95fr);
-  gap: var(--space-4);
+  gap: var(--space-5) var(--space-4);
   align-items: stretch;
 }
 .gallery-column {
+  grid-area: gallery;
   min-width: 0;
 }
 .photo-grid {
@@ -231,6 +232,7 @@ onBeforeUnmount(clearRefreshTimer)
   text-transform: uppercase;
 }
 .count-panel {
+  grid-area: count;
   display: flex;
   min-height: 100%;
   flex-direction: column;
@@ -267,10 +269,10 @@ onBeforeUnmount(clearRefreshTimer)
   }
 }
 .overview-navigation {
+  grid-area: navigation;
   display: flex;
   justify-content: space-between;
   min-height: var(--control-height);
-  margin-top: var(--space-5);
 }
 .overview-error {
   display: grid;
@@ -289,6 +291,10 @@ onBeforeUnmount(clearRefreshTimer)
     font-size: 36px;
   }
   .overview-content {
+    grid-template-areas:
+      'gallery'
+      'navigation'
+      'count';
     grid-template-columns: 1fr;
   }
   .count-panel {
