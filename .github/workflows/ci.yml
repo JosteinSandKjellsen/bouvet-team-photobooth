@@ -44,6 +44,8 @@ jobs:
       - run: pnpm --filter @bouvet-team-photobooth/web exec playwright install --with-deps chromium
       - run: pnpm check
       - run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://photobooth:photobooth@127.0.0.1:5432/photobooth
       - name: Upload browser failure evidence
         if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
