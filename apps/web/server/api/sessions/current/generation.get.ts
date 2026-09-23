@@ -12,7 +12,10 @@ const generationStatuses = {
   SUBMITTING: 'submitting',
   SUCCEEDED: 'succeeded',
   UPLOADING: 'submitting',
-} as const satisfies Record<GenerationStatus, GenerationStatusResponse['status']>
+} as const satisfies Record<
+  GenerationStatus,
+  GenerationStatusResponse['status']
+>
 
 export default defineEventHandler(
   async (event): Promise<GenerationStatusResponse> => {
