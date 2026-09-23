@@ -65,7 +65,12 @@ async function pollSubmittedGenerations(now: Date) {
       providerOutputUrl: null,
       status: 'SUBMITTED',
     },
-    select: { id: true, providerGenerationId: true },
+    select: {
+      id: true,
+      providerGenerationId: true,
+      providerSourceImageId: true,
+      providerSourceUploadedAt: true,
+    },
   })
   const jobsByGenerationId = new Map(jobs.map((job) => [job.aggregateId, job]))
   const nextAttemptAt = new Date(now.getTime() + completionPollDelayMs)
@@ -106,7 +111,7 @@ async function pollSubmittedGenerations(now: Date) {
     }
 
     await db.$transaction(async (transaction) => {
-      await transaction.backgroundJob.updateMany({
+      const completed = await transaction.backgroundJob.updateMany({
         where: { id: job.id, status: job.status },
         data: {
           completedAt: now,
@@ -114,10 +119,29 @@ async function pollSubmittedGenerations(now: Date) {
           status: 'FAILED',
         },
       })
-      await transaction.imageGeneration.updateMany({
+      if (completed.count === 0) return
+
+      const failed = await transaction.imageGeneration.updateMany({
         where: { id: generation.id, status: 'SUBMITTED' },
         data: { status: 'FAILED' },
       })
+      if (
+        failed.count === 1 &&
+        generation.providerSourceImageId &&
+        generation.providerSourceUploadedAt
+      ) {
+        await transaction.backgroundJob.upsert({
+          where: {
+            idempotencyKey: `delete-provider-source-image:${generation.id}`,
+          },
+          update: {},
+          create: {
+            aggregateId: generation.id,
+            idempotencyKey: `delete-provider-source-image:${generation.id}`,
+            kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+          },
+        })
+      }
     })
   }
 }
@@ -218,27 +242,72 @@ async function recoverReconciliationJobs(now: Date) {
       status: 'RUNNING',
     },
     orderBy: { leaseExpiresAt: 'asc' },
-    select: { attempt: true, id: true, maxAttempts: true },
+    select: { aggregateId: true, attempt: true, id: true, maxAttempts: true },
     take: submissionBatchSize,
   })
 
   for (const job of jobs) {
     const exhausted = job.attempt >= job.maxAttempts
-    await db.backgroundJob.updateMany({
-      where: { id: job.id, leaseExpiresAt: { lt: now }, status: 'RUNNING' },
-      data: exhausted
-        ? {
-            completedAt: now,
-            lastErrorCode: 'OUTPUT_INGESTION_FAILED',
-            status: 'FAILED',
-          }
-        : {
-            lastErrorCode: 'OUTPUT_INGESTION_FAILED',
-            leaseExpiresAt: null,
-            leaseOwner: null,
-            nextAttemptAt: now,
-            status: 'QUEUED',
+    if (!exhausted) {
+      await db.backgroundJob.updateMany({
+        where: { id: job.id, leaseExpiresAt: { lt: now }, status: 'RUNNING' },
+        data: {
+          lastErrorCode: 'OUTPUT_INGESTION_FAILED',
+          leaseExpiresAt: null,
+          leaseOwner: null,
+          nextAttemptAt: now,
+          status: 'QUEUED',
+        },
+      })
+      continue
+    }
+
+    await db.$transaction(async (transaction) => {
+      const completed = await transaction.backgroundJob.updateMany({
+        where: {
+          id: job.id,
+          leaseExpiresAt: { lt: now },
+          status: 'RUNNING',
+        },
+        data: {
+          completedAt: now,
+          lastErrorCode: 'OUTPUT_INGESTION_FAILED',
+          status: 'FAILED',
+        },
+      })
+      if (completed.count === 0) return
+
+      const generation = await transaction.imageGeneration.findUnique({
+        where: { id: job.aggregateId },
+        select: {
+          providerSourceImageId: true,
+          providerSourceUploadedAt: true,
+          status: true,
+        },
+      })
+      if (generation?.status !== 'SUBMITTED') return
+
+      const failed = await transaction.imageGeneration.updateMany({
+        where: { id: job.aggregateId, status: 'SUBMITTED' },
+        data: { status: 'FAILED' },
+      })
+      if (
+        failed.count === 1 &&
+        generation.providerSourceImageId &&
+        generation.providerSourceUploadedAt
+      ) {
+        await transaction.backgroundJob.upsert({
+          where: {
+            idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
           },
+          update: {},
+          create: {
+            aggregateId: job.aggregateId,
+            idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
+            kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+          },
+        })
+      }
     })
   }
 }
@@ -640,6 +709,8 @@ async function reconcileClaimedGeneration(
     select: {
       providerGenerationId: true,
       providerOutputUrl: true,
+      providerSourceImageId: true,
+      providerSourceUploadedAt: true,
       sourceImage: { select: { deleteAfter: true, id: true, status: true } },
       status: true,
     },
@@ -744,6 +815,22 @@ async function reconcileClaimedGeneration(
         },
       })
     }
+    if (
+      generation.providerSourceImageId &&
+      generation.providerSourceUploadedAt
+    ) {
+      await transaction.backgroundJob.upsert({
+        where: {
+          idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
+        },
+        update: {},
+        create: {
+          aggregateId: job.aggregateId,
+          idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
+          kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+        },
+      })
+    }
   })
 }
 
@@ -765,30 +852,81 @@ async function completeReconciliationJob(id: string, owner: string, now: Date) {
 }
 
 async function rescheduleReconciliationJob(
-  job: { attempt: number; id: string; maxAttempts: number },
+  job: {
+    aggregateId: string
+    attempt: number
+    id: string
+    maxAttempts: number
+  },
   owner: string,
   now: Date,
 ) {
   const exhausted = job.attempt >= job.maxAttempts
-  await db.backgroundJob.updateMany({
-    where: {
-      id: job.id,
-      leaseExpiresAt: { gt: now },
-      leaseOwner: owner,
-      status: 'RUNNING',
-    },
-    data: exhausted
-      ? {
-          completedAt: now,
-          lastErrorCode: 'OUTPUT_INGESTION_FAILED',
-          status: 'FAILED',
-        }
-      : {
-          lastErrorCode: 'OUTPUT_INGESTION_FAILED',
-          leaseExpiresAt: null,
-          leaseOwner: null,
-          nextAttemptAt: now,
-          status: 'QUEUED',
+  if (!exhausted) {
+    await db.backgroundJob.updateMany({
+      where: {
+        id: job.id,
+        leaseExpiresAt: { gt: now },
+        leaseOwner: owner,
+        status: 'RUNNING',
+      },
+      data: {
+        lastErrorCode: 'OUTPUT_INGESTION_FAILED',
+        leaseExpiresAt: null,
+        leaseOwner: null,
+        nextAttemptAt: now,
+        status: 'QUEUED',
+      },
+    })
+    return
+  }
+
+  await db.$transaction(async (transaction) => {
+    const completed = await transaction.backgroundJob.updateMany({
+      where: {
+        id: job.id,
+        leaseExpiresAt: { gt: now },
+        leaseOwner: owner,
+        status: 'RUNNING',
+      },
+      data: {
+        completedAt: now,
+        lastErrorCode: 'OUTPUT_INGESTION_FAILED',
+        status: 'FAILED',
+      },
+    })
+    if (completed.count === 0) return
+
+    const generation = await transaction.imageGeneration.findUnique({
+      where: { id: job.aggregateId },
+      select: {
+        providerSourceImageId: true,
+        providerSourceUploadedAt: true,
+        status: true,
+      },
+    })
+    if (generation?.status !== 'SUBMITTED') return
+
+    const failed = await transaction.imageGeneration.updateMany({
+      where: { id: job.aggregateId, status: 'SUBMITTED' },
+      data: { status: 'FAILED' },
+    })
+    if (
+      failed.count === 1 &&
+      generation.providerSourceImageId &&
+      generation.providerSourceUploadedAt
+    ) {
+      await transaction.backgroundJob.upsert({
+        where: {
+          idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
         },
+        update: {},
+        create: {
+          aggregateId: job.aggregateId,
+          idempotencyKey: `delete-provider-source-image:${job.aggregateId}`,
+          kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+        },
+      })
+    }
   })
 }

@@ -5,8 +5,10 @@ const {
   db,
   GenerationSubmissionOutcomeUnknownError,
   getGenerationCompletion,
+  getGeneratedOutput,
   getSourceImage,
   reserveGenerationCredits,
+  storeGeneratedImage,
   submitGeneration,
   uploadGenerationSource,
 } = vi.hoisted(() => {
@@ -31,8 +33,10 @@ const {
     },
     GenerationSubmissionOutcomeUnknownError,
     getGenerationCompletion: vi.fn(),
+    getGeneratedOutput: vi.fn(),
     getSourceImage: vi.fn(),
     reserveGenerationCredits: vi.fn(),
+    storeGeneratedImage: vi.fn(),
     submitGeneration: vi.fn(),
     uploadGenerationSource: vi.fn(),
   }
@@ -46,10 +50,14 @@ vi.mock('../../server/utils/generation-provider', () => ({
   createGenerationSourceUpload,
   GenerationSubmissionOutcomeUnknownError,
   getGenerationCompletion,
+  getGeneratedOutput,
   submitGeneration,
   uploadGenerationSource,
 }))
-vi.mock('../../server/utils/source-storage', () => ({ getSourceImage }))
+vi.mock('../../server/utils/source-storage', () => ({
+  getSourceImage,
+  storeGeneratedImage,
+}))
 
 const [{ recordGenerationCompletion }, { runGenerationSubmission }] =
   await Promise.all([
@@ -71,8 +79,10 @@ beforeEach(() => {
   db.imageGeneration.update.mockResolvedValue({})
   db.imageGeneration.updateMany.mockResolvedValue({ count: 1 })
   getGenerationCompletion.mockResolvedValue({ status: 'PENDING' })
+  getGeneratedOutput.mockRejectedValue(new Error('Output is unavailable'))
   getSourceImage.mockResolvedValue(Uint8Array.of(1, 2, 3))
   reserveGenerationCredits.mockResolvedValue(true)
+  storeGeneratedImage.mockResolvedValue(undefined)
   submitGeneration.mockResolvedValue({ providerGenerationId: 'provider-id' })
   createGenerationSourceUpload.mockResolvedValue({
     fields: { key: 'source-key' },
@@ -116,7 +126,12 @@ describe('runGenerationSubmission', () => {
         providerOutputUrl: null,
         status: 'SUBMITTED',
       },
-      select: { id: true, providerGenerationId: true },
+      select: {
+        id: true,
+        providerGenerationId: true,
+        providerSourceImageId: true,
+        providerSourceUploadedAt: true,
+      },
     })
     expect(getGenerationCompletion).toHaveBeenCalledWith('provider-id')
     expect(db.backgroundJob.updateMany).toHaveBeenCalledWith({
@@ -124,6 +139,128 @@ describe('runGenerationSubmission', () => {
       data: {
         lastErrorCode: null,
         nextAttemptAt: new Date('2026-09-22T12:00:05.000Z'),
+      },
+    })
+  })
+
+  it('enqueues provider cleanup after a confirmed terminal provider failure', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    getGenerationCompletion.mockResolvedValue({ status: 'FAILED' })
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { aggregateId: generationId, id: jobId, status: 'QUEUED' },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+    db.imageGeneration.findMany.mockResolvedValueOnce([
+      {
+        id: generationId,
+        providerGenerationId: 'provider-id',
+        providerSourceImageId: 'source-id',
+        providerSourceUploadedAt: new Date('2026-09-22T11:00:00.000Z'),
+      },
+    ])
+
+    await runGenerationSubmission(now)
+
+    expect(db.backgroundJob.upsert).toHaveBeenCalledWith({
+      where: {
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+      },
+      update: {},
+      create: {
+        aggregateId: generationId,
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+        kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+      },
+    })
+  })
+
+  it('enqueues provider cleanup after recovering an exhausted reconciliation lease', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          aggregateId: generationId,
+          attempt: 5,
+          id: jobId,
+          maxAttempts: 5,
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+    db.imageGeneration.findUnique.mockResolvedValueOnce({
+      providerSourceImageId: 'source-id',
+      providerSourceUploadedAt: new Date('2026-09-22T11:00:00.000Z'),
+      status: 'SUBMITTED',
+    })
+
+    await runGenerationSubmission(now)
+
+    expect(db.backgroundJob.upsert).toHaveBeenCalledWith({
+      where: {
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+      },
+      update: {},
+      create: {
+        aggregateId: generationId,
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+        kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
+      },
+    })
+  })
+
+  it('enqueues provider cleanup after exhausted output ingestion', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          aggregateId: generationId,
+          attempt: 4,
+          id: jobId,
+          maxAttempts: 5,
+        },
+      ])
+      .mockResolvedValueOnce([])
+    db.imageGeneration.findMany.mockResolvedValueOnce([{ id: generationId }])
+    db.imageGeneration.findUnique
+      .mockResolvedValueOnce({
+        providerGenerationId: 'provider-id',
+        providerOutputUrl:
+          'https://cdn.leonardo.ai/generations/provider-id.jpg',
+        providerSourceImageId: 'source-id',
+        providerSourceUploadedAt: new Date('2026-09-22T11:00:00.000Z'),
+        sourceImage: {
+          deleteAfter: new Date('2026-09-22T12:30:00.000Z'),
+          id: '33333333-3333-4333-8333-333333333333',
+          status: 'ACTIVE',
+        },
+        status: 'SUBMITTED',
+      })
+      .mockResolvedValueOnce({
+        providerSourceImageId: 'source-id',
+        providerSourceUploadedAt: new Date('2026-09-22T11:00:00.000Z'),
+        status: 'SUBMITTED',
+      })
+
+    await runGenerationSubmission(now)
+
+    expect(db.backgroundJob.upsert).toHaveBeenCalledWith({
+      where: {
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+      },
+      update: {},
+      create: {
+        aggregateId: generationId,
+        idempotencyKey: `delete-provider-source-image:${generationId}`,
+        kind: 'DELETE_PROVIDER_SOURCE_IMAGE',
       },
     })
   })
@@ -322,6 +459,7 @@ describe('runGenerationSubmission', () => {
       where: { id: generationId, status: 'SUBMITTING' },
       data: { status: 'SUBMISSION_UNKNOWN' },
     })
+    expect(db.backgroundJob.upsert).not.toHaveBeenCalled()
   })
 })
 

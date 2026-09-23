@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createGenerationSourceUpload,
+  deleteGenerationSource,
   getGenerationCompletion,
   getGeneratedOutput,
   submitGeneration,
   uploadGenerationSource,
 } from '../../server/utils/generation-provider'
+import type { GenerationSourceDeletionError } from '../../server/utils/generation-provider'
 import { spaceCowboysPrompt } from '../../server/utils/theme-prompts/space-cowboys'
 
 afterEach(() => {
@@ -15,6 +17,54 @@ afterEach(() => {
 })
 
 describe('generation provider', () => {
+  it('deletes a Leonardo source only after a matching confirmed response', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const sourceId = '11111111-1111-4111-8111-111111111111'
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ delete_init_images_by_pk: { id: sourceId } }),
+          { headers: { 'Content-Type': 'application/json' }, status: 200 },
+        ),
+      )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(deleteGenerationSource(sourceId)).resolves.toBeUndefined()
+    expect(providerFetch).toHaveBeenCalledWith(
+      `https://cloud.leonardo.ai/api/rest/v1/init-image/${sourceId}`,
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/json',
+          Authorization: 'Bearer test-api-key',
+        },
+        method: 'DELETE',
+      }),
+    )
+  })
+
+  it('does not retry an unconfirmed Leonardo source deletion response', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ delete_init_images_by_pk: null }), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+        }),
+      ),
+    )
+
+    await expect(
+      deleteGenerationSource('11111111-1111-4111-8111-111111111111'),
+    ).rejects.toMatchObject<Partial<GenerationSourceDeletionError>>({
+      message: 'Unconfirmed generation source deletion response',
+      retryable: false,
+    })
+  })
+
   it('uploads the source before submitting one private Nano Banana generation', async () => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     process.env.LEONARDO_API_KEY = 'test-api-key'

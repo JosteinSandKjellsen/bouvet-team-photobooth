@@ -32,6 +32,16 @@ export class GenerationSubmissionOutcomeUnknownError extends Error {
   }
 }
 
+export class GenerationSourceDeletionError extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+  ) {
+    super(message)
+    this.name = 'GenerationSourceDeletionError'
+  }
+}
+
 export async function createGenerationSourceUpload(): Promise<GenerationSourceUpload> {
   const apiKey = getLeonardoApiKey()
   let response: Response
@@ -99,6 +109,52 @@ export async function uploadGenerationSource(
   if (response.status !== 204) {
     throw new Error(
       `Generation source upload failed (status=${response.status})`,
+    )
+  }
+}
+
+export async function deleteGenerationSource(providerSourceImageId: string) {
+  const apiKey = getLeonardoApiKey()
+  let response: Response
+  try {
+    response = await fetch(
+      `${leonardoInitImageUrl}/${encodeURIComponent(providerSourceImageId)}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        method: 'DELETE',
+        signal: AbortSignal.timeout(leonardoRequestTimeoutMs),
+      },
+    )
+  } catch {
+    throw new GenerationSourceDeletionError(
+      'Generation source deletion is unavailable',
+      true,
+    )
+  }
+
+  if (!response.ok) {
+    throw new GenerationSourceDeletionError(
+      `Generation source deletion failed (status=${response.status})`,
+      isRetryableProviderStatus(response.status),
+    )
+  }
+
+  let body: unknown
+  try {
+    body = await response.json()
+  } catch {
+    throw new GenerationSourceDeletionError(
+      'Invalid generation source deletion response',
+      false,
+    )
+  }
+  if (!isConfirmedGenerationSourceDeletion(body, providerSourceImageId)) {
+    throw new GenerationSourceDeletionError(
+      'Unconfirmed generation source deletion response',
+      false,
     )
   }
 }
@@ -241,6 +297,22 @@ function isHttpsUrl(value: string) {
 function isStringRecord(value: unknown): value is Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   return Object.values(value).every((item) => typeof item === 'string')
+}
+
+function isConfirmedGenerationSourceDeletion(
+  value: unknown,
+  providerSourceImageId: string,
+) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const deleted = (value as Record<string, unknown>).delete_init_images_by_pk
+  if (!deleted || typeof deleted !== 'object' || Array.isArray(deleted)) {
+    return false
+  }
+  return (deleted as Record<string, unknown>).id === providerSourceImageId
+}
+
+function isRetryableProviderStatus(status: number) {
+  return status === 408 || status === 429 || status >= 500
 }
 
 type LeonardoGenerationResponse = {

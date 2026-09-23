@@ -1,29 +1,50 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { db, deleteGeneratedImage, deleteSourceImage } = vi.hoisted(() => ({
-  db: {
-    $transaction: vi.fn(),
-    backgroundJob: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-      updateMany: vi.fn(),
+const {
+  db,
+  deleteGeneratedImage,
+  deleteGenerationSource,
+  deleteSourceImage,
+  GenerationSourceDeletionError,
+} = vi.hoisted(() => {
+  class GenerationSourceDeletionError extends Error {
+    retryable = false
+  }
+
+  return {
+    db: {
+      $transaction: vi.fn(),
+      backgroundJob: {
+        create: vi.fn(),
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
+      },
+      generatedImage: {
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        updateMany: vi.fn(),
+      },
+      imageGeneration: {
+        findUnique: vi.fn(),
+      },
+      sourceImage: {
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        updateMany: vi.fn(),
+      },
     },
-    generatedImage: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      updateMany: vi.fn(),
-    },
-    sourceImage: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      updateMany: vi.fn(),
-    },
-  },
-  deleteGeneratedImage: vi.fn(),
-  deleteSourceImage: vi.fn(),
-}))
+    deleteGeneratedImage: vi.fn(),
+    deleteGenerationSource: vi.fn(),
+    deleteSourceImage: vi.fn(),
+    GenerationSourceDeletionError,
+  }
+})
 
 vi.mock('../../server/utils/db', () => ({ db }))
+vi.mock('../../server/utils/generation-provider', () => ({
+  deleteGenerationSource,
+  GenerationSourceDeletionError,
+}))
 vi.mock('../../server/utils/source-storage', () => ({
   deleteGeneratedImage,
   deleteSourceImage,
@@ -41,14 +62,22 @@ beforeEach(() => {
   db.generatedImage.findMany.mockResolvedValue([])
   db.generatedImage.updateMany.mockResolvedValue({ count: 1 })
   db.backgroundJob.create.mockResolvedValue({})
+  db.backgroundJob.findMany.mockResolvedValue([])
   db.backgroundJob.updateMany.mockResolvedValue({ count: 1 })
+  db.imageGeneration.findUnique.mockResolvedValue(null)
   deleteGeneratedImage.mockResolvedValue(undefined)
+  deleteGenerationSource.mockResolvedValue(undefined)
   deleteSourceImage.mockResolvedValue(undefined)
+})
+
+afterEach(() => {
+  delete process.env.GENERATION_PROVIDER
 })
 
 describe('runExpiredSourceCleanup', () => {
   it('queues, leases, removes, and tombstones one expired source', async () => {
     db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([
@@ -59,6 +88,7 @@ describe('runExpiredSourceCleanup', () => {
           maxAttempts: 5,
         },
       ])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     db.sourceImage.findMany.mockResolvedValueOnce([
       { id: '11111111-1111-4111-8111-111111111111' },
@@ -100,6 +130,8 @@ describe('runExpiredSourceCleanup', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     db.sourceImage.findMany.mockResolvedValueOnce([])
 
     await runExpiredSourceCleanup(now)
@@ -125,6 +157,49 @@ describe('runExpiredSourceCleanup', () => {
         kind: 'DELETE_SOURCE_IMAGE',
         leaseExpiresAt: { lt: now },
         status: 'RUNNING',
+      },
+    })
+  })
+
+  it('deletes one confirmed Leonardo source through a leased cleanup job', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          aggregateId: '11111111-1111-4111-8111-111111111111',
+          attempt: 0,
+          id: '22222222-2222-4222-8222-222222222222',
+          maxAttempts: 5,
+        },
+      ])
+    db.sourceImage.findMany.mockResolvedValueOnce([])
+    db.imageGeneration.findUnique.mockResolvedValueOnce({
+      providerSourceImageId: '33333333-3333-4333-8333-333333333333',
+      providerSourceUploadedAt: new Date('2026-09-21T19:00:00.000Z'),
+    })
+
+    await runExpiredSourceCleanup(now)
+
+    expect(deleteGenerationSource).toHaveBeenCalledWith(
+      '33333333-3333-4333-8333-333333333333',
+    )
+    expect(db.backgroundJob.updateMany).toHaveBeenLastCalledWith({
+      where: {
+        id: '22222222-2222-4222-8222-222222222222',
+        leaseExpiresAt: { gt: now },
+        leaseOwner: expect.any(String),
+        status: 'RUNNING',
+      },
+      data: {
+        completedAt: now,
+        leaseExpiresAt: null,
+        leaseOwner: null,
+        status: 'SUCCEEDED',
       },
     })
   })

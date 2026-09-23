@@ -84,7 +84,10 @@ current-event aggregate which increments only on durable output publication and
 does not decrement on expiry. The overview refreshes only its first page and
 does not return source, session, provider, or storage fields. The database and
 browser flow covers equal publication times, cursor navigation, expiry, and
-aggregate retention using synthetic outputs.
+aggregate retention using synthetic outputs. On 2026-09-23,
+`pnpm node:24 -- test:db` passed 18 tests with 8 intentional project/global
+skips against isolated PostgreSQL. This verification does not resolve the M7
+deployment, privacy, retention, provider-erasure, hardware, or launch gates.
 
 Suggested next-session request:
 
@@ -609,11 +612,63 @@ generation failure after retries. The job must validate the nullable response,
 be idempotent after repeated-delete behavior is verified, retry only classified
 transient failures, preserve its external ID after exhausted cleanup, and never
 treat `SUBMISSION_UNKNOWN` as safe to delete without reconciliation or approved
-manual intervention.
+manual intervention. An earlier recheck used an incorrect reference and returned
+`404`. The verified
+[v1 delete-init-image contract](https://docs.leonardo.ai/v1.0/reference/deleteinitimagebyid)
+defines authenticated `DELETE /init-image/{id}` and a nullable
+`delete_init_images_by_pk.id` response. The cleanup worker implements this
+contract. Live confirmation, including repeated-delete semantics, remains a
+launch gate.
 
 Deploy the existing Netlify-first adapters, workers/scheduler and migrations with
 isolated non-production storage. Add an operator runbook to this plan; split it
 into another document only when actual operational content warrants that.
+
+### M7 Operator Runbook
+
+This procedure records evidence; it does not substitute for product, privacy,
+provider, or event approvals. Local development and automated checks use the
+normal Nuxt/Nitro Node server; they do not require Netlify CLI or local Netlify
+emulation.
+
+1. Obtain the approved retention, inactivity, public-access, event-budget,
+   canonical-origin, print-format, processor, artwork and likeness decisions.
+   Confirm the application has a reviewed configuration path for every approved
+   value before entering participant images; do not promote the local values in
+   [`.env.example`](../.env.example).
+2. Create an isolated non-production Netlify project, PostgreSQL database and
+   site-wide Blob store. Verify the selected site and team in the Netlify UI or
+   deploy pipeline before deployment. A preview or branch environment must use
+   a separate project or Blob-store name and must not run deletion jobs against
+   production objects.
+3. Configure the pooled, least-privilege `DATABASE_URL` for Builds and
+   Functions; configure `SOURCE_STORAGE_DRIVER=netlify` and an approved
+   `SOURCE_STORAGE_BLOB_STORE_NAME` for hosted image bytes. Provide private
+   worker, session, provider, webhook and capture-generation settings only to
+   the scopes that need them. Keep `DIRECT_URL` and the migration-role
+   credential out of Netlify, committed files and browser-visible variables.
+4. Build and test the exact release under Node 24 with `pnpm check` and
+   `pnpm test:e2e`. Run `prisma migrate deploy` once in the dedicated CI/CD
+   migration stage with `DIRECT_URL` and the migration role. Deploy application
+   code only after that stage succeeds; never run development migration commands
+   or mutate an applied migration in the target environment.
+5. Inspect the published deploy and Functions view. Confirm the Nuxt server is
+   a Node Function and `job-sweep` is scheduled every 10 minutes. Use **Run
+   now** in the isolated environment and observe bounded enqueue, claim,
+   completion, retry and lease-recovery work in function logs and PostgreSQL.
+6. With synthetic images, observe source upload, generated-output read and
+   source/object/cache/metadata cleanup in the hosted runtime. Separately
+   perform the required paid-provider checks: provider-source deletion after
+   successful output and confirmed terminal failure, repeated-delete semantics,
+   retry exhaustion and manual escalation. Do not delete a
+   `SUBMISSION_UNKNOWN` provider source before reconciliation or an approved,
+   recorded intervention.
+7. Record the deploy identifier, migration result, Function runtime, scheduler
+   invocation, database evidence and cleanup observations with the release.
+   For an incident, first disable public capture/generation and stop further
+   rollout. Roll back only to a release compatible with the migrated schema;
+   recover through the database and provider procedures rather than applying an
+   unreviewed down migration or deleting unresolved provider sources.
 
 **Acceptance:** observe scheduled expiry, lease recovery and
 object/cache/metadata cleanup in the target environment. When Leonardo provides
