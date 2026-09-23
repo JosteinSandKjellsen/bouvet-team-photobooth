@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="photo-page">
+  <main class="photo-page page-with-footer">
     <section class="intro" aria-labelledby="photo-heading">
       <h1 id="photo-heading">{{ t('photo.title') }}</h1>
     </section>
@@ -211,16 +211,17 @@ onBeforeUnmount(() => {
           </template>
         </aside>
       </section>
-      <ActionButton
-        class="page-navigation"
-        as="link"
-        data-testid="photo-back-to-themes"
-        to="/"
-        variant="navigation"
-      >
-        <ArrowLeft :size="28" aria-hidden="true" />
-        {{ t('common.actions.backToThemes') }}
-      </ActionButton>
+      <PageFooter>
+        <ActionButton
+          as="link"
+          data-testid="photo-back-to-themes"
+          to="/"
+          variant="navigation"
+        >
+          <ArrowLeft :size="28" aria-hidden="true" />
+          {{ t('common.actions.backToThemes') }}
+        </ActionButton>
+      </PageFooter>
     </template>
 
     <section v-else class="unavailable" data-testid="photo-unavailable">
@@ -241,7 +242,8 @@ onBeforeUnmount(() => {
 .photo-page {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter) var(--space-7);
+  padding: 0 var(--page-gutter)
+    calc(var(--space-7) + var(--control-height) + var(--space-6));
 }
 .intro {
   margin-bottom: var(--space-5);
@@ -257,9 +259,6 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: var(--space-3);
   align-items: stretch;
-}
-.page-navigation {
-  margin-top: var(--space-5);
 }
 .image-region {
   display: grid;
@@ -324,6 +323,11 @@ onBeforeUnmount(() => {
     min-height: 0;
   }
 }
+@media (max-width: 700px) {
+  .photo-page {
+    padding-bottom: var(--space-7);
+  }
+}
 @media (max-width: 480px) {
   .intro h1,
   .unavailable h2 {
@@ -336,7 +340,8 @@ onBeforeUnmount(() => {
 @media print {
   :global(.masthead),
   .intro,
-  .share-panel {
+  .share-panel,
+  :global(.page-footer) {
     display: none;
   }
   .photo-page {

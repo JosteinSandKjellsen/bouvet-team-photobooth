@@ -38,7 +38,7 @@ onBeforeUnmount(clearRefreshTimer)
 </script>
 
 <template>
-  <main class="overview-page">
+  <main class="overview-page page-with-footer">
     <header class="overview-header">
       <h1>{{ t('overview.title') }}</h1>
       <p v-if="data" class="completed-count" data-testid="overview-count">
@@ -101,10 +101,12 @@ onBeforeUnmount(clearRefreshTimer)
       }}</ActionButton>
     </section>
 
-    <ActionButton as="link" class="home-link" to="/" variant="navigation">
-      <Home :size="24" aria-hidden="true" />
-      {{ t('common.actions.goHome') }}
-    </ActionButton>
+    <PageFooter>
+      <ActionButton as="link" to="/" variant="navigation">
+        <Home :size="24" aria-hidden="true" />
+        {{ t('common.actions.goHome') }}
+      </ActionButton>
+    </PageFooter>
   </main>
 </template>
 
@@ -112,7 +114,8 @@ onBeforeUnmount(clearRefreshTimer)
 .overview-page {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter) var(--space-7);
+  padding: 0 var(--page-gutter)
+    calc(var(--space-7) + var(--control-height) + var(--space-6));
 }
 .overview-header {
   display: flex;
@@ -170,10 +173,10 @@ onBeforeUnmount(clearRefreshTimer)
   margin: 0;
   color: var(--color-muted-text);
 }
-.home-link {
-  margin-top: var(--space-5);
-}
 @media (max-width: 700px) {
+  .overview-page {
+    padding-bottom: var(--space-7);
+  }
   .overview-header {
     display: grid;
     gap: var(--space-2);

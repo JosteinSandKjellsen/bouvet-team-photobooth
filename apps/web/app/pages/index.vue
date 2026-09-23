@@ -41,7 +41,7 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 </script>
 
 <template>
-  <main class="page-shell">
+  <main class="page-shell page-with-footer">
     <section class="intro" aria-labelledby="theme-heading">
       <p class="eyebrow">Bouvet Team Photobooth</p>
       <h1 id="theme-heading">{{ t('themeSelection.title') }}</h1>
@@ -67,12 +67,12 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
         :themes="themes"
         @select="selectTheme"
       />
-      <div class="actions">
+      <PageFooter>
         <ActionButton as="link" to="/overview" variant="navigation">
           <ContactRound :size="28" aria-hidden="true" />
           {{ t('themeSelection.overviewLink') }}
         </ActionButton>
-      </div>
+      </PageFooter>
     </section>
   </main>
 </template>
@@ -81,7 +81,8 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 .page-shell {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter) var(--space-7);
+  padding: 0 var(--page-gutter)
+    calc(var(--space-7) + var(--control-height) + var(--space-6));
 }
 .intro {
   display: grid;
@@ -114,16 +115,10 @@ h1 {
   border-top: 1px solid var(--color-divider);
   border-bottom: 1px solid var(--color-divider);
 }
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-5);
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-divider);
-}
 @media (max-width: 700px) {
+  .page-shell {
+    padding-bottom: var(--space-7);
+  }
   .intro {
     grid-template-columns: 1fr;
     row-gap: var(--space-4);

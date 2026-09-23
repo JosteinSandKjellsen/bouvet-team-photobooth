@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="capture-page">
+  <main class="capture-page page-with-footer">
     <template v-if="selectedTheme">
       <section class="intro" aria-labelledby="capture-heading">
         <p class="eyebrow">
@@ -581,17 +581,17 @@ onBeforeUnmount(() => {
         {{ t('capture.invalidTheme') }}
       </h1>
     </template>
-    <ActionButton
-      v-if="!(locallyApproved && captureGenerationEnabled)"
-      class="page-navigation"
-      as="link"
-      data-testid="capture-back-to-themes"
-      to="/"
-      variant="navigation"
-    >
-      <ArrowLeft :size="28" aria-hidden="true" />
-      {{ t('common.actions.backToThemes') }}
-    </ActionButton>
+    <PageFooter v-if="!(locallyApproved && captureGenerationEnabled)">
+      <ActionButton
+        as="link"
+        data-testid="capture-back-to-themes"
+        to="/"
+        variant="navigation"
+      >
+        <ArrowLeft :size="28" aria-hidden="true" />
+        {{ t('common.actions.backToThemes') }}
+      </ActionButton>
+    </PageFooter>
   </main>
 </template>
 
@@ -599,7 +599,8 @@ onBeforeUnmount(() => {
 .capture-page {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter) var(--space-7);
+  padding: 0 var(--page-gutter)
+    calc(var(--space-7) + var(--control-height) + var(--space-6));
 }
 .intro {
   max-width: 820px;
@@ -627,9 +628,6 @@ h1 {
 }
 .capture-workspace {
   max-width: 100%;
-}
-.page-navigation {
-  margin-top: var(--space-5);
 }
 .media-frame {
   position: relative;
@@ -886,6 +884,9 @@ img {
   }
   .media-frame {
     aspect-ratio: 4 / 3;
+  }
+  .capture-page {
+    padding-bottom: var(--space-7);
   }
 }
 @media (max-width: 480px) {
