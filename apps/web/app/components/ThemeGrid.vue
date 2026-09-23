@@ -27,7 +27,11 @@ const messageFor = (theme: ThemeDescriptor) => themeMessages[theme.id]
       class="theme-card"
       @click="emit('select', theme.id)"
     >
-      <img :src="theme.image" alt="" />
+      <img
+        :src="theme.image"
+        :class="{ 'theme-image--bottom-aligned': theme.id === 'red-carpet' }"
+        alt=""
+      />
       <span class="theme-copy">
         <span class="theme-name">{{ t(messageFor(theme).name) }}</span>
         <span class="theme-label">{{ t(messageFor(theme).label) }}</span>
@@ -81,6 +85,9 @@ img {
   border-radius: var(--card-radius) var(--card-radius) 0 0;
   object-fit: cover;
   background: var(--color-divider);
+}
+.theme-image--bottom-aligned {
+  object-position: center bottom;
 }
 .theme-copy {
   display: grid;

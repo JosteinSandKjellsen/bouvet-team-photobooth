@@ -14,15 +14,15 @@ test('serves the nine public theme descriptors', async ({ request }) => {
   expect(response.status()).toBe(200)
   expect(await response.json()).toEqual({
     themes: [
-      { id: 'wasteland', image: '/themes/wasteland.svg' },
-      { id: 'treehouse', image: '/themes/treehouse.svg' },
-      { id: 'block-world', image: '/themes/block-world.svg' },
-      { id: 'space-cowboys', image: '/themes/space-cowboys.svg' },
-      { id: 'life-simulation', image: '/themes/life-simulation.svg' },
-      { id: 'mech-pilots', image: '/themes/mech-pilots.svg' },
-      { id: 'kids-on-bikes', image: '/themes/kids-on-bikes.svg' },
-      { id: 'red-carpet', image: '/themes/red-carpet.svg' },
-      { id: 'samurai', image: '/themes/samurai.svg' },
+      { id: 'wasteland', image: '/themes/space-cowboys.jpg' },
+      { id: 'treehouse', image: '/themes/treehouse.jpg' },
+      { id: 'block-world', image: '/themes/block-world.jpg' },
+      { id: 'space-cowboys', image: '/themes/wasteland.jpg' },
+      { id: 'life-simulation', image: '/themes/life-simulation.jpg' },
+      { id: 'mech-pilots', image: '/themes/mech-pilots.jpg' },
+      { id: 'kids-on-bikes', image: '/themes/kids-on-bikes.jpg' },
+      { id: 'red-carpet', image: '/themes/red-carpet.jpg' },
+      { id: 'samurai', image: '/themes/samurai.jpg' },
     ],
   })
 })
@@ -51,7 +51,31 @@ test('selects a Norwegian theme and handles an invalid capture route', async ({
   await page.goto('/')
   const themeButtons = page.getByTestId(/^theme-/)
   await expect(themeButtons).toHaveCount(9)
-  await page.getByTestId('theme-wasteland').click()
+  const afterTheFall = page.getByTestId('theme-space-cowboys')
+  await expect(afterTheFall).toContainText('After the fall')
+  await expect(afterTheFall.locator('img')).toHaveAttribute(
+    'src',
+    '/themes/wasteland.jpg',
+  )
+  const spaceCowboys = page.getByTestId('theme-wasteland')
+  await expect(spaceCowboys).toContainText('Space cowboys')
+  await expect(spaceCowboys.locator('img')).toHaveAttribute(
+    'src',
+    '/themes/space-cowboys.jpg',
+  )
+  const mechPilots = page.getByTestId('theme-mech-pilots')
+  await expect(mechPilots).toContainText('Mech pilots')
+  await expect(mechPilots.locator('img')).toHaveAttribute(
+    'src',
+    '/themes/mech-pilots.jpg',
+  )
+  const productionReady = page.getByTestId('theme-red-carpet')
+  await expect(productionReady).toContainText('Production ready')
+  await expect(productionReady.locator('img')).toHaveAttribute(
+    'src',
+    '/themes/red-carpet.jpg',
+  )
+  await spaceCowboys.click()
   await expect(page).toHaveURL('/capture/wasteland')
   await expect(page.getByTestId('capture-activate-camera')).toBeVisible()
   await page.goto('/capture/unknown')
