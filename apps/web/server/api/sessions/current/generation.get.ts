@@ -1,4 +1,5 @@
 import type { GenerationStatusResponse } from '@bouvet-team-photobooth/contracts'
+import type { GenerationStatus } from '../../../generated/prisma/enums'
 import { db } from '../../../utils/db'
 import { getCurrentSession, sessionCookieName } from '../../../utils/sessions'
 
@@ -11,7 +12,7 @@ const generationStatuses = {
   SUBMITTING: 'submitting',
   SUCCEEDED: 'succeeded',
   UPLOADING: 'submitting',
-} as const
+} as const satisfies Record<GenerationStatus, GenerationStatusResponse['status']>
 
 export default defineEventHandler(
   async (event): Promise<GenerationStatusResponse> => {
@@ -42,7 +43,7 @@ export default defineEventHandler(
 
     const response: GenerationStatusResponse = {
       jobId: generation.id,
-      status: generationStatuses[generation.status],
+      status: generationStatuses[generation.status as GenerationStatus],
     }
     if (
       generation.status === 'SUCCEEDED' &&
