@@ -659,9 +659,11 @@ Use this baseline configuration:
   schedule = "*/10 * * * *"
 ```
 
-The current deployment has no Background Function. If one is added later,
-`background = true` is preferred; the older `-background` filename suffix
-remains supported but should not be the baseline. A schedule may instead be
+The deployment includes the `generation-submit-background.mts` Background
+Function. The generation API invokes it immediately after creating a durable
+job, while the scheduled `job-sweep` remains the recovery and source-cleanup
+path. The older `-background` filename suffix is used for this function because
+it is supported by the current Netlify adapter. A schedule may instead be
 exported in a TypeScript function's `config`, but define it in only one place.
 Schedules use UTC.
 
@@ -676,6 +678,9 @@ Scope environment variables as follows:
 - Make the pooled, least-privilege `DATABASE_URL` available to Builds and Functions. The build needs it while loading `prisma.config.ts` for client generation; never expose it through Nuxt public runtime configuration or a `NUXT_PUBLIC_` variable.
 - Make provider credentials and internal sweep secrets available to Functions
   only unless a documented build step needs them.
+- Make `NUXT_GENERATION_WORKER_TOKEN` available to Functions only. Use the same
+  value for the API trigger and `generation-submit-background`; it is not a
+  browser-visible variable.
 - Keep `DIRECT_URL` out of Netlify. Provide it only to the dedicated CI/CD migration job.
 - Store production values in Netlify environment variables, not in committed `.env` files or `netlify.toml`.
 
@@ -703,8 +708,9 @@ Edge Functions run on Deno rather than Node.js. They have a 20 MB compressed cod
 Account for these Netlify constraints:
 
 - Synchronous Functions have a non-configurable 60-second execution limit.
-- A future Background Function would have a 15-minute execution limit and return
-  `202` immediately.
+- The generation Background Function has a 15-minute execution limit and
+  returns `202` immediately; it should process a bounded batch and leave
+  recovery to the scheduled sweep.
 - Background Function payloads are limited to 256 KB, so send only a job ID and correlation data.
 - Background Functions retry failures after one minute and then two minutes. The database attempt count remains authoritative.
 - Background Functions are available on credit-based plans, including Free, Personal, and Pro, and on Enterprise; confirm that expected execution fits the selected plan's usage and billing model.

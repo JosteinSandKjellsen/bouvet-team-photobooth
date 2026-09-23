@@ -6,6 +6,7 @@ import {
   requireSameOrigin,
   sessionCookieName,
 } from '../../../utils/sessions'
+import { triggerGenerationWorker } from '../../../utils/generation-worker'
 import { createGenerationForSource } from '../../../utils/sources'
 
 export default defineEventHandler(
@@ -30,6 +31,7 @@ export default defineEventHandler(
     }
 
     const generation = await createGenerationForSource(session.id)
+    await triggerGenerationWorker()
     setResponseStatus(event, 202)
     return { jobId: generation.id, status: 'pending' }
   },
