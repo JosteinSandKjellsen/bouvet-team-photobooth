@@ -35,4 +35,6 @@ jobs:
           NUXT_TELEMETRY_DISABLED: '1'
       - run: pnpm prepare
       - run: pnpm --filter @bouvet-team-photobooth/web db:generate
+        env:
+          DATABASE_URL: postgresql://photobooth:photobooth@127.0.0.1:5432/photobooth
       - run: pnpm --filter @bouvet-team-photobooth/web exec playwright install --with-deps chromium
