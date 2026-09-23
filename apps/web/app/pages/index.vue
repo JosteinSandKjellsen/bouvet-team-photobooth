@@ -3,7 +3,7 @@ import type {
   ThemeDescriptor,
   ThemesResponse,
 } from '@bouvet-team-photobooth/contracts'
-import { ContactRound } from '@lucide/vue'
+import { ContactRound, ShieldCheck } from '@lucide/vue'
 
 defineOptions({ name: 'ThemeSelectionPage' })
 
@@ -21,6 +21,11 @@ const loading = computed(
 )
 const selectingTheme = ref(false)
 const selectionError = ref(false)
+const privacyDialog = ref<{ open: () => void } | null>(null)
+
+const openPrivacyDialog = () => {
+  privacyDialog.value?.open()
+}
 
 const selectTheme = async (themeId: ThemeDescriptor['id']) => {
   if (selectingTheme.value) {
@@ -72,8 +77,18 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
           <ContactRound :size="28" aria-hidden="true" />
           {{ t('themeSelection.overviewLink') }}
         </ActionButton>
+        <ActionButton
+          class="privacy-link"
+          variant="navigation"
+          data-testid="privacy-open"
+          @click="openPrivacyDialog"
+        >
+          <ShieldCheck :size="24" aria-hidden="true" />
+          {{ t('privacy.open') }}
+        </ActionButton>
       </PageFooter>
     </section>
+    <PrivacyDialog ref="privacyDialog" />
   </main>
 </template>
 
@@ -114,6 +129,9 @@ h1 {
   padding: var(--space-5) 0;
   border-top: 1px solid var(--color-divider);
   border-bottom: 1px solid var(--color-divider);
+}
+.privacy-link {
+  margin-left: auto;
 }
 @media (max-width: 700px) {
   .page-shell {

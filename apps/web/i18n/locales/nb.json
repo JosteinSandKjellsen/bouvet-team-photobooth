@@ -18,6 +18,37 @@
     "sessionResetError": "Vi kunne ikke starte et nytt teambilde. Prøv igjen.",
     "empty": "Ingen universer er tilgjengelige akkurat nå."
   },
+  "privacy": {
+    "open": "Personvern",
+    "close": "Lukk personverninformasjon",
+    "eyebrow": "Bouvet Team Photobooth",
+    "title": "Slik behandler vi bilder",
+    "introduction": "Denne informasjonen forklarer hvordan Bouvet Team Photobooth behandler bilder når dere bruker opplevelsen.",
+    "source": {
+      "title": "Bildet dere tar",
+      "camera": "Kameraet brukes bare når dere selv aktiverer det og tar et bilde.",
+      "purpose": "Gruppebildet brukes til å lage et nytt teambilde i universet dere velger.",
+      "retention": "Originalbildet er privat og midlertidig. Bouvet sletter det etter at det ferdige bildet er lagret, og rydder opp avbrutte forsøk."
+    },
+    "provider": {
+      "title": "Bildebehandling hos Leonardo AI",
+      "description": "Originalbildet sendes til Leonardo AI, som behandler det for å lage det valgte teambildet."
+    },
+    "result": {
+      "title": "Det ferdige teambildet",
+      "publication": "Teambildet blir tilgjengelig på en offentlig lenke og i arrangementsgalleriet i 30 dager.",
+      "expiry": "Etter 30 dager slutter appen å vise bildet, og Bouvets lagrede kopi slettes.",
+      "copies": "Kopier som er lastet ned eller skrevet ut, kan ikke slettes av appen."
+    },
+    "session": {
+      "title": "Anonym bruk",
+      "description": "Dere trenger ingen konto. Appen bruker en kortvarig, sikker informasjonskapsel for å holde deres bilde adskilt fra andre besøkendes bilder. Vi spør ikke etter navn, e-postadresse, quizsvar, betalings- eller stedsinformasjon."
+    },
+    "contact": {
+      "title": "Spørsmål eller ønske om fjerning",
+      "description": "Snakk med Bouvet-personalet på standen. Vis gjerne lenken eller QR-koden til teambildet, slik at vi kan finne riktig bilde."
+    }
+  },
   "capture": {
     "title": "{theme}",
     "invalidTheme": "Dette universet finnes ikke.",
