@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import { runGenerationSubmission } from '../../utils/generation-submission'
+import { logJobFailure } from '../../utils/job-logging'
 
 export default defineEventHandler(async (event) => {
   const { cleanupWorkerToken } = useRuntimeConfig(event)
@@ -17,6 +18,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  await runGenerationSubmission()
+  const startedAt = performance.now()
+  try {
+    await runGenerationSubmission()
+  } catch (error) {
+    logJobFailure('Generation submission sweep failed', error, {
+      durationMs: Math.round(performance.now() - startedAt),
+      provider: process.env.GENERATION_PROVIDER ?? 'disabled',
+    })
+    throw error
+  }
   setResponseStatus(event, 204)
 })

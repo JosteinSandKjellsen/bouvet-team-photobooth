@@ -1,4 +1,5 @@
 import { timingSafeEqual } from 'node:crypto'
+import { logJobFailure } from '../../utils/job-logging'
 import { runExpiredSourceCleanup } from '../../utils/source-cleanup'
 
 const hasValidWorkerToken = (provided: string, expected: string) => {
@@ -25,6 +26,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  await runExpiredSourceCleanup()
+  const startedAt = performance.now()
+  try {
+    await runExpiredSourceCleanup()
+  } catch (error) {
+    logJobFailure('Source cleanup sweep failed', error, {
+      durationMs: Math.round(performance.now() - startedAt),
+      provider: process.env.GENERATION_PROVIDER ?? 'disabled',
+    })
+    throw error
+  }
   setResponseStatus(event, 204)
 })

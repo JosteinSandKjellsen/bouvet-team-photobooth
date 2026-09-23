@@ -3,6 +3,7 @@ import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
 import { reserveGenerationCredits } from './generation-budget'
 import { recordGenerationCompletion } from './generation-completion'
+import { logJobFailure } from './job-logging'
 import {
   createGenerationSourceUpload,
   GenerationSubmissionOutcomeUnknownError,
@@ -84,7 +85,10 @@ async function pollSubmittedGenerations(now: Date) {
       completion = await getGenerationCompletion(
         generation.providerGenerationId,
       )
-    } catch {
+    } catch (error) {
+      logJobFailure('Generation completion poll failed', error, {
+        operation: 'poll-generation-completion',
+      })
       await db.backgroundJob.updateMany({
         where: { id: job.id, status: job.status },
         data: {
@@ -414,7 +418,10 @@ async function submitClaimedGeneration(
   if (!usesLeonardo || generationStatus === 'UPLOADING') {
     try {
       sourceImage = await getSourceImage(source.storageKey)
-    } catch {
+    } catch (error) {
+      logJobFailure('Generation source read failed', error, {
+        operation: 'read-generation-source',
+      })
       await failGenerationForUnavailableSource(
         job.id,
         job.aggregateId,
@@ -440,6 +447,9 @@ async function submitClaimedGeneration(
     try {
       upload = await createGenerationSourceUpload()
     } catch (error) {
+      logJobFailure('Generation source upload initialization failed', error, {
+        operation: 'initialize-generation-source-upload',
+      })
       await failGenerationForSourceUpload(
         job.id,
         job.aggregateId,
@@ -463,6 +473,9 @@ async function submitClaimedGeneration(
     try {
       await uploadGenerationSource(upload, sourceImage as Uint8Array)
     } catch (error) {
+      logJobFailure('Generation source upload failed', error, {
+        operation: 'upload-generation-source',
+      })
       await failGenerationForSourceUpload(
         job.id,
         job.aggregateId,
@@ -523,6 +536,9 @@ async function submitClaimedGeneration(
   } catch (error) {
     if (!(error instanceof GenerationSubmissionOutcomeUnknownError)) throw error
 
+    logJobFailure('Generation submission outcome is unknown', error, {
+      operation: 'submit-generation',
+    })
     await quarantineUncertainSubmission(
       job.id,
       job.aggregateId,
@@ -742,7 +758,10 @@ async function reconcileClaimedGeneration(
     ) {
       throw new Error('Invalid generated output')
     }
-  } catch {
+  } catch (error) {
+    logJobFailure('Generated output ingestion failed', error, {
+      operation: 'read-generated-output',
+    })
     await rescheduleReconciliationJob(job, owner, now)
     return
   }
@@ -765,7 +784,10 @@ async function reconcileClaimedGeneration(
 
   try {
     await storeGeneratedImage(image.storageKey, output.image)
-  } catch {
+  } catch (error) {
+    logJobFailure('Generated image storage write failed', error, {
+      operation: 'store-generated-output',
+    })
     await rescheduleReconciliationJob(job, owner, now)
     return
   }

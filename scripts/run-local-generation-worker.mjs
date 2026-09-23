@@ -1,4 +1,9 @@
 const defaultIntervalMs = 2_000
+const workerPaths = [
+  '/api/internal/generation-submission',
+  '/api/internal/source-cleanup',
+]
+const maxResponseDiagnosticLength = 1_000
 
 export function getWorkerSettings(environment = process.env) {
   const origin =
@@ -32,18 +37,71 @@ export function getWorkerSettings(environment = process.env) {
 }
 
 export async function runSweep(settings) {
-  for (const path of [
-    '/api/internal/generation-submission',
-    '/api/internal/source-cleanup',
-  ]) {
+  for (const path of workerPaths) {
+    const startedAt = performance.now()
     const response = await fetch(`${settings.origin}${path}`, {
       headers: { Authorization: `Bearer ${settings.token}` },
       method: 'POST',
     })
+    const durationMs = Math.round(performance.now() - startedAt)
     if (response.status !== 204) {
-      throw new Error(`Worker request failed with HTTP ${response.status}`)
+      const diagnostic = await getResponseDiagnostic(response, settings.token)
+      throw new Error(
+        formatWorkerRequestFailure({
+          ...diagnostic,
+          durationMs,
+          path,
+          status: response.status,
+        }),
+      )
     }
+    console.info('Local generation worker request completed', {
+      durationMs,
+      method: 'POST',
+      path,
+      status: response.status,
+    })
   }
+}
+
+async function getResponseDiagnostic(response, token) {
+  const requestId =
+    response.headers?.get?.('x-request-id') ??
+    response.headers?.get?.('x-nf-request-id') ??
+    undefined
+  try {
+    const body = await response.text?.()
+    return {
+      requestId,
+      responseBody: body ? sanitizeDiagnostic(body, token) : undefined,
+    }
+  } catch {
+    return { requestId }
+  }
+}
+
+function sanitizeDiagnostic(value, token) {
+  return value
+    .replaceAll(token, '[redacted]')
+    .replace(/Bearer\s+\S+/gi, 'Bearer [redacted]')
+    .replace(/https?:\/\/[^\s"']+/gi, '[url]')
+    .replace(/\s+/g, ' ')
+    .slice(0, maxResponseDiagnosticLength)
+}
+
+function formatWorkerRequestFailure({
+  durationMs,
+  path,
+  requestId,
+  responseBody,
+  status,
+}) {
+  const details = [
+    `Worker request failed: POST ${path} returned HTTP ${status} after ${durationMs}ms`,
+  ]
+  if (requestId) details.push(`requestId=${requestId}`)
+  if (responseBody) details.push(`response=${responseBody}`)
+  return details.join(' ')
 }
 
 async function main() {
@@ -55,8 +113,15 @@ async function main() {
     if (stopped || running) return
 
     running = true
+    const startedAt = performance.now()
+    console.info('Local generation worker sweep started', {
+      origin: new URL(settings.origin).origin,
+    })
     try {
       await runSweep(settings)
+      console.info('Local generation worker sweep completed', {
+        durationMs: Math.round(performance.now() - startedAt),
+      })
     } catch (error) {
       console.error(
         error instanceof Error ? error.message : 'Worker request failed',

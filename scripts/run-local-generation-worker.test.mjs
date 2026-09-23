@@ -41,7 +41,7 @@ test('sweeps the protected generation and cleanup endpoints', async () => {
   const requests = []
   globalThis.fetch = async (url, options) => {
     requests.push({ options, url })
-    return { status: 204 }
+    return { status: 204, text: async () => '' }
   }
 
   try {
@@ -70,4 +70,37 @@ test('sweeps the protected generation and cleanup endpoints', async () => {
       url: 'http://127.0.0.1:3000/api/internal/source-cleanup',
     },
   ])
+})
+
+test('reports a failed endpoint response without exposing the worker token', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => ({
+    headers: new Headers({ 'x-request-id': 'request-123' }),
+    status: 500,
+    text: async () =>
+      'Database connection failed for Bearer worker-token at http://127.0.0.1:5432',
+  })
+
+  try {
+    await assert.rejects(
+      runSweep({
+        intervalMs: 2_000,
+        origin: 'http://127.0.0.1:3000',
+        token: 'worker-token',
+      }),
+      (error) => {
+        assert.match(
+          error.message,
+          /POST \/api\/internal\/generation-submission returned HTTP 500/,
+        )
+        assert.match(error.message, /requestId=request-123/)
+        assert.match(error.message, /Bearer \[redacted\]/)
+        assert.match(error.message, /\[url\]/)
+        assert.doesNotMatch(error.message, /worker-token/)
+        return true
+      },
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })

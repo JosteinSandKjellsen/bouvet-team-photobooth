@@ -4,6 +4,7 @@ import {
   deleteGenerationSource,
   GenerationSourceDeletionError,
 } from './generation-provider'
+import { logJobFailure } from './job-logging'
 import { deleteGeneratedImage, deleteSourceImage } from './source-storage'
 
 const cleanupBatchSize = 25
@@ -273,7 +274,10 @@ async function deleteExpiredSourceImage(
 
   try {
     await deleteSourceImage(source.storageKey)
-  } catch {
+  } catch (error) {
+    logJobFailure('Source image storage deletion failed', error, {
+      operation: 'delete-source-image',
+    })
     await rescheduleCleanupJob(job, owner, now, 'SOURCE_DELETE_FAILED')
     return
   }
@@ -354,6 +358,13 @@ async function deleteProviderSourceImage(
   try {
     await deleteGenerationSource(generation.providerSourceImageId)
   } catch (error) {
+    logJobFailure('Provider source image deletion failed', error, {
+      operation: 'delete-provider-source-image',
+      retryable:
+        error instanceof GenerationSourceDeletionError
+          ? error.retryable
+          : false,
+    })
     if (error instanceof GenerationSourceDeletionError && error.retryable) {
       await rescheduleCleanupJob(
         job,
@@ -415,7 +426,10 @@ async function deleteExpiredGeneratedImage(
 
   try {
     await deleteGeneratedImage(image.storageKey)
-  } catch {
+  } catch (error) {
+    logJobFailure('Generated image storage deletion failed', error, {
+      operation: 'delete-generated-image',
+    })
     await rescheduleCleanupJob(job, owner, now, 'GENERATED_IMAGE_DELETE_FAILED')
     return
   }
