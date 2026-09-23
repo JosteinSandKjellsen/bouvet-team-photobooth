@@ -60,6 +60,7 @@ export interface PublicPhotoResponse {
 export interface PublicPhotoListItem {
   height: number
   imageUrl: string
+  publishedAt: string
   publicId: string
   width: number
 }

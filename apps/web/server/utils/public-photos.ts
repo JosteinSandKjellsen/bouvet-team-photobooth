@@ -53,12 +53,18 @@ function decodeCursor(value: unknown) {
 
 function getPhotoItem(photo: {
   height: number
+  publishedAt: Date | null
   publicId: string
   width: number
 }): PublicPhotoListItem {
+  if (!photo.publishedAt) {
+    throw new Error('Published gallery photo is missing its publication time')
+  }
+
   return {
     height: photo.height,
     imageUrl: `/api/photos/${photo.publicId}/image`,
+    publishedAt: photo.publishedAt.toISOString(),
     publicId: photo.publicId,
     width: photo.width,
   }

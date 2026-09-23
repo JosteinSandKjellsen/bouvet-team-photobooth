@@ -82,11 +82,19 @@
     "newPicture": "Ta et nytt bilde"
   },
   "overview": {
-    "title": "Teambilder fra arrangementet",
+    "eyebrow": "Bouvet Team Photobooth",
+    "title": "Se de nyeste teamene",
     "loading": "Laster teambilder.",
     "loadError": "Teambildene kunne ikke lastes inn.",
     "empty": "Ingen teambilder er klare ennå.",
-    "completedCount": "Ingen teambilder ennå | Ett teambilde fra arrangementet | {count} teambilder fra arrangementet",
+    "countLabel": "Team på bilde",
+    "countUnit": "teambilder laget på arrangementet",
+    "photoAge": {
+      "now": "Akkurat nå",
+      "minutes": "{count} min siden",
+      "hours": "{count} t siden",
+      "days": "{count} d siden"
+    },
     "imageAlt": "Ferdig teambilde fra arrangementet",
     "navigation": "Bla i teambilder",
     "older": "Eldre bilder",
