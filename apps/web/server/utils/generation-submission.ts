@@ -18,6 +18,20 @@ import { isThemeId } from './themes'
 const submissionBatchSize = 10
 const submissionLeaseMs = 60_000
 const completionPollDelayMs = 5_000
+const defaultGeneratedImageRetentionMs = 30 * 24 * 60 * 60 * 1_000
+
+function getGeneratedImageRetentionMs() {
+  const configured = process.env.GENERATED_IMAGE_RETENTION_MS
+  if (!configured) return defaultGeneratedImageRetentionMs
+
+  const retentionMs = Number(configured)
+  if (!Number.isSafeInteger(retentionMs) || retentionMs <= 0) {
+    throw new Error(
+      'GENERATED_IMAGE_RETENTION_MS must be a positive safe integer',
+    )
+  }
+  return retentionMs
+}
 
 export async function runGenerationSubmission(now = new Date()) {
   const provider = process.env.GENERATION_PROVIDER
@@ -766,13 +780,14 @@ async function reconcileClaimedGeneration(
     return
   }
 
+  const deleteAfter = new Date(now.getTime() + getGeneratedImageRetentionMs())
   const image = await db.generatedImage.upsert({
     where: { generationId: job.aggregateId },
     update: {},
     create: {
       byteSize: output.image.byteLength,
       contentType: output.contentType,
-      deleteAfter: generation.sourceImage.deleteAfter,
+      deleteAfter,
       generationId: job.aggregateId,
       height: metadata.height,
       publicId: randomBytes(32).toString('base64url'),
@@ -811,7 +826,7 @@ async function reconcileClaimedGeneration(
 
     const published = await transaction.generatedImage.updateMany({
       where: { id: image.id, publishedAt: null, status: 'PENDING' },
-      data: { publishedAt: now, status: 'ACTIVE' },
+      data: { deleteAfter, publishedAt: now, status: 'ACTIVE' },
     })
     if (published.count === 1) {
       await transaction.eventAggregate.upsert({

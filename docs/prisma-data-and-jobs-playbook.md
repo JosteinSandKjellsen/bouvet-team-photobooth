@@ -567,6 +567,11 @@ A late worker cannot complete after expiry because the completion predicate requ
 
 ### Generated images
 
+Generated-image retention is separate from private session and source retention.
+Set `deleteAfter` to 30 days after first publication; the server-side
+`GENERATED_IMAGE_RETENTION_MS` override defaults to `2592000000`. Never copy the
+source image's shorter deadline onto the public generated result.
+
 A scheduled retention sweep selects a bounded batch where:
 
 ```text

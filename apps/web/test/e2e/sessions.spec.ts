@@ -543,6 +543,8 @@ test('queues one generation only for the current session approved source', async
   const generatedImage = await database.generatedImage.findUniqueOrThrow({
     select: {
       byteSize: true,
+      deleteAfter: true,
+      publishedAt: true,
       publicId: true,
       status: true,
       storageKey: true,
@@ -551,6 +553,13 @@ test('queues one generation only for the current session approved source', async
   })
   expect(generatedImage.status).toBe('ACTIVE')
   expect(generatedImage.publicId).toMatch(/^[A-Za-z0-9_-]{43}$/)
+  expect(generatedImage.publishedAt).not.toBeNull()
+  if (!generatedImage.publishedAt) {
+    throw new Error('Expected the generated image to be published')
+  }
+  expect(
+    generatedImage.deleteAfter.getTime() - generatedImage.publishedAt.getTime(),
+  ).toBe(30 * 24 * 60 * 60 * 1_000)
   const completedCountAfterPublication =
     await database.eventAggregate.findUniqueOrThrow({
       select: { completedPhotoCount: true },

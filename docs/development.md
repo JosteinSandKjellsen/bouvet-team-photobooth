@@ -72,6 +72,11 @@ must be scheduled by the deployment platform; its local token and capacity are
 not approved production values. Configure distinct secret and numeric values
 before public use.
 
+Published generated images expire 30 days after first publication. The server
+uses that default when `GENERATED_IMAGE_RETENTION_MS` is absent; the tracked
+template sets the equivalent `2592000000` milliseconds explicitly. This setting
+does not extend private sessions or source-image retention.
+
 Browser capture-to-generation is disabled by default. It requires both
 `NUXT_CAPTURE_GENERATION_ENABLED=true` on the server and
 `NUXT_PUBLIC_CAPTURE_GENERATION_ENABLED=true` for the browser flow; the private

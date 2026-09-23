@@ -154,6 +154,8 @@ branding rights.
 
 ## Retention And Readiness Gates
 
+- Published generated results expire 30 days after first publication. Their
+  cumulative event count remains after expiry.
 - Delete application-owned sources after durable output ingestion succeeds;
   bound failed and abandoned source retention. Expired public metadata, image,
   download, and gallery reads stop immediately even when physical deletion is

@@ -112,9 +112,11 @@ Suggested next-session request:
 - Automatic inactivity reset is kiosk-only; phone result pages never auto-reset.
 - The cumulative completed-picture total for the current event survives photo
   expiry as an aggregate without permanent photo/session links.
-- Retention durations remain undecided and must be approved before real-photo
-  testing. Leonardo init-image deletion is documented but not implemented;
-  generated-image deletion remains an unresolved provider capability.
+- Published generated results expire 30 days after first publication. Remaining
+  source, tombstone and operational retention windows must be approved before
+  real-photo testing. Leonardo init-image deletion is documented but not
+  implemented; generated-image deletion remains an unresolved provider
+  capability.
 
 Technical approaches below are implementation recommendations, not claims that
 provider capabilities, privacy policies or deployment readiness were verified.
