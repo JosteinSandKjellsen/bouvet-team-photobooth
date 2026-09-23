@@ -148,7 +148,7 @@ describe('generation provider', () => {
     )
     expect(generationRequest.method).toBe('POST')
     expect(JSON.parse(generationRequest.body as string)).toEqual({
-      model: 'nano-banana-2-lite',
+      model: 'openai/gpt-image-2.5-sunburst',
       parameters: {
         guidances: {
           image_reference: [{ image: { id: 'source-id', type: 'UPLOADED' } }],
@@ -156,6 +156,7 @@ describe('generation provider', () => {
         height: 768,
         prompt: spaceCowboysPrompt,
         prompt_enhance: 'OFF',
+        quality: 'MEDIUM',
         quantity: 1,
         style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
         width: 1376,

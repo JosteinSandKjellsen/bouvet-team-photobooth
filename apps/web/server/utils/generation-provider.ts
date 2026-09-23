@@ -7,7 +7,7 @@ const leonardoGenerationUrl =
   'https://cloud.leonardo.ai/api/rest/v2/generations'
 const leonardoGenerationStatusUrl =
   'https://cloud.leonardo.ai/api/rest/v1/generations'
-const leonardoModel = 'nano-banana-2-lite'
+const leonardoModel = 'openai/gpt-image-2.5-sunburst'
 const leonardoStyle = '111dc692-d470-4eec-b791-3475abac4c46'
 const leonardoRequestTimeoutMs = 15_000
 const maxGeneratedOutputBytes = 8_000_000
@@ -194,6 +194,7 @@ export async function submitGeneration(submission: GenerationSubmission) {
           height: 768,
           prompt: themePrompts[submission.themeId],
           prompt_enhance: 'OFF',
+          quality: 'MEDIUM',
           quantity: 1,
           style_ids: [leonardoStyle],
           width: 1376,
