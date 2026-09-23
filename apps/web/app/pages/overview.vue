@@ -64,7 +64,11 @@ onBeforeUnmount(clearRefreshTimer)
       <h1>{{ t('overview.title') }}</h1>
     </header>
 
-    <p v-if="status === 'pending'" data-testid="overview-loading" role="status">
+    <p
+      v-if="status === 'pending' && !data"
+      data-testid="overview-loading"
+      role="status"
+    >
       {{ t('overview.loading') }}
     </p>
 
@@ -197,6 +201,13 @@ onBeforeUnmount(clearRefreshTimer)
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
   border-radius: var(--space-3);
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+.photo-link:hover {
+  box-shadow: 0 0 14px rgb(17 19 60 / 16%);
+  transform: translateY(-2px);
 }
 .photo-link:focus-visible {
   outline: 3px solid var(--color-action-primary);
@@ -246,6 +257,14 @@ onBeforeUnmount(clearRefreshTimer)
   margin: var(--space-2) 0 0;
   color: var(--color-muted-text);
   font-size: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-link {
+    transition: none;
+  }
+  .photo-link:hover {
+    transform: none;
+  }
 }
 .overview-navigation {
   display: flex;
