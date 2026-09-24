@@ -42,6 +42,8 @@ button {
 .application {
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
   overflow: clip;
 }
@@ -57,9 +59,20 @@ button {
 .application-content {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 .page-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding-top: clamp(var(--space-5), 4dvh, var(--space-7));
+}
+.page-with-footer {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 .masthead {
   display: flex;

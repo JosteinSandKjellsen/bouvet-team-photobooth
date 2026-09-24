@@ -63,7 +63,7 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
     <p v-else-if="themes.length === 0" class="message">
       {{ t('themeSelection.empty') }}
     </p>
-    <section v-else aria-labelledby="theme-heading">
+    <section v-else class="theme-selection" aria-labelledby="theme-heading">
       <p v-if="selectionError" class="message" role="alert">
         {{ t('themeSelection.sessionResetError') }}
       </p>
@@ -96,8 +96,12 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 .page-shell {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter)
-    calc(var(--space-7) + var(--control-height) + var(--space-6));
+  padding: 0 var(--page-gutter);
+}
+.theme-selection {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 .intro {
   display: grid;
@@ -134,9 +138,6 @@ h1 {
   margin-left: auto;
 }
 @media (max-width: 700px) {
-  .page-shell {
-    padding-bottom: var(--space-7);
-  }
   .intro {
     grid-template-columns: 1fr;
     row-gap: var(--space-4);

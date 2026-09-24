@@ -151,8 +151,7 @@ onBeforeUnmount(clearRefreshTimer)
 .overview-page {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter)
-    calc(var(--space-7) + var(--control-height) + var(--space-6));
+  padding: 0 var(--page-gutter);
 }
 .overview-header {
   margin-bottom: var(--space-4);
@@ -284,9 +283,6 @@ onBeforeUnmount(clearRefreshTimer)
   color: var(--color-muted-text);
 }
 @media (max-width: 700px) {
-  .overview-page {
-    padding-bottom: var(--space-7);
-  }
   .overview-header h1 {
     font-size: 36px;
   }

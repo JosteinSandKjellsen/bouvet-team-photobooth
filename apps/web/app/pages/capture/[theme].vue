@@ -599,8 +599,7 @@ onBeforeUnmount(() => {
 .capture-page {
   width: min(1280px, 100%);
   margin: 0 auto;
-  padding: 0 var(--page-gutter)
-    calc(var(--space-7) + var(--control-height) + var(--space-6));
+  padding: 0 var(--page-gutter);
 }
 .intro {
   max-width: 820px;
@@ -884,9 +883,6 @@ img {
   }
   .media-frame {
     aspect-ratio: 4 / 3;
-  }
-  .capture-page {
-    padding-bottom: var(--space-7);
   }
 }
 @media (max-width: 480px) {
