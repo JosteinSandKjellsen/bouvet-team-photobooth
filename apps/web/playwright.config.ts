@@ -24,7 +24,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'node --env-file-if-exists=../../.env .output/server/index.mjs',
+    command:
+      'node --env-file-if-exists=../../.env ../../scripts/start-production-server.mjs',
     url: `${baseURL}/api/health`,
     env: {
       ...process.env,
