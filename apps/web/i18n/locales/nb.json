@@ -14,9 +14,9 @@
     "title": "Velg dagens utfordring!",
     "description": "Velg verdenen dere vil sendes til. Samle laget foran kameraet, så sender vi dere på oppdrag!",
     "overviewLink": "SISTE BILDER",
-    "loadError": "Universene kunne ikke lastes inn.",
+    "loadError": "Oppdragene kunne ikke lastes inn.",
     "sessionResetError": "Vi kunne ikke starte et nytt teambilde. Prøv igjen.",
-    "empty": "Ingen universer er tilgjengelige akkurat nå."
+    "empty": "Ingen oppdrag er tilgjengelige akkurat nå."
   },
   "privacy": {
     "open": "Personvern",
