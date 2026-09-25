@@ -42,7 +42,7 @@
     },
     "session": {
       "title": "Anonym bruk",
-      "description": "Dere trenger ingen konto. Appen bruker en kortvarig, sikker informasjonskapsel for å holde deres bilde adskilt fra andre besøkendes bilder. Vi spør ikke etter navn, e-postadresse, quizsvar, betalings- eller stedsinformasjon."
+      "description": "Dere trenger ingen konto. Appen bruker en kortvarig, sikker informasjonskapsel for å holde deres bilde adskilt fra andre besøkendes bilder. Vi spør ikke etter navn, e-postadresse, betalings- eller stedsinformasjon."
     },
     "contact": {
       "title": "Spørsmål eller ønske om fjerning",
