@@ -1,7 +1,7 @@
 {
   "common": {
     "actions": {
-      "backToThemes": "Velg et annet univers",
+      "backToThemes": "Til oppdrag",
       "goHome": "Til forsiden",
       "retry": "Prøv igjen"
     },
@@ -11,9 +11,9 @@
     }
   },
   "themeSelection": {
-    "title": "Hvilket team passer dere?",
-    "description": "I Bouvet jobber vi i team med forskjellige fag, styrker og personligheter. Velg teammiljøet deres, så sender vi dere på oppdrag.",
-    "overviewLink": "Se teambilder fra arrangementet",
+    "title": "Velg dagens utfordring!",
+    "description": "Velg verdenen dere vil sendes til. Samle laget foran kameraet, så sender vi dere på oppdrag!",
+    "overviewLink": "SISTE BILDER",
     "loadError": "Universene kunne ikke lastes inn.",
     "sessionResetError": "Vi kunne ikke starte et nytt teambilde. Prøv igjen.",
     "empty": "Ingen universer er tilgjengelige akkurat nå."
@@ -74,14 +74,14 @@
       "pending": "Bildet er klart for behandling.",
       "overlay": {
         "title": "Lager teambilde",
-        "description": "Vi samler teamet i et nytt univers."
+        "description": "Teamet på vei til oppdrag!"
       },
       "progress": {
         "label": "Fremdrift for teambildet",
         "sourceReady": "Bilde klart",
-        "preparing": "Pakker romdrakter",
-        "checking": "Sjekker stjernene",
-        "building": "Bygger univers",
+        "preparing": "Pakker niste",
+        "checking": "Pusser tennene",
+        "building": "Lader partikkelkanonen",
         "teamReady": "Team klart"
       }
     },
@@ -113,8 +113,8 @@
     "newPicture": "Ta et nytt bilde"
   },
   "overview": {
-    "eyebrow": "Bouvet Team Photobooth",
-    "title": "Se de nyeste teamene",
+    "eyebrow": "Team Photobooth",
+    "title": "Siste oppdrag",
     "loading": "Laster teambilder.",
     "loadError": "Teambildene kunne ikke lastes inn.",
     "empty": "Ingen teambilder er klare ennå.",
@@ -123,8 +123,8 @@
     "photoAge": {
       "now": "Akkurat nå",
       "minutes": "{count} min siden",
-      "hours": "{count} t siden",
-      "days": "{count} d siden"
+      "hours": "{count} timer siden",
+      "days": "{count} dager siden"
     },
     "imageAlt": "Ferdig teambilde fra arrangementet",
     "navigation": "Bla i teambilder",
@@ -133,49 +133,49 @@
   },
   "themes": {
     "wasteland": {
-      "name": "Siste sprint",
-      "label": "After the fall",
-      "description": "Arver systemet ingen andre tør å deploye."
+      "name": "Hamstra hermetikk?",
+      "label": "Postapokalypsen",
+      "description": "I tilfellet apokalypse; git commit, git push og finn skjul."
     },
     "treehouse": {
-      "name": "Tretopplauget",
-      "label": "Treetopp realm",
-      "description": "Pair programming, potions og perfekt flyt."
+      "name": "D20 avgjør skjebnen!",
+      "label": "Eventyrerne",
+      "description": "En alv, en magiker og en kriger møttes på en bar.."
     },
     "blockWorld": {
-      "name": "Blokkbyggerne",
-      "label": "Block world",
+      "name": "Tråkka på en lego?",
+      "label": "Blokkverden",
       "description": "Bryter problemet ned til alt passer sammen."
     },
     "spaceCowboys": {
-      "name": "Grensepatruljen",
+      "name": "Feeling lucky, punk?",
       "label": "Space cowboys",
-      "description": "Når bakloggene er like stor som galaksen."
+      "description": "Når teamet må gjetes som kveg."
     },
     "lifeSimulation": {
-      "name": "Livssimulatorene",
-      "label": "Life mode",
-      "description": "Full kontroll på work-life. I teorien."
+      "name": "Eat, sleep, code, repeat?",
+      "label": "Livssimulator",
+      "description": "Full kontroll på work-life balansen!"
     },
     "mechPilots": {
-      "name": "Mech-pilotene",
-      "label": "Mech pilots",
-      "description": "Automatisert. Også kaffepausen."
+      "name": "Robotklipper XXXL?",
+      "label": "Mech-pilotene",
+      "description": "Ikke få Windows update midt på slagmarken!"
     },
     "kidsOnBikes": {
-      "name": "Signalgjengerne",
-      "label": "Dead signal",
-      "description": "Finner feilen. Selv i en annen dimensjon."
+      "name": "Trøbbel i permanenten?",
+      "label": "80-tallsgjengen",
+      "description": "Kasett + blyant = suksess!"
     },
     "redCarpet": {
-      "name": "Produksjonsklare",
-      "label": "Production ready",
-      "description": "Når teamet er klart for premiere."
+      "name": "Produksjonsklare?",
+      "label": "Rød løper",
+      "description": "Prodsetting på en fredag? Null stress!"
     },
     "samurai": {
-      "name": "Samurai-lauget",
-      "label": "Ink & steel",
-      "description": "Planlegger rolig. Leverer skarpt."
+      "name": "Sur sushi?",
+      "label": "Samuraiene",
+      "description": "Ying vs yang eller mekanisk vs membran? "
     }
   }
 }

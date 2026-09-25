@@ -48,7 +48,7 @@ const selectTheme = async (themeId: ThemeDescriptor['id']) => {
 <template>
   <main class="page-shell page-with-footer">
     <section class="intro" aria-labelledby="theme-heading">
-      <p class="eyebrow">Bouvet Team Photobooth</p>
+      <p class="eyebrow">{{ t('privacy.eyebrow') }}</p>
       <h1 id="theme-heading">{{ t('themeSelection.title') }}</h1>
       <p>{{ t('themeSelection.description') }}</p>
     </section>
