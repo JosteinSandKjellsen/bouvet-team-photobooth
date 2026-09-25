@@ -1,5 +1,8 @@
 import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
-import { currentGenerationModelProfileId } from './generation-models'
+import {
+  currentGenerationModelProfileId,
+  nanoBananaModelProfileId,
+} from './generation-models'
 
 export const themeGeneration = {
   'block-world': { modelProfileId: currentGenerationModelProfileId },
@@ -7,7 +10,7 @@ export const themeGeneration = {
   'life-simulation': { modelProfileId: currentGenerationModelProfileId },
   'mech-pilots': { modelProfileId: currentGenerationModelProfileId },
   'red-carpet': { modelProfileId: currentGenerationModelProfileId },
-  samurai: { modelProfileId: currentGenerationModelProfileId },
+  samurai: { modelProfileId: nanoBananaModelProfileId },
   'space-cowboys': { modelProfileId: currentGenerationModelProfileId },
   treehouse: { modelProfileId: currentGenerationModelProfileId },
   wasteland: { modelProfileId: currentGenerationModelProfileId },

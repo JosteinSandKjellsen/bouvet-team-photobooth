@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { currentGenerationModelProfileId } from '../../server/utils/generation-models'
+import { nanoBananaModelProfileId } from '../../server/utils/generation-models'
 
 const { db } = vi.hoisted(() => ({
   db: {
@@ -35,7 +35,7 @@ describe('createGenerationForSource', () => {
     expect(db.imageGeneration.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          modelProfileId: currentGenerationModelProfileId,
+          modelProfileId: nanoBananaModelProfileId,
         }),
       }),
     )

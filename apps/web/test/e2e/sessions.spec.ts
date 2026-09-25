@@ -91,7 +91,7 @@ async function createPublishedGalleryPhoto(publishedAt: Date) {
             create: {
               id: generationId,
               idempotencyKey: randomUUID(),
-              modelProfileId: 'gpt-image-2-5-sunburst-v1',
+              modelProfileId: 'nano-banana-2-lite-v1',
               status: 'SUCCEEDED',
               generatedImage: {
                 create: {
@@ -502,7 +502,7 @@ test('queues one generation only for the current session approved source', async
   })
   expect(stored).toEqual({
     id: generation.jobId,
-    modelProfileId: 'gpt-image-2-5-sunburst-v1',
+    modelProfileId: 'nano-banana-2-lite-v1',
     status: 'PENDING',
   })
   await expect(

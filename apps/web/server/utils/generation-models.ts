@@ -1,4 +1,5 @@
 export const currentGenerationModelProfileId = 'gpt-image-2-5-sunburst-v1'
+export const nanoBananaModelProfileId = 'nano-banana-2-lite-v1'
 
 export const generationModelProfiles = {
   [currentGenerationModelProfileId]: {
@@ -8,6 +9,17 @@ export const generationModelProfiles = {
       height: 768,
       prompt_enhance: 'OFF',
       quality: 'MEDIUM',
+      quantity: 1,
+      style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
+      width: 1376,
+    },
+  },
+  [nanoBananaModelProfileId]: {
+    creditReservation: 50,
+    model: 'nano-banana-2-lite',
+    parameters: {
+      height: 768,
+      prompt_enhance: 'OFF',
       quantity: 1,
       style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
       width: 1376,

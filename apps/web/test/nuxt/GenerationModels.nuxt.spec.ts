@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   currentGenerationModelProfileId,
   getGenerationModelProfile,
+  nanoBananaModelProfileId,
 } from '../../server/utils/generation-models'
 import {
   getThemeGeneration,
@@ -10,14 +11,16 @@ import {
 import { themes } from '../../server/utils/themes'
 
 describe('theme generation profiles', () => {
-  it('assigns every configured theme to the current approved model profile', () => {
+  it('assigns Samurai to Nano Banana and other themes to the current profile', () => {
     expect(Object.keys(themeGeneration).sort()).toEqual(
       themes.map((theme) => theme.id).sort(),
     )
 
     for (const theme of themes) {
       expect(getThemeGeneration(theme.id).modelProfileId).toBe(
-        currentGenerationModelProfileId,
+        theme.id === 'samurai'
+          ? nanoBananaModelProfileId
+          : currentGenerationModelProfileId,
       )
     }
   })
@@ -31,5 +34,10 @@ describe('theme generation profiles', () => {
       parameters: { quantity: 1 },
     })
     expect(getGenerationModelProfile('unapproved-model')).toBeUndefined()
+    expect(getGenerationModelProfile(nanoBananaModelProfileId)).toMatchObject({
+      creditReservation: 50,
+      model: 'nano-banana-2-lite',
+      parameters: { quantity: 1 },
+    })
   })
 })

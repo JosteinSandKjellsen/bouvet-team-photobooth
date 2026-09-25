@@ -500,12 +500,13 @@ provider is explicitly configured. Each durable generation snapshots an
 immutable server-only model profile before its job is queued. The current
 `gpt-image-2-5-sunburst-v1` profile uses the
 `openai/gpt-image-2.5-sunburst` discriminator, Dynamic style, prompt
-enhancement off, quantity one, and a 50-credit reservation; all nine themes map
-to it in the first per-theme-model increment. The profile is internal to the
-server, generation row, and worker: sessions, public themes, photo responses,
-and browser requests never contain it. New model profiles require documented
-schema and cost verification before a theme can select them, while existing
-profiles remain available for queued and retried jobs. Earlier Flare submissions
+enhancement off, quantity one, and a 50-credit reservation. Samurai is mapped
+to the separate `nano-banana-2-lite-v1` profile; all other themes retain the
+Sunburst profile. The profile is internal to the server, generation row, and
+worker: sessions, public themes, photo responses, and browser requests never
+contain it. New model profiles require documented schema and cost verification
+before a theme can select them, while existing profiles remain available for
+queued and retried jobs. Earlier Flare submissions
 using both inline bytes and an uploaded source ID returned HTTP-success GraphQL
 error arrays rather than a generation acceptance. The application retained each
 affected local synthetic submission as `SUBMISSION_UNKNOWN` rather than

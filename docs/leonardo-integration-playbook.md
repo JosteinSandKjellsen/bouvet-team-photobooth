@@ -33,11 +33,18 @@ or changing a configured model:
   `generations_by_pk`. Accept a generated output only for `COMPLETE` and only
   from the approved Leonardo CDN host.
 
-The current application profile is `gpt-image-2-5-sunburst-v1`, which submits
-the `openai/gpt-image-2.5-sunburst` discriminator. Every configured theme
-selects this profile in the first per-theme-model increment. Its source
-configuration and profile-specific request fields are server-only; the public
-theme response and every browser request remain model-free.
+The current application profiles are:
+
+| Profile ID                  | Leonardo discriminator          | Assigned themes            |
+| --------------------------- | ------------------------------- | -------------------------- |
+| `gpt-image-2-5-sunburst-v1` | `openai/gpt-image-2.5-sunburst` | Every theme except Samurai |
+| `nano-banana-2-lite-v1`     | `nano-banana-2-lite`            | Samurai                    |
+
+The Nano Banana profile uses the v2 fields documented in Leonardo's public
+model guide rechecked on 2026-09-25: one `UPLOADED` image reference, 1376 by
+768 dimensions, Dynamic style, one output, and prompt enhancement off. Its
+profile-specific request fields are server-only; the public theme response and
+every browser request remain model-free.
 
 `ImageGeneration.modelProfileId` snapshots the selected profile when the
 generation is created. A queued, resumed, retried, or reconciled generation
@@ -46,14 +53,14 @@ theme to another model. Retain old profile definitions while durable jobs can
 reference them. An unknown or retired profile must fail before a provider
 request, never fall back to another model.
 
-This change does not reverify Sunburst through authenticated discovery or a
-live request. Recheck its model schema, supported source reference, current
-price, and completion contract before enabling it for a new real-provider
-environment. The Flare material below records evaluated provider behavior but
-is not an enabled profile. Do not add Flare or another model without its own
-server-side profile, runtime-validated schema, tests, live contract check, and
-cost review. Never select a more expensive model automatically or accept
-arbitrary client-supplied model names.
+This change does not reverify Sunburst or Nano Banana through authenticated
+model discovery or a live request. Recheck each profile's model schema,
+supported source reference, current price, and completion contract before
+enabling it for a new real-provider environment. The Flare material below
+records evaluated provider behavior but is not an enabled profile. Do not add
+another model without its own server-side profile, runtime-validated schema,
+tests, live contract check, and cost review. Never select a more expensive model
+automatically or accept arbitrary client-supplied model names.
 
 GPT Image 2.5 Flare supports `UPLOADED`, `URL`, and `BASE64` source images. Nano
 Banana 2 Lite accepts only `UPLOADED` and `GENERATED` references. The required

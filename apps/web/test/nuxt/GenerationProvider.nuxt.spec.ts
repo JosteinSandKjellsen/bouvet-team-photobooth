@@ -8,7 +8,11 @@ import {
   uploadGenerationSource,
 } from '../../server/utils/generation-provider'
 import type { GenerationSourceDeletionError } from '../../server/utils/generation-provider'
-import { currentGenerationModelProfileId } from '../../server/utils/generation-models'
+import {
+  currentGenerationModelProfileId,
+  nanoBananaModelProfileId,
+} from '../../server/utils/generation-models'
+import { samuraiPrompt } from '../../server/utils/theme-prompts/samurai'
 import { spaceCowboysPrompt } from '../../server/utils/theme-prompts/space-cowboys'
 
 afterEach(() => {
@@ -66,7 +70,7 @@ describe('generation provider', () => {
     })
   })
 
-  it('uploads the source before submitting one private Nano Banana generation', async () => {
+  it('uploads the source before submitting one private Sunburst generation', async () => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     process.env.LEONARDO_API_KEY = 'test-api-key'
     const providerFetch = vi
@@ -159,6 +163,49 @@ describe('generation provider', () => {
         prompt: spaceCowboysPrompt,
         prompt_enhance: 'OFF',
         quality: 'MEDIUM',
+        quantity: 1,
+        style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
+        width: 1376,
+      },
+      public: false,
+    })
+  })
+
+  it('submits Samurai with the Nano Banana profile parameters', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          generate: { apiCreditCost: 23, generationId: 'provider-id' },
+        }),
+        { headers: { 'Content-Type': 'application/json' }, status: 200 },
+      ),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        modelProfileId: nanoBananaModelProfileId,
+        providerSourceImageId: 'source-id',
+        themeId: 'samurai',
+      }),
+    ).resolves.toEqual({
+      apiCreditCost: 23,
+      providerGenerationId: 'provider-id',
+    })
+
+    const [, request] = providerFetch.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(request.body as string)).toEqual({
+      model: 'nano-banana-2-lite',
+      parameters: {
+        guidances: {
+          image_reference: [{ image: { id: 'source-id', type: 'UPLOADED' } }],
+        },
+        height: 768,
+        prompt: samuraiPrompt,
+        prompt_enhance: 'OFF',
         quantity: 1,
         style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
         width: 1376,
