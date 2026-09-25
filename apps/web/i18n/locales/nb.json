@@ -71,6 +71,8 @@
       "locallyApproved": "Bildet er godkjent. Det blir ikke lastet opp før neste del av løsningen er klar."
     },
     "generating": {
+      "title": "Jobber med saken..",
+      "subtitle": "Vent litt mens vi sender dere på oppdrag.",
       "pending": "Bildet er klart for behandling.",
       "overlay": {
         "title": "Lager teambilde",

@@ -53,6 +53,12 @@ const generationProgressStage = computed(() => {
       return 'preparing'
   }
 })
+const isGeneratingIntro = computed(
+  () =>
+    generationProgressStage.value !== null &&
+    generationProgressStage.value !== 'failed' &&
+    generationProgressStage.value !== 'complete',
+)
 const generationProgressLabelKey = computed(() => {
   switch (generationProgressStage.value) {
     case 'checking':
@@ -288,8 +294,24 @@ onBeforeUnmount(() => {
           <span aria-hidden="true">&middot;</span>
           {{ t(themeMessages[selectedTheme.id].label) }}
         </p>
-        <h1 id="capture-heading">{{ t('capture.ready.title') }}</h1>
-        <p>{{ t('capture.ready.description') }}</p>
+        <h1 id="capture-heading">
+          {{
+            t(
+              isGeneratingIntro
+                ? 'capture.generating.title'
+                : 'capture.ready.title',
+            )
+          }}
+        </h1>
+        <p>
+          {{
+            t(
+              isGeneratingIntro
+                ? 'capture.generating.subtitle'
+                : 'capture.ready.description',
+            )
+          }}
+        </p>
       </section>
 
       <section class="capture-workspace" aria-live="polite">
