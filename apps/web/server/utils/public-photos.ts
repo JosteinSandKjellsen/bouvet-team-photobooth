@@ -205,6 +205,13 @@ export async function getPublicPhoto(publicId: string | undefined) {
       publicId: true,
       storageKey: true,
       width: true,
+      generation: {
+        select: {
+          sourceImage: {
+            select: { session: { select: { themeId: true } } },
+          },
+        },
+      },
     },
     where: {
       deleteAfter: { gt: new Date() },

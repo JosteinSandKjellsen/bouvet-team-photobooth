@@ -622,7 +622,7 @@ h1 {
 .intro > p:last-child {
   margin: 0;
   color: var(--color-muted-text);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.5;
 }
 .capture-workspace {

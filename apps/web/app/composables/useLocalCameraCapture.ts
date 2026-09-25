@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-const MAX_PROCESSED_DIMENSION = 1_600
+const MAX_PROCESSED_DIMENSION = 1_920
 const TARGET_BYTES = 4_000_000
 
 export type CameraError =
@@ -50,7 +50,7 @@ function createCanvas(width: number, height: number) {
 async function encodeJpeg(canvas: HTMLCanvasElement) {
   let workingCanvas = canvas
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    for (const quality of [0.85, 0.75, 0.65, 0.5]) {
+    for (const quality of [0.92, 0.85, 0.75, 0.65, 0.5]) {
       const blob = await new Promise<Blob | null>((resolve) =>
         workingCanvas.toBlob(resolve, 'image/jpeg', quality),
       )
@@ -148,8 +148,8 @@ export function useLocalCameraCapture() {
         audio: false,
         video: {
           facingMode: { ideal: nextFacingMode },
-          height: { ideal: 720 },
-          width: { ideal: 1280 },
+          height: { ideal: 1080 },
+          width: { ideal: 1920 },
         },
       }
       try {

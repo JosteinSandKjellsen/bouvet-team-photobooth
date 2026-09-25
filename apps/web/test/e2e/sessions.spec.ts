@@ -623,6 +623,7 @@ test('queues one generation only for the current session approved source', async
     downloadUrl: `/api/photos/${generatedImage.publicId}/download`,
     height: 768,
     imageUrl: `/api/photos/${generatedImage.publicId}/image`,
+    themeId: 'samurai',
     width: 1376,
   })
 

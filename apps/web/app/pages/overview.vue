@@ -257,7 +257,7 @@ onBeforeUnmount(clearRefreshTimer)
 .count-description {
   margin: var(--space-2) 0 0;
   color: var(--color-muted-text);
-  font-size: 18px;
+  font-size: 17px;
 }
 @media (prefers-reduced-motion: reduce) {
   .photo-link {

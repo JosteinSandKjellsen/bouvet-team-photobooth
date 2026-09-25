@@ -95,7 +95,8 @@
     }
   },
   "photo": {
-    "title": "Teambilde",
+    "title": "Teamet er klart!",
+    "subtitle": "Skann koden, skriv ut bildet eller last det ned.",
     "loading": "Laster teambildet.",
     "imageAlt": "Ferdig teambilde",
     "download": "Last ned bilde",
@@ -110,10 +111,11 @@
     "unavailableTitle": "Dette teambildet er ikke tilgjengelig.",
     "unavailableDescription": "Bildet kan ha blitt fjernet eller utløpt.",
     "retry": "Prøv igjen",
-    "newPicture": "Ta et nytt bilde"
+    "newPicture": "Ta et nytt bilde",
+    "footerThanks": "Takk for at dere besøkte Bouvet!"
   },
   "overview": {
-    "eyebrow": "Team Photobooth",
+    "eyebrow": "Bouvet Team Photobooth",
     "title": "Siste oppdrag",
     "loading": "Laster teambilder.",
     "loadError": "Teambildene kunne ikke lastes inn.",
@@ -138,9 +140,9 @@
       "description": "I tilfellet apokalypse; git commit, git push og finn skjul."
     },
     "treehouse": {
-      "name": "D20 avgjør skjebnen!",
+      "name": "D20 avgjør skjebnen?",
       "label": "Eventyrerne",
-      "description": "En alv, en magiker og en kriger møttes på en bar.."
+      "description": "En alv, en magiker og en kriger gikk inn på en bar.."
     },
     "blockWorld": {
       "name": "Tråkka på en lego?",
@@ -150,7 +152,7 @@
     "spaceCowboys": {
       "name": "Feeling lucky, punk?",
       "label": "Space cowboys",
-      "description": "Når teamet må gjetes som kveg."
+      "description": "Når team lead er 12 parsec unna."
     },
     "lifeSimulation": {
       "name": "Eat, sleep, code, repeat?",
@@ -165,7 +167,7 @@
     "kidsOnBikes": {
       "name": "Trøbbel i permanenten?",
       "label": "80-tallsgjengen",
-      "description": "Kasett + blyant = suksess!"
+      "description": "Kassett + blyant = suksess!"
     },
     "redCarpet": {
       "name": "Produksjonsklare?",
@@ -173,7 +175,7 @@
       "description": "Prodsetting på en fredag? Null stress!"
     },
     "samurai": {
-      "name": "Sur sushi?",
+      "name": "Sushi bonanza?",
       "label": "Samuraiene",
       "description": "Ying vs yang eller mekanisk vs membran? "
     }

@@ -6,7 +6,7 @@ import { storeSourceImage } from './source-storage'
 
 const MAX_INPUT_BYTES = 4_000_000
 const MAX_INPUT_PIXELS = 16_000_000
-const MAX_PROCESSED_DIMENSION = 1_600
+const MAX_PROCESSED_DIMENSION = 1_920
 const MAX_PROCESSED_BYTES = 4_000_000
 
 const allowedMimeTypes = new Set(['jpeg', 'png', 'webp'])
@@ -195,7 +195,7 @@ export async function createSourceImage(
         width: MAX_PROCESSED_DIMENSION,
         withoutEnlargement: true,
       })
-      .jpeg({ quality: 85 })
+      .jpeg({ quality: 92 })
       .toBuffer({ resolveWithObject: true })
     normalized = {
       bytes: result.data,

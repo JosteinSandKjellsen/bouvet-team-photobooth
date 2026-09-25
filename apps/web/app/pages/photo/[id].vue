@@ -2,6 +2,7 @@
 import type { PublicPhotoResponse } from '@bouvet-team-photobooth/contracts'
 import { ArrowLeft, Clipboard, Download, Printer } from '@lucide/vue'
 import QRCode from 'qrcode'
+import { themeMessages } from '~/utils/themeMessages'
 
 defineOptions({ name: 'PhotoResultPage' })
 
@@ -14,6 +15,10 @@ const { data, refresh, status } = await useFetch<PublicPhotoResponse>(
   () => `/api/photos/${photoId.value}`,
   { watch: [photoId] },
 )
+const themeEyebrow = computed(() => {
+  const themeId = data.value?.themeId
+  return themeId ? themeMessages[themeId] : undefined
+})
 const copyStatus = ref<'copied' | 'failed' | null>(null)
 const printFailed = ref(false)
 const publicUrl = ref('')
@@ -137,7 +142,13 @@ onBeforeUnmount(() => {
 <template>
   <main class="photo-page page-with-footer">
     <section class="intro" aria-labelledby="photo-heading">
+      <p v-if="themeEyebrow" class="eyebrow">
+        {{ t(themeEyebrow.name) }}
+        <span aria-hidden="true">&middot;</span>
+        {{ t(themeEyebrow.label) }}
+      </p>
       <h1 id="photo-heading">{{ t('photo.title') }}</h1>
+      <p>{{ t('photo.subtitle') }}</p>
     </section>
 
     <p v-if="status === 'pending'" data-testid="photo-loading" role="status">
@@ -221,6 +232,7 @@ onBeforeUnmount(() => {
           <ArrowLeft :size="28" aria-hidden="true" />
           {{ t('common.actions.backToThemes') }}
         </ActionButton>
+        <p class="footer-thanks">{{ t('photo.footerThanks') }}</p>
       </PageFooter>
     </template>
 
@@ -245,13 +257,38 @@ onBeforeUnmount(() => {
   padding: 0 var(--page-gutter);
 }
 .intro {
-  margin-bottom: var(--space-5);
+  max-width: 820px;
+  margin-bottom: var(--space-4);
+}
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  color: var(--color-action-primary);
+  font-weight: 700;
+  text-transform: uppercase;
 }
 .intro h1,
 .unavailable h2 {
   margin: 0;
   font-size: 48px;
-  line-height: 1.1;
+  line-height: 1.12;
+}
+.intro h1 {
+  margin-bottom: var(--space-1);
+}
+.intro > p:last-child {
+  margin: 0;
+  color: var(--color-muted-text);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.footer-thanks {
+  margin: 0 0 0 auto;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 500;
 }
 .photo-workspace {
   display: grid;

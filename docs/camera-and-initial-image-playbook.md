@@ -50,9 +50,9 @@ const INITIAL_IMAGE_LIMITS = {
   maxDimension: 8_192,
   maxLeonardoUploadBytes: 5 * MEBIBYTE,
   targetLeonardoUploadBytes: 4 * MEBIBYTE,
-  maxProcessedDimension: 1_600,
+  maxProcessedDimension: 1_920,
   minProcessedDimension: 768,
-  initialJpegQuality: 0.85,
+  initialJpegQuality: 0.92,
   minimumJpegQuality: 0.5,
 } as const
 ```
@@ -144,8 +144,8 @@ const constraints: MediaStreamConstraints = {
   audio: false,
   video: {
     facingMode: { ideal: 'user' },
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
   },
 }
 ```
@@ -301,9 +301,9 @@ Use this sequence:
 1. Reject the input when its compressed bytes, dimensions, or decoded pixel
    count exceed the inbound limits.
 2. Decode the image and apply its orientation.
-3. Resize without upscaling so the longest edge is at most 1600 pixels.
-4. Encode as JPEG at quality 0.85.
-5. If the result exceeds `effectiveTarget`, search quality between 0.85 and 0.5
+3. Resize without upscaling so the longest edge is at most 1920 pixels.
+4. Encode as JPEG at quality 0.92.
+5. If the result exceeds `effectiveTarget`, search quality between 0.92 and 0.5
    for at most six additional encodes.
 6. If quality reduction is insufficient, reduce both dimensions proportionally
    and repeat the bounded quality search.

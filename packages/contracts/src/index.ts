@@ -54,6 +54,7 @@ export interface PublicPhotoResponse {
   downloadUrl: string
   height: number
   imageUrl: string
+  themeId?: ThemeDescriptor['id']
   width: number
 }
 
