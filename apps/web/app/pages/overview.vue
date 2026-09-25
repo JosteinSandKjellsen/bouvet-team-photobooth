@@ -224,16 +224,19 @@ onBeforeUnmount(clearRefreshTimer)
   object-fit: cover;
 }
 .photo-caption {
+  height: var(--space-4);
   color: var(--color-muted-text);
   font-size: 12px;
   font-weight: 700;
+  line-height: var(--space-4);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 .count-panel {
   grid-area: count;
   display: flex;
-  min-height: 100%;
+  align-self: stretch;
+  margin-bottom: calc(var(--space-2) + var(--space-4));
   flex-direction: column;
   justify-content: center;
   padding: var(--space-6);
@@ -295,6 +298,7 @@ onBeforeUnmount(clearRefreshTimer)
   }
   .count-panel {
     min-height: 220px;
+    margin-bottom: 0;
     padding: var(--space-5);
   }
   .count-value {
