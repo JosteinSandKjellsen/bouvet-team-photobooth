@@ -45,6 +45,11 @@ camera. Temporary transfer buffers and durable source objects have different
 cleanup lifetimes. Uncertain paid submissions are not automatically resubmitted,
 and source URLs do not prove provider erasure.
 
+Model profiles and theme-to-model mappings are server-only generation
+configuration. A model switch is a new versioned profile plus a theme mapping
+for future work; the selected profile is persisted on the durable generation.
+It must not become a public theme field or a browser control.
+
 ## Workflows
 
 - [implement-vertical-slice](../.github/skills/implement-vertical-slice/SKILL.md):
@@ -100,6 +105,9 @@ or agent tool activity in a fresh chat. Try these read-only prompts:
 4. "Use verify-change to check the health scaffold and report actual command results."
 5. "Plan the photo result layout for kiosk and phone. Read the design guide, identify mockup placeholders, and do not edit code."
 6. "Compound the current session into the AI harness. Separate logged evidence from inference and validate each harness edit."
+7. "Add a server-only Leonardo model profile for one theme. Read the Leonardo
+   playbook, preserve queued-job profile snapshots, and do not expose a model
+   selector in browser contracts."
 
 The feature-planning prompts should load the relevant domain guide without treating the
 entire future feature as authorized implementation. Ordinary health-check work

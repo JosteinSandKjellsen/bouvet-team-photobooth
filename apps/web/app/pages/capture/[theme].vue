@@ -252,7 +252,13 @@ async function approvePicture() {
 }
 
 async function retryGeneration() {
-  if (submitting.value || generationStatus.value !== 'failed') {
+  const isRetryableFailure = generationStatus.value === 'failed'
+  const shouldRetryGenerationRequest =
+    generationStatus.value === null && submissionError.value
+  if (
+    submitting.value ||
+    (!isRetryableFailure && !shouldRetryGenerationRequest)
+  ) {
     return
   }
 
@@ -260,7 +266,9 @@ async function retryGeneration() {
   submissionError.value = false
   try {
     const generation = await $fetch<GenerationAcceptedResponse>(
-      '/api/sessions/current/retry',
+      isRetryableFailure
+        ? '/api/sessions/current/retry'
+        : '/api/sessions/current/generate',
       { method: 'POST' },
     )
     generationStatus.value = generation.status
@@ -577,7 +585,10 @@ onBeforeUnmount(() => {
           role="status"
         >
           <ActionButton
-            v-if="generationStatus === 'failed'"
+            v-if="
+              generationStatus === 'failed' ||
+              (generationStatus === null && submissionError)
+            "
             data-testid="capture-retry-generation"
             :disabled="submitting"
             @click="retryGeneration"

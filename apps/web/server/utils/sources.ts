@@ -3,6 +3,8 @@ import sharp from 'sharp'
 import type { SourceImageUploadResponse } from '@bouvet-team-photobooth/contracts'
 import { db } from './db'
 import { storeSourceImage } from './source-storage'
+import { getThemeGeneration } from './theme-generation'
+import { isThemeId } from './themes'
 
 const MAX_INPUT_BYTES = 4_000_000
 const MAX_INPUT_PIXELS = 16_000_000
@@ -26,14 +28,15 @@ export async function createGenerationForSource(sessionId: string) {
       sessionId,
       status: 'ACTIVE',
     },
-    select: { id: true },
+    select: { id: true, session: { select: { themeId: true } } },
   })
-  if (!source) {
+  if (!source || !isThemeId(source.session.themeId)) {
     throw createError({
       statusCode: 409,
       statusMessage: 'Approved source is unavailable',
     })
   }
+  const { modelProfileId } = getThemeGeneration(source.session.themeId)
 
   const generationId = randomUUID()
   try {
@@ -48,6 +51,7 @@ export async function createGenerationForSource(sessionId: string) {
         data: {
           id: generationId,
           idempotencyKey: `generate-image:${source.id}`,
+          modelProfileId,
           sourceImageId: source.id,
         },
         select: { id: true },

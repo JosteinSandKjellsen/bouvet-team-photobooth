@@ -496,13 +496,20 @@ are terminal and are never submitted or resubmitted automatically. The
 documented v1 init-image deletion call and its durable cleanup state are not yet
 implemented.
 The generation sweep can submit through the adapter only when the Leonardo
-provider is explicitly configured. Its active root model discriminator is
-`nano-banana-2-lite`, with the Dynamic style, prompt enhancement off, and the
-documented v2 `UPLOADED` reference shape captured from a working Leonardo page
-request on 2026-09-22. Earlier Flare submissions using both inline bytes and an
-uploaded source ID returned HTTP-success GraphQL error arrays rather than a
-generation acceptance. The application retained each affected local synthetic
-submission as `SUBMISSION_UNKNOWN` rather than resubmitting it. Provider transport,
+provider is explicitly configured. Each durable generation snapshots an
+immutable server-only model profile before its job is queued. The current
+`gpt-image-2-5-sunburst-v1` profile uses the
+`openai/gpt-image-2.5-sunburst` discriminator, Dynamic style, prompt
+enhancement off, quantity one, and a 50-credit reservation; all nine themes map
+to it in the first per-theme-model increment. The profile is internal to the
+server, generation row, and worker: sessions, public themes, photo responses,
+and browser requests never contain it. New model profiles require documented
+schema and cost verification before a theme can select them, while existing
+profiles remain available for queued and retried jobs. Earlier Flare submissions
+using both inline bytes and an uploaded source ID returned HTTP-success GraphQL
+error arrays rather than a generation acceptance. The application retained each
+affected local synthetic submission as `SUBMISSION_UNKNOWN` rather than
+resubmitting it. Provider transport,
 non-success, malformed JSON, and malformed HTTP-success responses are typed as
 uncertain outcomes. The claimed job boundary immediately persists the sanitized
 diagnostic and quarantines the generation instead of allowing the internal
@@ -529,15 +536,16 @@ Approved live Nano requests using synthetic sources were accepted, reconciled as
 complete through this endpoint, and ingested into private application storage
 without another paid submission.
 
-A PostgreSQL-backed UTC-day ledger now atomically reserves 50 credits before a
-Leonardo submission, up to an approved 10,000-credit daily cap. Replaying a
-reservation for the same generation is idempotent. An isolated PostgreSQL test
-submits 201 concurrent reservations and verifies exactly 200 succeed, with the
-stored total fixed at 10,000 credits. The scheduled worker admits only explicit
+A PostgreSQL-backed UTC-day ledger atomically reserves the selected profile's
+reviewed credits before a Leonardo submission, up to an approved 10,000-credit
+daily cap. Replaying a reservation for the same generation is idempotent. The
+current 50-credit profile allows 200 concurrent reservations, with the stored
+total fixed at 10,000 credits. The scheduled worker admits only explicit
 deterministic or Leonardo providers. For a Leonardo submission, it reads the
 active unexpired source from private application storage, validates the
-server-owned selected theme, reserves credits, and passes the bytes and theme to
-the asynchronous provider adapter. Local source failures are classified before
+server-owned selected theme and persisted model profile, reserves profile
+credits, and passes the bytes, theme, and profile to the asynchronous provider
+adapter. Local source failures are classified before
 any reservation or provider request; uncertain provider acceptance still holds
 for reconciliation rather than resubmission. Focused tests mock the provider;
 separately approved live submissions using synthetic sources have also completed

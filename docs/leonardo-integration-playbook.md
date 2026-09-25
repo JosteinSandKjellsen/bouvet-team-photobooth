@@ -15,10 +15,10 @@ documentation on 2026-09-22.
 
 ## Scope and API contract
 
-Use Leonardo's v2 API for all generation submissions. The model identifiers below
-were rechecked against the authenticated `GET /models` response and official
-v2 model guides on 2026-09-22; recheck both before changing the configured
-model:
+Use Leonardo's v2 API for all generation submissions. The historical model
+identifiers below were rechecked against the authenticated `GET /models`
+response and official v2 model guides on 2026-09-22. Recheck both before adding
+or changing a configured model:
 
 - Base URL: `https://cloud.leonardo.ai/api/rest/v2`
 - Generation endpoint: `POST /generations`
@@ -33,14 +33,27 @@ model:
   `generations_by_pk`. Accept a generated output only for `COMPLETE` and only
   from the approved Leonardo CDN host.
 
-The implemented model discriminator is `nano-banana-2-lite`. The Flare material
-below records evaluated provider behavior but is not an enabled adapter.
-Authenticated model discovery identifies Flare as
-`59fdceca-7d29-4d41-87ec-19f4f53bd7e3`, while its documented request
-discriminator is `openai/gpt-image-2.5-flare`. Do not enable Flare or another
-model without its own server-side configuration, runtime-validated schema,
-tests, live contract check, and cost review. Never select a more expensive model
-automatically or accept arbitrary client-supplied model names.
+The current application profile is `gpt-image-2-5-sunburst-v1`, which submits
+the `openai/gpt-image-2.5-sunburst` discriminator. Every configured theme
+selects this profile in the first per-theme-model increment. Its source
+configuration and profile-specific request fields are server-only; the public
+theme response and every browser request remain model-free.
+
+`ImageGeneration.modelProfileId` snapshots the selected profile when the
+generation is created. A queued, resumed, retried, or reconciled generation
+therefore keeps its approved profile even when a later deployment maps that
+theme to another model. Retain old profile definitions while durable jobs can
+reference them. An unknown or retired profile must fail before a provider
+request, never fall back to another model.
+
+This change does not reverify Sunburst through authenticated discovery or a
+live request. Recheck its model schema, supported source reference, current
+price, and completion contract before enabling it for a new real-provider
+environment. The Flare material below records evaluated provider behavior but
+is not an enabled profile. Do not add Flare or another model without its own
+server-side profile, runtime-validated schema, tests, live contract check, and
+cost review. Never select a more expensive model automatically or accept
+arbitrary client-supplied model names.
 
 GPT Image 2.5 Flare supports `UPLOADED`, `URL`, and `BASE64` source images. Nano
 Banana 2 Lite accepts only `UPLOADED` and `GENERATED` references. The required
@@ -229,8 +242,8 @@ client input.
 
 ### Model reference baseline
 
-Both current candidates use `POST /api/rest/v2/generations` and accept an
-uploaded source image under `parameters.guidances.image_reference`:
+The following historical candidates use `POST /api/rest/v2/generations` and
+accept an uploaded source image under `parameters.guidances.image_reference`:
 
 | Capability               | GPT Image 2.5 Flare                                   | Nano Banana 2 Lite             |
 | ------------------------ | ----------------------------------------------------- | ------------------------------ |
@@ -254,6 +267,22 @@ optional Nano reference strength as server-side configuration based on the
 provided examples. These settings may be revised later through configuration
 and testing. Any change that can increase credit usage requires an explicit
 product decision and cost review.
+
+### Application model profile rules
+
+Define each permitted provider model once in the server-only model registry,
+with an immutable profile ID, provider discriminator, fully specified v2
+parameters, and reviewed credit reservation. Map each stable theme ID to one
+profile in the separate server-only theme-generation configuration. Do not add
+model data to the public theme descriptor, contracts, sessions, photos, or
+browser state.
+
+Persist the resolved profile ID with the durable generation before its job is
+queued. The submission worker must resolve only that stored profile and reserve
+its configured credits atomically against the daily cap. Switching a theme to a
+new model means adding a new immutable profile, mapping future generations to
+it, and retaining the prior profile for existing jobs. Reusing a profile ID for
+different parameters, model discriminators, or costs is prohibited.
 
 Nano Banana 2 Lite request:
 
@@ -341,8 +370,8 @@ silently selecting a more expensive tier.
 - Keep `model` and `public` at the request root; put model parameters under
   `parameters`.
 - Set `quantity: 1` explicitly and reject larger values.
-- Use the baseline width, height, prompt enhancement and style for the initial
-  implementation. Omit optional reference strength until deliberately tested.
+- Use only the selected model profile's width, height, prompt enhancement, and
+  style. Omit optional reference strength until deliberately tested.
 - Send actual `guidances.image_reference` objects, not reference counts.
 - Use only `AUTO`, `ON`, or `OFF` for `prompt_enhance`.
 - Do not expose a quality selector or add a Flare `quality` override. The
@@ -616,9 +645,10 @@ Use the following as implementation constraints for an AI coding harness:
   configuration.
 - Always request exactly one output. Do not expose model, quality, dimensions,
   style, quantity, or reference-strength controls to clients.
-- Allow future models through an explicit server-side registry entry,
-  model-specific schema, tests, and cost review. Never upgrade a request to a
-  higher-priced model or quality tier automatically.
+- Allow future models through an immutable server-side profile, a theme mapping,
+  model-specific schema, tests, and cost review. Persist the selected profile
+  before queueing; never upgrade a request to a higher-priced model or quality
+  tier automatically.
 - Runtime-validate apiCreditCost. M4 does not persist it; add durable capture and
   alerts before using it for production cost reporting.
 - Keep initImageId and generationId as distinct domain fields.

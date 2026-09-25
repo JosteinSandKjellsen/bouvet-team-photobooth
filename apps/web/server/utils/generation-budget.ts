@@ -1,12 +1,16 @@
 import { db } from './db'
 
 const dailyCreditCap = 10_000
-const generationCreditReservation = 50
-
 export async function reserveGenerationCredits(
   generationId: string,
+  credits: number,
   now = new Date(),
 ) {
+  if (!Number.isSafeInteger(credits) || credits <= 0) {
+    throw new Error(
+      'Generation credit reservation must be a positive safe integer',
+    )
+  }
   const budgetDay = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   )
@@ -27,12 +31,12 @@ export async function reserveGenerationCredits(
           "reservedCredits",
           "updatedAt"
         )
-        VALUES (${budgetDay}, ${generationCreditReservation}, ${now})
+        VALUES (${budgetDay}, ${credits}, ${now})
         ON CONFLICT ("day") DO UPDATE
         SET
-          "reservedCredits" = "DailyGenerationBudget"."reservedCredits" + ${generationCreditReservation},
+          "reservedCredits" = "DailyGenerationBudget"."reservedCredits" + ${credits},
           "updatedAt" = ${now}
-        WHERE "DailyGenerationBudget"."reservedCredits" + ${generationCreditReservation} <= ${dailyCreditCap}
+        WHERE "DailyGenerationBudget"."reservedCredits" + ${credits} <= ${dailyCreditCap}
         RETURNING "day"
       `
       if (reserved.length === 0) return false
@@ -40,7 +44,7 @@ export async function reserveGenerationCredits(
       await transaction.generationCreditReservation.create({
         data: {
           budgetDay,
-          credits: generationCreditReservation,
+          credits,
           generationId,
         },
       })

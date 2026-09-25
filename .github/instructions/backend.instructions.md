@@ -21,6 +21,9 @@ applyTo: 'apps/web/server/**'
 - Before paid generation or provider work, read the
   [Leonardo playbook](../../docs/leonardo-integration-playbook.md), including
   uncertain submissions, webhook authentication and unverified provider erasure.
+  Resolve model choice only through the server-only profile registry, snapshot
+  that profile on the durable generation before queueing, and never expose or
+  accept model configuration through browser contracts.
 - Before Prisma, jobs, object storage or retention work, read the
   [data and jobs playbook](../../docs/prisma-data-and-jobs-playbook.md).
   Keep external calls outside database transactions and SDKs in adapters.

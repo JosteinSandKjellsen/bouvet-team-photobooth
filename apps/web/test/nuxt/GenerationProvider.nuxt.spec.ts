@@ -8,6 +8,7 @@ import {
   uploadGenerationSource,
 } from '../../server/utils/generation-provider'
 import type { GenerationSourceDeletionError } from '../../server/utils/generation-provider'
+import { currentGenerationModelProfileId } from '../../server/utils/generation-models'
 import { spaceCowboysPrompt } from '../../server/utils/theme-prompts/space-cowboys'
 
 afterEach(() => {
@@ -98,6 +99,7 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: upload.providerSourceImageId,
         themeId: 'space-cowboys',
       }),
@@ -225,10 +227,28 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),
     ).rejects.toThrow('Invalid generation provider response')
+  })
+
+  it('does not submit an unapproved model profile', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi.fn()
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        modelProfileId: 'unapproved-model',
+        providerSourceImageId: 'source-id',
+        themeId: 'wasteland',
+      }),
+    ).rejects.toThrow('Generation provider is unavailable')
+    expect(providerFetch).not.toHaveBeenCalled()
   })
 
   it('accepts a nested provider response with a null credit cost', async () => {
@@ -252,6 +272,7 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),
@@ -274,6 +295,7 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),
@@ -305,6 +327,7 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),
@@ -339,6 +362,7 @@ describe('generation provider', () => {
     await expect(
       submitGeneration({
         generationId: 'application-id',
+        modelProfileId: currentGenerationModelProfileId,
         providerSourceImageId: 'source-id',
         themeId: 'wasteland',
       }),

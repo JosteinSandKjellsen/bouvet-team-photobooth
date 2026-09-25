@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { currentGenerationModelProfileId } from '../../server/utils/generation-models'
 
 const {
   createGenerationSourceUpload,
@@ -274,6 +275,7 @@ describe('runGenerationSubmission', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ aggregateId: generationId, id: jobId }])
     db.imageGeneration.findUnique.mockResolvedValue({
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: null,
       providerSourceUploadedAt: null,
       sourceImage: {
@@ -297,9 +299,10 @@ describe('runGenerationSubmission', () => {
       },
       Uint8Array.of(1, 2, 3),
     )
-    expect(reserveGenerationCredits).toHaveBeenCalledWith(generationId, now)
+    expect(reserveGenerationCredits).toHaveBeenCalledWith(generationId, 50, now)
     expect(submitGeneration).toHaveBeenCalledWith({
       generationId,
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: 'source-id',
       themeId: 'space-cowboys',
     })
@@ -314,6 +317,7 @@ describe('runGenerationSubmission', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ aggregateId: generationId, id: jobId }])
     db.imageGeneration.findUnique.mockResolvedValue({
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: 'persisted-source-id',
       providerSourceUploadedAt: new Date('2026-09-22T11:59:00.000Z'),
       sourceImage: {
@@ -332,6 +336,7 @@ describe('runGenerationSubmission', () => {
     expect(uploadGenerationSource).not.toHaveBeenCalled()
     expect(submitGeneration).toHaveBeenCalledWith({
       generationId,
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: 'persisted-source-id',
       themeId: 'space-cowboys',
     })
@@ -381,6 +386,7 @@ describe('runGenerationSubmission', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ aggregateId: generationId, id: jobId }])
     db.imageGeneration.findUnique.mockResolvedValue({
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: null,
       providerSourceUploadedAt: null,
       sourceImage: {
@@ -413,6 +419,46 @@ describe('runGenerationSubmission', () => {
     })
   })
 
+  it('fails without submitting when the persisted model profile is unavailable', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    db.backgroundJob.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ aggregateId: generationId, id: jobId }])
+    db.imageGeneration.findUnique.mockResolvedValue({
+      modelProfileId: 'retired-profile',
+      providerSourceImageId: null,
+      providerSourceUploadedAt: null,
+      sourceImage: {
+        deleteAfter: new Date('2026-09-22T12:30:00.000Z'),
+        session: { themeId: 'space-cowboys' },
+        status: 'ACTIVE',
+        storageKey: 'sources/source.jpg',
+      },
+      status: 'PENDING',
+    })
+
+    await runGenerationSubmission(now)
+
+    expect(reserveGenerationCredits).not.toHaveBeenCalled()
+    expect(submitGeneration).not.toHaveBeenCalled()
+    expect(db.backgroundJob.updateMany).toHaveBeenLastCalledWith({
+      where: {
+        id: jobId,
+        leaseExpiresAt: { gt: now },
+        leaseOwner: expect.any(String),
+        status: 'RUNNING',
+      },
+      data: {
+        completedAt: now,
+        lastErrorCode: 'MODEL_PROFILE_UNAVAILABLE',
+        status: 'FAILED',
+      },
+    })
+  })
+
   it('quarantines an uncertain provider response without failing the sweep', async () => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     const diagnostic =
@@ -427,6 +473,7 @@ describe('runGenerationSubmission', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ aggregateId: generationId, id: jobId }])
     db.imageGeneration.findUnique.mockResolvedValue({
+      modelProfileId: currentGenerationModelProfileId,
       providerSourceImageId: null,
       providerSourceUploadedAt: null,
       sourceImage: {

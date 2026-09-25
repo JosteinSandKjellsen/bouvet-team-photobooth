@@ -106,6 +106,7 @@ model ImageGeneration {
   sourceImageId            String           @unique @db.Uuid
   sourceImage              SourceImage      @relation(fields: [sourceImageId], references: [id], onDelete: Restrict)
   idempotencyKey           String           @unique
+  modelProfileId           String
   providerSourceImageId    String?          @unique
   providerSourceUploadedAt DateTime?        @db.Timestamptz(3)
   providerGenerationId     String?          @unique

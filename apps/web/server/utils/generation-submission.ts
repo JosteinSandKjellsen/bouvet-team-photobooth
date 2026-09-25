@@ -3,6 +3,7 @@ import sharp, { type Metadata } from 'sharp'
 import { db } from './db'
 import { reserveGenerationCredits } from './generation-budget'
 import { recordGenerationCompletion } from './generation-completion'
+import { getGenerationModelProfile } from './generation-models'
 import { logJobFailure } from './job-logging'
 import {
   createGenerationSourceUpload,
@@ -382,6 +383,7 @@ async function submitClaimedGeneration(
   const generation = await db.imageGeneration.findUnique({
     where: { id: job.aggregateId },
     select: {
+      modelProfileId: true,
       providerSourceImageId: true,
       providerSourceUploadedAt: true,
       sourceImage: {
@@ -410,8 +412,13 @@ async function submitClaimedGeneration(
     return
   }
 
-  const source = generation?.sourceImage
+  const source = generation.sourceImage
+  const modelProfile = getGenerationModelProfile(generation.modelProfileId)
   const themeId = source?.session.themeId
+  if (!modelProfile) {
+    await failGenerationForUnavailableModel(job.id, job.aggregateId, owner, now)
+    return
+  }
   if (
     !source ||
     source.deleteAfter <= now ||
@@ -447,7 +454,11 @@ async function submitClaimedGeneration(
   }
 
   if (usesLeonardo) {
-    const reserved = await reserveGenerationCredits(job.aggregateId, now)
+    const reserved = await reserveGenerationCredits(
+      job.aggregateId,
+      modelProfile.creditReservation,
+      now,
+    )
     if (!reserved) {
       await failGenerationForDailyCap(job.id, job.aggregateId, owner, now)
       return
@@ -544,6 +555,7 @@ async function submitClaimedGeneration(
   try {
     result = await submitGeneration({
       generationId: job.aggregateId,
+      modelProfileId: generation.modelProfileId,
       providerSourceImageId,
       themeId,
     })
@@ -710,6 +722,36 @@ async function failGenerationForUnavailableSource(
     data: {
       completedAt: now,
       lastErrorCode: 'SOURCE_UNAVAILABLE',
+      status: 'FAILED',
+    },
+  })
+  if (completed.count === 0) return
+
+  await db.imageGeneration.updateMany({
+    where: {
+      id: generationId,
+      status: { in: ['READY_TO_SUBMIT', 'SUBMITTING', 'UPLOADING'] },
+    },
+    data: { status: 'FAILED' },
+  })
+}
+
+async function failGenerationForUnavailableModel(
+  jobId: string,
+  generationId: string,
+  owner: string,
+  now: Date,
+) {
+  const completed = await db.backgroundJob.updateMany({
+    where: {
+      id: jobId,
+      leaseExpiresAt: { gt: now },
+      leaseOwner: owner,
+      status: 'RUNNING',
+    },
+    data: {
+      completedAt: now,
+      lastErrorCode: 'MODEL_PROFILE_UNAVAILABLE',
       status: 'FAILED',
     },
   })

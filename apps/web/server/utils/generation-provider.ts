@@ -1,5 +1,6 @@
 import type { ThemeDescriptor } from '@bouvet-team-photobooth/contracts'
 import sharp from 'sharp'
+import { getGenerationModelProfile } from './generation-models'
 import { themePrompts } from './theme-prompts'
 
 const leonardoInitImageUrl = 'https://cloud.leonardo.ai/api/rest/v1/init-image'
@@ -7,14 +8,13 @@ const leonardoGenerationUrl =
   'https://cloud.leonardo.ai/api/rest/v2/generations'
 const leonardoGenerationStatusUrl =
   'https://cloud.leonardo.ai/api/rest/v1/generations'
-const leonardoModel = 'openai/gpt-image-2.5-sunburst'
-const leonardoStyle = '111dc692-d470-4eec-b791-3475abac4c46'
 const leonardoRequestTimeoutMs = 15_000
 const maxGeneratedOutputBytes = 8_000_000
 const maxProviderErrorMessageLength = 300
 
 interface GenerationSubmission {
   generationId: string
+  modelProfileId: string
   providerSourceImageId?: string
   themeId?: ThemeDescriptor['id']
 }
@@ -171,7 +171,13 @@ export async function submitGeneration(submission: GenerationSubmission) {
   }
 
   const apiKey = process.env.LEONARDO_API_KEY
-  if (!apiKey || !submission.providerSourceImageId || !submission.themeId) {
+  const modelProfile = getGenerationModelProfile(submission.modelProfileId)
+  if (
+    !apiKey ||
+    !modelProfile ||
+    !submission.providerSourceImageId ||
+    !submission.themeId
+  ) {
     throw new Error('Generation provider is unavailable')
   }
 
@@ -179,8 +185,9 @@ export async function submitGeneration(submission: GenerationSubmission) {
   try {
     response = await fetch(leonardoGenerationUrl, {
       body: JSON.stringify({
-        model: leonardoModel,
+        model: modelProfile.model,
         parameters: {
+          ...modelProfile.parameters,
           guidances: {
             image_reference: [
               {
@@ -191,13 +198,7 @@ export async function submitGeneration(submission: GenerationSubmission) {
               },
             ],
           },
-          height: 768,
           prompt: themePrompts[submission.themeId],
-          prompt_enhance: 'OFF',
-          quality: 'MEDIUM',
-          quantity: 1,
-          style_ids: [leonardoStyle],
-          width: 1376,
         },
         public: false,
       }),

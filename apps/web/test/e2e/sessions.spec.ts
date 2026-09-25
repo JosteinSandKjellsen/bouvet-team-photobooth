@@ -91,6 +91,7 @@ async function createPublishedGalleryPhoto(publishedAt: Date) {
             create: {
               id: generationId,
               idempotencyKey: randomUUID(),
+              modelProfileId: 'gpt-image-2-5-sunburst-v1',
               status: 'SUCCEEDED',
               generatedImage: {
                 create: {
@@ -208,6 +209,43 @@ test('submits an approved browser capture through the private generation flow', 
   expect(mutationRequests).toContain('POST /api/sessions/current/close')
 })
 
+test('retries an unconfirmed idempotent generation request without recapturing', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+
+  let rejectedInitialRequest = false
+  await page.route('**/api/sessions/current/generate', async (route) => {
+    if (route.request().method() === 'POST' && !rejectedInitialRequest) {
+      rejectedInitialRequest = true
+      await route.fulfill({
+        body: JSON.stringify({ message: 'Temporary failure' }),
+        contentType: 'application/json',
+        status: 503,
+      })
+      return
+    }
+    await route.continue()
+  })
+
+  await page.context().grantPermissions(['camera'])
+  await page.goto('/capture/samurai')
+  await expect(page.getByTestId('capture-video')).toBeVisible()
+  await page.getByTestId('capture-take-photo').click()
+  await expect(page.getByTestId('capture-retake')).toBeVisible({
+    timeout: 5_000,
+  })
+  await page.getByTestId('capture-use-picture').click()
+
+  await expect(page.getByTestId('capture-retry-generation')).toBeVisible()
+  await page.getByTestId('capture-retry-generation').click()
+  await expect(page.getByTestId('capture-generation-progress')).toHaveAttribute(
+    'data-stage',
+    'preparing',
+  )
+  expect(rejectedInitialRequest).toBe(true)
+})
+
 test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   request: _request,
 }, testInfo) => {
@@ -223,7 +261,7 @@ test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   })
   const reservations = await Promise.all(
     Array.from({ length: 201 }, () =>
-      reserveGenerationCredits(randomUUID(), budgetDay),
+      reserveGenerationCredits(randomUUID(), 50, budgetDay),
     ),
   )
   expect(reservations.filter(Boolean)).toHaveLength(200)
@@ -459,10 +497,14 @@ test('queues one generation only for the current session approved source', async
 
   const database = getTestDb()
   const stored = await database.imageGeneration.findUniqueOrThrow({
-    select: { id: true, status: true },
+    select: { id: true, modelProfileId: true, status: true },
     where: { sourceImageId: sourceId },
   })
-  expect(stored).toEqual({ id: generation.jobId, status: 'PENDING' })
+  expect(stored).toEqual({
+    id: generation.jobId,
+    modelProfileId: 'gpt-image-2-5-sunburst-v1',
+    status: 'PENDING',
+  })
   await expect(
     database.backgroundJob.count({
       where: { aggregateId: generation.jobId, kind: 'GENERATE_IMAGE' },

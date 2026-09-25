@@ -37,6 +37,11 @@ public DTOs in `packages/contracts`. Import contracts through the workspace
 package. Never expose secrets, provider IDs, or database models to the browser.
 Generated `.nuxt` and `.output` files are not source files.
 
+Leonardo model selection is server-only. Configure approved, versioned model
+profiles in the backend, map themes to those profiles there, and persist the
+resolved profile with each generation before it is queued. Do not add model
+controls or model data to public contracts, browser state, or theme responses.
+
 ## Canonical Feature Guidance
 
 Before planning or changing one of these features, read its applicable playbook.
