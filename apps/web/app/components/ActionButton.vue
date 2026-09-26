@@ -69,6 +69,19 @@ withDefaults(
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background-color 160ms ease-in-out,
+    border-color 160ms ease-in-out,
+    color 160ms ease-in-out;
+}
+.app-action--primary:not(:disabled):hover {
+  border-color: var(--color-action-primary-hover);
+  background: var(--color-action-primary-hover);
+}
+.app-action--secondary:not(:disabled):hover {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-secondary-hover);
+  color: var(--color-action-primary);
 }
 .app-action--secondary {
   border-color: currentcolor;
@@ -99,5 +112,10 @@ withDefaults(
 .app-action:focus-visible {
   outline: 3px solid var(--color-action-primary);
   outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-action {
+    transition: none;
+  }
 }
 </style>
