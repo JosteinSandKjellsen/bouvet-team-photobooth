@@ -11,6 +11,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   runtimeConfig: {
+    adminDeletionEnabled: false,
+    adminPassphraseHash: '',
     captureGenerationEnabled: false,
     cleanupWorkerToken: '',
     leonardoWebhookToken: '',

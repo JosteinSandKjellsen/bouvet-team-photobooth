@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createGenerationSourceUpload,
   deleteGenerationSource,
+  deleteLeonardoGeneration,
   getGenerationCompletion,
   getGeneratedOutput,
   submitGeneration,
@@ -23,6 +24,71 @@ afterEach(() => {
 })
 
 describe('generation provider', () => {
+  it('confirms deletion of the exact Leonardo generation', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const id = '11111111-1111-4111-8111-111111111111'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          delete_generations_by_pk: { id },
+        }),
+      ),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+    await expect(deleteLeonardoGeneration(id)).resolves.toBeUndefined()
+    expect(providerFetch).toHaveBeenCalledWith(
+      `https://cloud.leonardo.ai/api/rest/v1/generations/${id}`,
+      expect.objectContaining({
+        method: 'DELETE',
+        redirect: 'error',
+        headers: {
+          Accept: 'application/json',
+          Authorization: 'Bearer test-api-key',
+        },
+      }),
+    )
+  })
+
+  it.each([
+    { body: { delete_generations_by_pk: null }, status: 200, retryable: false },
+    {
+      body: { delete_generations_by_pk: { id: 'different' } },
+      status: 200,
+      retryable: false,
+    },
+    { body: {}, status: 404, retryable: false },
+    { body: {}, status: 500, retryable: false },
+    { body: {}, status: 429, retryable: true },
+  ])(
+    'classifies generation deletion status $status without claiming erasure',
+    async ({ body, status, retryable }) => {
+      process.env.GENERATION_PROVIDER = 'leonardo'
+      process.env.LEONARDO_API_KEY = 'test-api-key'
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue(new Response(JSON.stringify(body), { status })),
+      )
+      await expect(
+        deleteLeonardoGeneration('11111111-1111-4111-8111-111111111111'),
+      ).rejects.toMatchObject({ retryable })
+    },
+  )
+
+  it('does not automatically repeat an interrupted generation deletion', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('connection lost')),
+    )
+    await expect(
+      deleteLeonardoGeneration('11111111-1111-4111-8111-111111111111'),
+    ).rejects.toMatchObject({ retryable: false })
+  })
+
   it('deletes a Leonardo source only after a matching confirmed response', async () => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     process.env.LEONARDO_API_KEY = 'test-api-key'

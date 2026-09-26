@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import type { PublicPhotoOverviewResponse } from '@bouvet-team-photobooth/contracts'
-import { ArrowLeft, ArrowRight, Home } from '@lucide/vue'
+import type {
+  AdminAvailabilityResponse,
+  PublicPhotoOverviewResponse,
+} from '@bouvet-team-photobooth/contracts'
+import { ArrowLeft, ArrowRight, Home, Trash2 } from '@lucide/vue'
+import type PhotoAdminControls from '../components/PhotoAdminControls.vue'
 
 defineOptions({ name: 'PhotoOverviewPage' })
 
 const route = useRoute()
 const { t } = useI18n()
+const admin = ref<InstanceType<typeof PhotoAdminControls>>()
 const before = computed(() =>
   typeof route.query.before === 'string' ? route.query.before : undefined,
 )
@@ -17,7 +22,17 @@ const { data, refresh, status } = await useFetch<PublicPhotoOverviewResponse>(
   '/api/photos/recent',
   { query: { after, before }, watch: [after, before] },
 )
+const { data: adminAvailability } = await useFetch<AdminAvailabilityResponse>(
+  '/api/admin/availability',
+)
 let refreshTimer: ReturnType<typeof setInterval> | undefined
+
+async function refreshAfterDeletion() {
+  await refresh()
+  if (!data.value?.photos.length && !isFirstPage.value) {
+    await navigateTo('/overview')
+  }
+}
 
 function formatPhotoAge(publishedAt: string) {
   const ageInSeconds = Math.max(
@@ -80,25 +95,42 @@ onBeforeUnmount(clearRefreshTimer)
       <section v-else class="overview-content">
         <div class="gallery-column">
           <section class="photo-grid" data-testid="overview-grid">
-            <NuxtLink
+            <div
               v-for="photo in data.photos"
               :key="photo.publicId"
-              :to="`/photo/${photo.publicId}`"
-              class="photo-entry"
-              data-testid="overview-photo"
+              class="photo-container"
             >
-              <span class="photo-link">
-                <img
-                  :src="photo.imageUrl"
-                  :alt="t('overview.imageAlt')"
-                  :width="photo.width"
-                  :height="photo.height"
-                />
-              </span>
-              <span class="photo-caption">{{
-                formatPhotoAge(photo.publishedAt)
-              }}</span>
-            </NuxtLink>
+              <NuxtLink
+                :to="`/photo/${photo.publicId}`"
+                class="photo-entry"
+                data-testid="overview-photo"
+              >
+                <span class="photo-link" data-testid="overview-photo-image">
+                  <img
+                    :src="photo.imageUrl"
+                    :alt="t('overview.imageAlt')"
+                    :width="photo.width"
+                    :height="photo.height"
+                  />
+                </span>
+                <span class="photo-caption">{{
+                  formatPhotoAge(photo.publishedAt)
+                }}</span>
+              </NuxtLink>
+              <ActionButton
+                v-if="admin?.active"
+                class="photo-delete"
+                variant="secondary"
+                icon-only
+                data-testid="overview-delete-photo"
+                :disabled="admin.busy"
+                :aria-label="t('overview.admin.delete')"
+                :title="t('overview.admin.delete')"
+                @click="admin.confirmDeletion(photo)"
+              >
+                <Trash2 :size="20" aria-hidden="true" />
+              </ActionButton>
+            </div>
           </section>
         </div>
 
@@ -106,6 +138,7 @@ onBeforeUnmount(clearRefreshTimer)
           <ActionButton
             v-if="data.newerCursor"
             as="link"
+            data-testid="overview-newer"
             :to="`/overview?after=${data.newerCursor}`"
             variant="navigation"
           >
@@ -115,6 +148,7 @@ onBeforeUnmount(clearRefreshTimer)
           <ActionButton
             v-if="data.olderCursor"
             as="link"
+            data-testid="overview-older"
             class="overview-navigation__older"
             :to="`/overview?before=${data.olderCursor}`"
             variant="navigation"
@@ -144,6 +178,11 @@ onBeforeUnmount(clearRefreshTimer)
         <Home :size="24" aria-hidden="true" />
         {{ t('common.actions.goHome') }}
       </ActionButton>
+      <PhotoAdminControls
+        v-if="adminAvailability?.enabled"
+        ref="admin"
+        @removed="refreshAfterDeletion"
+      />
     </PageFooter>
   </main>
 </template>
@@ -194,6 +233,16 @@ onBeforeUnmount(clearRefreshTimer)
   min-width: 0;
   color: inherit;
   text-decoration: none;
+}
+.photo-container {
+  position: relative;
+  min-width: 0;
+}
+.photo-delete {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: var(--color-surface);
 }
 .photo-link {
   display: block;

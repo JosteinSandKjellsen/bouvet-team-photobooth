@@ -415,6 +415,28 @@ if (result.count !== 1) {
 
 For cleanup batches, select at most a fixed number of eligible IDs, then delete by those IDs. Never use an unbounded `deleteMany({})` in application code.
 
+### Operator-requested photo deletion
+
+`PhotoDeletion` retains the opaque operation handle and minimal local/provider
+cleanup references while a `DELETE_PUBLIC_PHOTO` job runs. The request marks the
+photo `DELETE_PENDING` and creates this job in one transaction. A bounded inline
+attempt handles the usual case; the existing scheduled cleanup sweep recovers
+queued work. Local storage deletion and confirmed Leonardo generation deletion
+are checkpointed independently before hard-deleting `GeneratedImage`.
+`ImageGeneration` remains terminal to fence late callbacks, and its provider
+output URL is cleared. Existing source cleanup and retention stay independent.
+
+Do not repeat an uncertain provider delete. A matching v1 deletion response is
+required; only an explicit rate-limit rejection permits automatic retry.
+Failures retain references for operator recovery, while completed cleanup
+records and their jobs are purged in bounded batches after 24 hours. The event
+aggregate is unchanged. Read the [operator runbook](./development.md#overview-admin-deletion).
+
+`AdminSession` stores only hashes, a credential-version fingerprint and a short
+lease. `AdminLoginBucket` provides atomic, shared login limits across function
+instances. The cleanup sweep also removes expired sessions and rate-limit
+buckets in bounded batches. Neither table belongs to anonymous capture sessions.
+
 ## 7. Transactions and idempotency
 
 Use the smallest mechanism that preserves the invariant:

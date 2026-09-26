@@ -76,3 +76,16 @@ export interface PublicPhotoOverviewResponse {
   olderCursor?: string
   photos: PublicPhotoListItem[]
 }
+
+export interface AdminSessionResponse {
+  expiresAt: string
+}
+
+export interface AdminAvailabilityResponse {
+  enabled: boolean
+}
+
+export interface PhotoDeletionResponse {
+  operationId: string
+  status: 'pending' | 'completed' | 'failed'
+}

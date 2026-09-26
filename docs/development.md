@@ -135,6 +135,74 @@ run `pnpm prepare` before checks and never edit `.nuxt` or `.output`.
 For local editing, Vue - Official, ESLint and Prettier VS Code extensions are
 useful; no global editor settings are required.
 
+## Overview Admin Deletion
+
+This is optional and disabled by default. Apply the Prisma migration through the
+normal migration workflow, then generate a unique operator passphrase hash in an
+interactive terminal:
+
+```sh
+node scripts/hash-admin-passphrase.mjs
+```
+
+Input is hidden and not placed in shell history. Use a unique passphrase of at
+least 8 characters. The output encodes a random salt and scrypt key
+(`N=32768`, `r=8`, `p=3`). Store that output as
+`NUXT_ADMIN_PASSPHRASE_HASH` in Netlify's private Functions environment, never in
+public runtime config, committed files or `netlify.toml`. Set the single private
+`NUXT_ADMIN_DELETION_ENABLED=true` flag to enable the server and reveal the
+lock. The browser asks a no-store availability endpoint that returns only whether
+the complete server-side configuration is enabled; it never receives the hash.
+Redeploy after changes.
+Use the exact HTTPS site origin for `NUXT_SESSION_ORIGIN`; loopback HTTP is only
+for local testing. Deploy previews must use isolated databases and Blob stores.
+
+The passphrase is sent in an HTTPS request body and verified server-side. TLS
+protects it in transit; it is not a browser-only password protocol. No password
+or reusable password hash goes in URLs or browser storage. Each session requires
+both an HttpOnly, Secure, SameSite cookie and a separate memory-only page token.
+The five-minute lease renews once a minute while the page remains active.
+Reload/navigation/pagehide clear access; exit revocation is best-effort, with
+lease expiry as the crash/network fallback. A new login in another tab revokes
+the browser's previous session. Rotating the configured hash invalidates old
+sessions once the new configuration is deployed.
+
+Login attempts are atomically limited in PostgreSQL to five per client and
+thirty globally per ten-minute fixed window, including malformed attempts.
+Netlify's platform-overwritten client-IP header is used only on Netlify; local
+Node servers use the connection IP, not caller-provided forwarding headers.
+Rate-limit buckets and expired sessions are pruned by the cleanup sweep.
+
+Deletion immediately blocks public reads, then makes a bounded inline cleanup
+attempt. The existing worker/scheduler resumes queued work; the current Netlify
+sweep runs every ten minutes, so retry completion may be delayed. A response
+distinguishes pending, completed and failed removal, and the active page polls
+pending operations. Completed photo rows and local bytes are deleted, provider
+output URLs are cleared, and completed operation/job records expire after 24
+hours. Terminal generation/source metadata follows the existing retention
+policy; the cumulative event count is unchanged.
+
+Before enabling real-photo deletion, explicitly verify the documented Leonardo
+v1 generation-delete endpoint using an approved synthetic output from the
+current v2 model. Verify its matching-ID acknowledgement, repeat behavior and
+provider/CDN retention. Do not mistake source (`init-image`) deletion for
+generation deletion. No live deletion or deployment is performed by automated
+tests.
+
+For failed cleanup, inspect the `DELETE_PUBLIC_PHOTO` job and its `PhotoDeletion`
+checkpoint through authorized operator database access. The picture remains
+hidden. Fix storage/configuration failures before requeueing. Never clear
+`providerDeleteStartedAt` or reissue a provider delete after an uncertain
+outcome without verifying it with Leonardo. If remote deletion is independently
+confirmed, record `providerDeletedAt` and requeue the same job to finish local
+metadata cleanup. Otherwise retain the reference and escalate; do not report
+full deletion. Accepted cleanup continues after the admin session ends.
+
+`pnpm test:db` includes the real admin HTTP/browser flow and uses one worker
+because gallery state and login limits are global. Shared-limit checks run on
+the desktop project once; the admin flow also exercises a 320px phone viewport.
+The normal `pnpm test:e2e` run keeps admin mode disabled without a test database.
+
 ## Commands
 
 Run these from the repository root:

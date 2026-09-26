@@ -33,6 +33,7 @@ enum BackgroundJobKind {
   DELETE_SOURCE_IMAGE
   DELETE_GENERATED_IMAGE
   DELETE_PROVIDER_SOURCE_IMAGE
+  DELETE_PUBLIC_PHOTO
 }
 
 enum BackgroundJobStatus {
@@ -155,4 +156,39 @@ model BackgroundJob {
   @@index([status, nextAttemptAt, createdAt])
   @@index([status, leaseExpiresAt])
   @@index([kind, aggregateId])
+}
+
+model AdminSession {
+  id                String   @id @default(uuid()) @db.Uuid
+  capabilityHash    String   @unique
+  pageTokenHash     String
+  credentialVersion String
+  expiresAt         DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
+model AdminLoginBucket {
+  key       String   @id
+  attempts  Int
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
+model PhotoDeletion {
+  id                      String    @id @default(uuid()) @db.Uuid
+  operationId             String    @unique
+  publicId                String    @unique
+  imageId                 String    @unique @db.Uuid
+  generationId            String    @db.Uuid
+  storageKey              String?
+  providerGenerationId    String?
+  providerDeleteStartedAt DateTime? @db.Timestamptz(3)
+  providerDeletedAt       DateTime? @db.Timestamptz(3)
+  localDeletedAt          DateTime? @db.Timestamptz(3)
+  completedAt             DateTime? @db.Timestamptz(3)
+  createdAt               DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([completedAt])
 }

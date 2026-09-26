@@ -117,6 +117,31 @@
     "footerThanks": "Takk for at dere besøkte Bouvet!"
   },
   "overview": {
+    "admin": {
+      "unlock": "Aktiver adminmodus",
+      "lock": "Avslutt adminmodus",
+      "loginTitle": "Adminmodus",
+      "passphrase": "Passordfrase",
+      "cancel": "Avbryt",
+      "delete": "Slett bilde",
+      "confirmTitle": "Vil du slette dette bildet?",
+      "confirmDescription": "Bildet fjernes fra galleriet og slettes hos Leonardo og i appen. Dette kan ikke angres. Nedlastede eller utskrevne kopier kan ikke fjernes.",
+      "working": "Vennligst vent.",
+      "deletion": {
+        "pending": "Bildet er fjernet fra galleriet. Sletting pågår.",
+        "completed": "Bildet er slettet.",
+        "failed": "Bildet er fjernet fra galleriet, men slettingen er ikke fullført. Kontakt driftsansvarlig."
+      },
+      "errors": {
+        "loginFailed": "Feil passordfrase. Prøv igjen.",
+        "rateLimited": "For mange forsøk. Vent ti minutter før du prøver igjen.",
+        "unavailable": "Adminmodus er ikke tilgjengelig akkurat nå.",
+        "sessionExpired": "Adminøkten er avsluttet. Lås opp igjen for å fortsette.",
+        "requestFailed": "Slettingen kunne ikke bekreftes. Prøv igjen.",
+        "statusFailed": "Forbindelsen ble brutt. Status sjekkes igjen automatisk.",
+        "logoutFailed": "Adminmodus er avsluttet på denne siden. Serverøkten kunne ikke avsluttes og utløper innen fem minutter."
+      }
+    },
     "eyebrow": "Bouvet Team Photobooth",
     "title": "Siste oppdrag",
     "loading": "Laster teambilder.",

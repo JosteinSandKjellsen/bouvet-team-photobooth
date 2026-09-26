@@ -96,11 +96,20 @@ Suggested next-session request:
 > public-origin gates are resolved. Keep participant images disabled until the
 > privacy and retention gates are approved.
 
+The optional overview deletion slice adds a page-bound operator session and
+confirmed deletion controls, not a general administration site or M7 launch
+approval. It is disabled by default. Its configuration and failure recovery are
+owned by [the development guide](./development.md#overview-admin-deletion).
+Leonardo's v1 generation-delete endpoint is documented; compatibility with the
+current v2 model outputs, repeated-delete semantics and provider/CDN erasure
+remain live verification gates.
+
 ## Confirmed Product Decisions
 
 - Exactly four user-facing routes: `/`, `/capture/[theme]`, `/photo/[id]` and
   `/overview`. Countdown, review and generation are local capture-page states.
-- Nine selectable themes, with source-controlled configuration and no admin UI.
+- Nine selectable themes, with source-controlled configuration. The only admin
+  UI exception is optional image deletion on `/overview`.
 - A three-second countdown replaces the existing five-second camera baseline.
 - Norwegian Bokmal user-facing copy; English engineering documentation.
 - Both kiosk and phone visitors can start capture and generation without accounts.
@@ -114,9 +123,9 @@ Suggested next-session request:
   expiry as an aggregate without permanent photo/session links.
 - Published generated results expire 30 days after first publication. Remaining
   source, tombstone and operational retention windows must be approved before
-  real-photo testing. Leonardo init-image deletion is documented but not
-  implemented; generated-image deletion remains an unresolved provider
-  capability.
+  real-photo testing. Leonardo init-image deletion is implemented in the
+  dedicated source worker; generated-image deletion through
+  the documented v1 endpoint still requires live compatibility verification.
 
 Technical approaches below are implementation recommendations, not claims that
 provider capabilities, privacy policies or deployment readiness were verified.

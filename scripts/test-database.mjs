@@ -60,6 +60,7 @@ function main() {
       'playwright',
       'test',
       'test/e2e/sessions.spec.ts',
+      'test/e2e/admin.spec.ts',
     ])
   }
 }

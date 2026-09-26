@@ -864,18 +864,20 @@ test('lists active public photos with stable cursor navigation and keeps the eve
   await expect(page.getByTestId('overview-grid')).toBeVisible()
   await expect(page.getByTestId('overview-photo')).toHaveCount(6)
   await expect(page.getByTestId('overview-count')).toBeVisible()
-  const [galleryBounds, countBounds] = await Promise.all([
+  const [galleryBounds, countBounds, lastImageBounds] = await Promise.all([
     page.getByTestId('overview-grid').boundingBox(),
     page.getByTestId('overview-count').boundingBox(),
+    page.getByTestId('overview-photo-image').last().boundingBox(),
   ])
   expect(galleryBounds).not.toBeNull()
   expect(countBounds).not.toBeNull()
-  if (!galleryBounds || !countBounds) {
+  if (!galleryBounds || !countBounds || !lastImageBounds) {
     throw new Error('Expected visible overview layout bounds')
   }
   expect(countBounds.y).toBeCloseTo(galleryBounds.y, 1)
+  // The counter aligns with the last image, excluding the caption underneath.
   expect(countBounds.y + countBounds.height).toBeCloseTo(
-    galleryBounds.y + galleryBounds.height,
+    lastImageBounds.y + lastImageBounds.height,
     1,
   )
 

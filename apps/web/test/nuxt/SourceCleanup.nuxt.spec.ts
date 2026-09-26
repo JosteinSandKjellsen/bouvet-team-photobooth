@@ -41,6 +41,9 @@ const {
 })
 
 vi.mock('../../server/utils/db', () => ({ db }))
+vi.mock('../../server/utils/photo-deletion', () => ({
+  runPhotoDeletionCleanup: vi.fn(),
+}))
 vi.mock('../../server/utils/generation-provider', () => ({
   deleteGenerationSource,
   GenerationSourceDeletionError,

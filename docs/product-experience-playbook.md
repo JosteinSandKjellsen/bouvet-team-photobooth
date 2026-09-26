@@ -128,6 +128,26 @@ branding rights.
   does not decrement when an individual picture expires and needs no permanent
   picture/session link.
 
+### Optional Overview Deletion
+
+The deletion-only mode is a narrow exception to the administration exclusion.
+A bottom-right lock on `/overview` prompts for an operator passphrase, then adds
+trash controls to published images. Confirmation removes the selected picture
+from public reads immediately; the cumulative completed-picture count does not
+decrement. No other administrative capabilities or routes are introduced.
+
+Admin access is separate from visitor sessions and bound to the current page.
+Pagination preserves access; leaving the route, refreshing, browser-history
+restoration or explicitly locking requires a new login. A five-minute renewable
+server lease bounds sessions left behind after failed exit notifications.
+HTTPS encrypts the passphrase in transit; the server verifies a salted hash.
+Cookies alone never authorize deletion from another tab.
+
+Deletion covers application storage, the Leonardo generation and the public
+photo record. Pending or unconfirmed remote cleanup must never appear as fully
+deleted. Downloads and printed copies cannot be revoked. See
+[operator setup and recovery](./development.md#overview-admin-deletion).
+
 ## Privacy, Sessions, And Kiosk
 
 - Agree how all participants acknowledge public publication before real-photo
@@ -178,7 +198,8 @@ branding rights.
 
 ## Exclusions
 
-Do not add an administration site, visitor accounts, personality assessment,
+Do not add an administration site beyond the deletion-only overview controls,
+visitor accounts, personality assessment,
 group-role approval, complex gallery filters, numbered pagination, permanent
 storage, arbitrary public prompts/model controls, silent-print integration, or
 a platform migration. Mock generation is a development/test tool, not a

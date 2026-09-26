@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { adminTestHash } from './test/e2e/admin-settings'
 
 const port = Number(process.env.E2E_PORT ?? 3100)
 if (!Number.isInteger(port) || port < 1024 || port > 65535) {
@@ -9,6 +10,7 @@ const baseURL = `http://127.0.0.1:${port}`
 
 export default defineConfig({
   testDir: './test/e2e',
+  workers: captureGenerationEnabled ? 1 : undefined,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -31,6 +33,8 @@ export default defineConfig({
       ...process.env,
       NITRO_HOST: '127.0.0.1',
       NITRO_PORT: String(port),
+      NUXT_ADMIN_DELETION_ENABLED: String(captureGenerationEnabled),
+      NUXT_ADMIN_PASSPHRASE_HASH: captureGenerationEnabled ? adminTestHash : '',
       NUXT_CAPTURE_GENERATION_ENABLED: String(captureGenerationEnabled),
       NUXT_LEONARDO_WEBHOOK_TOKEN: 'test-leonardo-webhook-token',
       NUXT_PUBLIC_CAPTURE_GENERATION_ENABLED: String(captureGenerationEnabled),
@@ -39,6 +43,7 @@ export default defineConfig({
       NUXT_SESSION_TTL_MS: '300000',
       GENERATION_PROVIDER: 'deterministic',
       SOURCE_STORAGE_DIR: 'test-results/source-storage',
+      SOURCE_STORAGE_DRIVER: 'local',
     },
     reuseExistingServer: false,
     timeout: 30_000,

@@ -206,6 +206,13 @@ and a path to a new picture. Do not display a QR for an unavailable result.
 
 ### Overview
 
+When explicitly enabled, place the deletion-only admin lock at the right end of
+the existing footer. Its icon is small, but its target remains at least 48px.
+After authentication, place a trash control over each thumbnail, separate from
+the image link. Use a labelled modal for the passphrase and a confirmation modal
+with the selected image; preserve cancel, keyboard focus and failure feedback.
+Keep all other gallery controls and the normal-mode composition unchanged.
+
 Keep six pictures per page, with a three-by-two or two-by-three grid as space
 allows. Use a single column only when needed for small screens or enlarged text;
 do not change the page size. Use consistent thumbnail ratios and meaningful alt

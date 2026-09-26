@@ -42,6 +42,66 @@ export class GenerationSourceDeletionError extends Error {
   }
 }
 
+export class GenerationDeletionError extends Error {
+  constructor(
+    message: string,
+    readonly retryable = false,
+  ) {
+    super(message)
+    this.name = 'GenerationDeletionError'
+  }
+}
+
+export async function deleteLeonardoGeneration(generationId: string) {
+  if (process.env.GENERATION_PROVIDER !== 'leonardo') {
+    throw new GenerationDeletionError('Leonardo deletion is not configured')
+  }
+  const apiKey = getLeonardoApiKey()
+  let response: Response
+  try {
+    response = await fetch(
+      `${leonardoGenerationStatusUrl}/${encodeURIComponent(generationId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        redirect: 'error',
+        signal: AbortSignal.timeout(leonardoRequestTimeoutMs),
+      },
+    )
+  } catch {
+    throw new GenerationDeletionError('Generation deletion outcome is unknown')
+  }
+  if (!response.ok) {
+    // Only an explicit rate-limit rejection is safe to automatically repeat.
+    throw new GenerationDeletionError(
+      `Generation deletion failed (status=${response.status})`,
+      response.status === 429,
+    )
+  }
+  let body: unknown
+  try {
+    body = await response.json()
+  } catch {
+    throw new GenerationDeletionError('Invalid generation deletion response')
+  }
+  if (
+    !body ||
+    typeof body !== 'object' ||
+    !('delete_generations_by_pk' in body) ||
+    !body.delete_generations_by_pk ||
+    typeof body.delete_generations_by_pk !== 'object' ||
+    !('id' in body.delete_generations_by_pk) ||
+    body.delete_generations_by_pk.id !== generationId
+  ) {
+    throw new GenerationDeletionError(
+      'Unconfirmed generation deletion response',
+    )
+  }
+}
+
 export async function createGenerationSourceUpload(): Promise<GenerationSourceUpload> {
   const apiKey = getLeonardoApiKey()
   let response: Response

@@ -6,12 +6,14 @@ import {
 } from './generation-provider'
 import { logJobFailure } from './job-logging'
 import { deleteGeneratedImage, deleteSourceImage } from './source-storage'
+import { runPhotoDeletionCleanup } from './photo-deletion'
 
 const cleanupBatchSize = 25
 const cleanupLeaseMs = 60_000
 const retryDelayMs = 60_000
 
 export async function runExpiredSourceCleanup(now = new Date()) {
+  await runPhotoDeletionCleanup(now)
   await recoverExpiredSourceCleanupJobs(now)
   await enqueueExpiredSourceCleanupJobs(now)
   await recoverExpiredGeneratedImageCleanupJobs(now)
