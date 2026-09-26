@@ -2,7 +2,7 @@ export const redCarpetPrompt = `Transform the uploaded group photograph into a g
 
 IDENTITY — HIGHEST PRIORITY:
 
-Keep exactly the same people, in the same left-to-right order, with approximately the same positions and poses. Preserve each person’s recognisable face, age, skin tone, hairstyle, facial hair, body shape, relative height and distinctive features.
+Keep exactly the same people, in the same left-to-right order, with approximately the same positions and poses. Preserve each person’s recognisable face, age, skin tone, facial hair, body shape, relative height and distinctive features.
 Faces, skin, hair and hands must remain photorealistic, clearly visible and naturally proportioned. Do not add, remove, duplicate, merge or swap people.
 Preserve each person’s eyewear exactly as shown in the source. People with glasses must have exactly one pair; people without glasses must not receive eyewear. Do not add sunglasses or accessories that obscure faces.
 Give the team warm, confident and natural expressions. They should look proud, relaxed and slightly amused, as if their latest delivery has just received a standing ovation. Avoid exaggerated celebrity poses or artificial expressions.
@@ -13,6 +13,10 @@ Completely replace everyday clothing with elegant, modern premiere outfits suita
 Use a varied selection of tailored suits, tuxedo-inspired outfits, evening dresses, formal jumpsuits, elegant blazers, polished shoes and restrained accessories. Select outfits individually without relying on gender stereotypes.
 Use deep navy, black, warm white, burgundy, emerald, coral and subtle metallic accents. Give every person a distinct outfit while maintaining a coherent team appearance.
 The clothing should feel stylish, contemporary and professional rather than excessively luxurious, revealing or theatrical. Do not include branded garments, readable labels or identical outfits.
+
+RED-CARPET GROOMING:
+
+Give every person polished, celebrity-ready event grooming while keeping them immediately recognisable. Use sharp, tailored haircuts and neat styling for short hair; use polished waves, curls, updos or sleek styling for longer hair. Add subtle, professional makeup where it suits the person’s presentation: even complexion, natural contour, restrained eye definition and a flattering lip colour. Keep makeup elegant and camera-ready rather than heavy, theatrical or identity-changing. Preserve natural skin tone, facial structure, facial hair and eyewear.
 
 RED-CARPET SETTING:
 

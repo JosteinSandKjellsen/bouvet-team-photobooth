@@ -22,9 +22,11 @@ describe('theme generation profiles', () => {
 
     for (const theme of themes) {
       expect(getThemeGeneration(theme.id).modelProfileId).toBe(
-        theme.id === 'samurai' || theme.id === 'kids-on-bikes'
+        ['samurai', 'kids-on-bikes', 'life-simulation'].includes(theme.id)
           ? nanoBananaModelProfileId
-          : ['space-cowboys', 'treehouse', 'wasteland'].includes(theme.id)
+          : ['red-carpet', 'space-cowboys', 'treehouse', 'wasteland'].includes(
+                theme.id,
+              )
             ? nanoBananaDynamicV3ModelProfileId
             : currentGenerationModelProfileId,
       )

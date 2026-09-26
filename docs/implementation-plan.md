@@ -500,18 +500,19 @@ provider is explicitly configured. Each durable generation snapshots an
 immutable server-only model profile before its job is queued. The current
 `gpt-image-2-5-sunburst-v1` profile uses the
 `openai/gpt-image-2.5-sunburst` discriminator, Dynamic style, prompt
-enhancement off, quantity one, and a 50-credit reservation. Samurai and Kids
-on Bikes are mapped to the separate `nano-banana-2-lite-v1` profile. Space
-Cowboys, Treehouse, and Wasteland are mapped to the `nano-banana-dynamic-v3`
-profile, which uses the original Nano Banana request discriminator, Dynamic
-style, 1344 by 768 dimensions, and a `MID` uploaded-image strength; all other
-themes retain the Sunburst profile. The prior Dynamic and Illustration profiles
-remain available only to finish or reconcile durable generations that already
-reference them. The profile is internal to the server, generation row, and
-worker: sessions, public themes, photo responses, and browser requests never
-contain it. New model profiles require documented schema and cost verification
-before a theme can select them, while existing profiles remain available for
-queued and retried jobs. Earlier Flare submissions
+enhancement off, quantity one, and a 50-credit reservation. Samurai, Kids on
+Bikes, and Life Simulation are mapped to the separate
+`nano-banana-2-lite-v1` profile. Red Carpet, Space Cowboys, Treehouse, and
+Wasteland are mapped to the `nano-banana-dynamic-v3` profile, which uses the
+original Nano Banana request discriminator, Dynamic style, 1344 by 768
+dimensions, and a `MID` uploaded-image strength; all other themes retain the
+Sunburst profile. The prior Dynamic and Illustration profiles remain available
+only to finish or reconcile durable generations that already reference them.
+The profile is internal to the server, generation row, and worker: sessions,
+public themes, photo responses, and browser requests never contain it. New
+model profiles require documented schema and cost verification before a theme
+can select them, while existing profiles remain available for queued and
+retried jobs. Earlier Flare submissions
 using both inline bytes and an uploaded source ID returned HTTP-success GraphQL
 error arrays rather than a generation acceptance. The application retained each
 affected local synthetic submission as `SUBMISSION_UNKNOWN` rather than

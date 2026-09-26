@@ -8,9 +8,9 @@ import {
 export const themeGeneration = {
   'block-world': { modelProfileId: currentGenerationModelProfileId },
   'kids-on-bikes': { modelProfileId: nanoBananaModelProfileId },
-  'life-simulation': { modelProfileId: currentGenerationModelProfileId },
+  'life-simulation': { modelProfileId: nanoBananaModelProfileId },
   'mech-pilots': { modelProfileId: currentGenerationModelProfileId },
-  'red-carpet': { modelProfileId: currentGenerationModelProfileId },
+  'red-carpet': { modelProfileId: nanoBananaDynamicV3ModelProfileId },
   samurai: { modelProfileId: nanoBananaModelProfileId },
   'space-cowboys': { modelProfileId: nanoBananaDynamicV3ModelProfileId },
   treehouse: { modelProfileId: nanoBananaDynamicV3ModelProfileId },
