@@ -86,13 +86,13 @@ participant images until the retention, disclosure and provider gates in the
 database test runner enables both values only for its synthetic camera input.
 
 For local synthetic-image testing, enable both flags in the ignored `.env` file
-and run `pnpm local:worker` in a second terminal after `pnpm dev`. The worker
-uses the existing authenticated internal endpoints to submit queued generations,
-reconcile completed output, and process cleanup. It defaults to
-`NUXT_SESSION_ORIGIN` and a two-second interval; set
-`LOCAL_GENERATION_WORKER_ORIGIN` or
-`LOCAL_GENERATION_WORKER_INTERVAL_MS` only when a different local target is
-needed.
+and run `pnpm dev:local` to start the development server and local worker
+together. The worker uses the existing authenticated internal endpoints to
+submit queued generations, reconcile completed output, and process cleanup. It
+defaults to `NUXT_SESSION_ORIGIN` and a two-second interval; set
+`LOCAL_GENERATION_WORKER_ORIGIN` or `LOCAL_GENERATION_WORKER_INTERVAL_MS` only
+when a different local target is needed. `pnpm dev` and `pnpm local:worker`
+remain available to run the processes separately.
 
 To exercise Leonardo locally, set `GENERATION_PROVIDER=leonardo`, supply an
 approved local `LEONARDO_API_KEY`, and run the local worker. The worker polls the
@@ -211,6 +211,7 @@ Run these from the repository root:
 | ----------------------------------- | ------------------------------------------------------- |
 | `pnpm prepare`                      | Generate Nuxt types and lint configuration.             |
 | `pnpm dev`                          | Start the single development server.                    |
+| `pnpm dev:local`                    | Start the development server and local worker together. |
 | `pnpm lint` / `pnpm lint:fix`       | Lint code and Markdown / apply fixes.                   |
 | `pnpm lint:code`                    | Check code and import boundaries with ESLint.           |
 | `pnpm lint:markdown`                | Check Markdown structure, including Copilot files.      |
