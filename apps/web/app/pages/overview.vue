@@ -96,7 +96,7 @@ onBeforeUnmount(clearRefreshTimer)
         <div class="gallery-column">
           <section class="photo-grid" data-testid="overview-grid">
             <div
-              v-for="photo in data.photos"
+              v-for="(photo, index) in data.photos"
               :key="photo.publicId"
               class="photo-container"
             >
@@ -111,6 +111,9 @@ onBeforeUnmount(clearRefreshTimer)
                     :alt="t('overview.imageAlt')"
                     :width="photo.width"
                     :height="photo.height"
+                    :loading="index === 0 ? 'eager' : 'lazy'"
+                    :fetchpriority="index === 0 ? 'high' : 'auto'"
+                    decoding="async"
                   />
                 </span>
                 <span class="photo-caption">{{

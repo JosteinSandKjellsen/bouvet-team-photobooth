@@ -596,6 +596,10 @@ do not turn every user request into a Leonardo fallback.
 Return the stored content type, ETag, and conditional `304 Not Modified`
 responses. For private images, use private or authenticated CDN caching. Bound
 all browser and CDN cache lifetimes by the remaining time until `deleteAfter`.
+The implemented public image endpoint uses a maximum three-hour browser and
+shared-cache lifetime, shortened when retention expires sooner. Gallery reads
+use a 768-pixel JPEG thumbnail variant generated from application-owned storage;
+the variant is not persisted as another long-lived object.
 
 ## Recommended application job
 

@@ -63,7 +63,7 @@ function getPhotoItem(photo: {
 
   return {
     height: photo.height,
-    imageUrl: `/api/photos/${photo.publicId}/image`,
+    imageUrl: `/api/photos/${photo.publicId}/image?variant=thumbnail`,
     publishedAt: photo.publishedAt.toISOString(),
     publicId: photo.publicId,
     width: photo.width,
@@ -201,6 +201,7 @@ export async function getPublicPhoto(publicId: string | undefined) {
     select: {
       byteSize: true,
       contentType: true,
+      deleteAfter: true,
       height: true,
       publicId: true,
       storageKey: true,

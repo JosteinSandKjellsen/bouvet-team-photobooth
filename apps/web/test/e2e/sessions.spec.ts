@@ -706,12 +706,20 @@ test('queues one generation only for the current session approved source', async
     `/api/photos/${generatedImage.publicId}/image`,
   )
   expect(publicImage.status()).toBe(200)
-  expect(publicImage.headers()['cache-control']).toBe('no-store')
+  expect(publicImage.headers()['cache-control']).toBe(
+    'public, max-age=10800, s-maxage=10800, must-revalidate',
+  )
   expect(publicImage.headers()['content-length']).toBe(
     String(generatedImage.byteSize),
   )
   expect(publicImage.headers()['content-type']).toContain('image/jpeg')
   expect((await publicImage.body()).byteLength).toBe(generatedImage.byteSize)
+  const revalidatedImage = await request.get(
+    `/api/photos/${generatedImage.publicId}/image`,
+    { headers: { 'if-none-match': publicImage.headers().etag ?? '' } },
+  )
+  expect(revalidatedImage.status()).toBe(304)
+  expect((await revalidatedImage.body()).byteLength).toBe(0)
 
   const publicDownload = await request.get(
     `/api/photos/${generatedImage.publicId}/download`,
@@ -814,8 +822,26 @@ test('lists active public photos with stable cursor navigation and keeps the eve
   )
   expect(new Set(firstPage.photos.map((photo) => photo.publicId)).size).toBe(6)
   expect(firstPage.photos[0]?.imageUrl).toBe(
+    `/api/photos/${firstPage.photos[0]?.publicId}/image?variant=thumbnail`,
+  )
+  const thumbnailResponse = await request.get(
+    firstPage.photos[0]?.imageUrl ?? '',
+  )
+  expect(thumbnailResponse.status()).toBe(200)
+  expect(thumbnailResponse.headers()['cache-control']).toBe(
+    'public, max-age=10800, s-maxage=10800, must-revalidate',
+  )
+  const thumbnail = await thumbnailResponse.body()
+  const fullImageResponse = await request.get(
     `/api/photos/${firstPage.photos[0]?.publicId}/image`,
   )
+  expect(thumbnail.byteLength).toBeLessThan(
+    (await fullImageResponse.body()).byteLength,
+  )
+  await expect(sharp(thumbnail).metadata()).resolves.toMatchObject({
+    format: 'jpeg',
+    width: 768,
+  })
   expect(firstPage.newerCursor).toBeUndefined()
   expect(firstPage.olderCursor).toBeTruthy()
   const olderCursor = firstPage.olderCursor

@@ -164,6 +164,8 @@ onBeforeUnmount(() => {
             :alt="t('photo.imageAlt')"
             :width="data.width"
             :height="data.height"
+            decoding="async"
+            fetchpriority="high"
           />
         </div>
 
