@@ -45,8 +45,9 @@ const generationProgressStage = computed(() => {
     case 'submitted':
       return 'building'
     case 'submitting':
-    case 'submission_unknown':
       return 'checking'
+    case 'submission_unknown':
+      return null
     case 'failed':
       return 'failed'
     default:
@@ -149,6 +150,7 @@ function schedulePoll() {
   if (
     !isActive ||
     generationStatus.value === 'failed' ||
+    generationStatus.value === 'submission_unknown' ||
     generationStatus.value === 'succeeded'
   ) {
     return
@@ -168,7 +170,7 @@ async function loadGenerationStatus(silent = false) {
 
     locallyApproved.value = true
     generationStatus.value = generation.status
-    submissionError.value = false
+    submissionError.value = generation.status === 'submission_unknown'
 
     if (generation.status === 'succeeded' && generation.resultPath) {
       await navigateTo(generation.resultPath)
@@ -329,7 +331,7 @@ onBeforeUnmount(() => {
             :alt="t('capture.review.previewAlt')"
           />
           <div
-            v-if="locallyApproved && captureGenerationEnabled"
+            v-if="isGeneratingIntro"
             class="processing-overlay"
             data-testid="capture-processing-overlay"
             aria-hidden="true"
@@ -595,7 +597,12 @@ onBeforeUnmount(() => {
           >
             {{ t('common.actions.retry') }}
           </ActionButton>
-          <p v-if="submissionError" class="error" role="alert">
+          <p
+            v-if="submissionError"
+            class="error"
+            data-testid="capture-generation-error"
+            role="alert"
+          >
             {{ t('capture.errors.generationUnavailable') }}
           </p>
         </div>
@@ -614,7 +621,13 @@ onBeforeUnmount(() => {
         {{ t('capture.invalidTheme') }}
       </h1>
     </template>
-    <PageFooter v-if="!(locallyApproved && captureGenerationEnabled)">
+    <PageFooter
+      v-if="
+        !locallyApproved ||
+        !captureGenerationEnabled ||
+        generationStatus === 'submission_unknown'
+      "
+    >
       <ActionButton
         as="link"
         data-testid="capture-back-to-themes"

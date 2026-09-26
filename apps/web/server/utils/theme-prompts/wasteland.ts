@@ -35,7 +35,7 @@ Weapons, bowstrings, straps and equipment must not intersect faces, bodies, hand
 VISUAL STYLE:
 
 Use dramatic golden-hour lighting combined with a restrained radioactive glow, airborne dust, realistic shadows and a weathered cinematic colour palette. Preserve natural skin tones and neutral, flattering light on every face.
-Create a polished, photorealistic retro-science-fiction adventure image. Prioritise sharp, natural-looking faces over environmental detail.
+Create a polished, stylised Post-Apocalyptic / Wasteland Punk adventure image with expressive, hand-painted textures, bold graphic forms and weathered punk details. Render faces in the same stylised treatment rather than photorealistically, while preserving every person’s recognisable identity, facial features and expression.
 All clothing, technology, weapons and environmental elements must be original designs. Do not reproduce recognisable characters, costumes, products, logos, locations or props from any existing film, television or game franchise.
 
 FINAL CHECK:

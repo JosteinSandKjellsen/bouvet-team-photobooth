@@ -246,6 +246,39 @@ test('retries an unconfirmed idempotent generation request without recapturing',
   expect(rejectedInitialRequest).toBe(true)
 })
 
+test('does not resubmit an uncertain provider submission', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'runs once')
+  test.skip(!hasTestDatabase, 'requires the synthetic generation flow')
+
+  const generationRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.method() === 'POST') {
+      generationRequests.push(new URL(request.url()).pathname)
+    }
+  })
+  await page.route('**/api/sessions/current/generation', async (route) => {
+    await route.fulfill({
+      body: JSON.stringify({
+        jobId: '10038373-24aa-4e8d-80f6-d5b013eb1876',
+        status: 'submission_unknown',
+      }),
+      contentType: 'application/json',
+      status: 200,
+    })
+  })
+
+  await page.goto('/capture/space-cowboys')
+
+  await expect(page.getByTestId('capture-generation-progress')).toBeHidden()
+  await expect(page.getByTestId('capture-processing-overlay')).toBeHidden()
+  await expect(page.getByTestId('capture-generation-error')).toBeVisible()
+  await expect(page.getByTestId('capture-retry-generation')).toBeHidden()
+  await expect(page.getByTestId('capture-back-to-themes')).toBeVisible()
+  expect(generationRequests).not.toContain('/api/sessions/current/generate')
+})
+
 test('atomically caps daily Leonardo reservations at 10000 credits', async ({
   request: _request,
 }, testInfo) => {

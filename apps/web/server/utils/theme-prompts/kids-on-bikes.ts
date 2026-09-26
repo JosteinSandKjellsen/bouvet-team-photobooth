@@ -2,8 +2,9 @@ export const kidsOnBikesPrompt = `Transform the uploaded group photograph into a
 
 IDENTITY — HIGHEST PRIORITY:
 
-Keep exactly the same people, in the same left-to-right order, with approximately the same positions and poses. Preserve each person’s recognisable face, age, skin tone, hairstyle, facial hair, body shape, relative height and distinctive features.
-Faces, skin, hair and hands must remain photorealistic, clearly visible and naturally proportioned. Do not add, remove, duplicate, merge or swap people.
+Keep exactly the same people, in the same left-to-right order, with approximately the same positions and poses. Preserve each person’s recognisable face, age, skin tone, facial hair, body shape, relative height and distinctive features.
+Transform each person’s hairstyle into an original, era-appropriate 1980s look, such as a mullet, loose curls, feathered layers, a teased style or a bold side part.
+Faces, skin, hair and hands must use a painterly realistic style, remain clearly visible and retain natural proportions. Do not add, remove, duplicate, merge or swap people.
 Preserve each person’s eyewear exactly as shown in the source. People with glasses must have exactly one pair; people without glasses must not receive eyewear. Do not add goggles, masks or anything that obscures a face.
 Give the team curious, excited and slightly nervous expressions. They have just discovered something impossible and are trying to understand it together. They should feel adventurous and clever, not grim, terrified or professionally trained for an emergency.
 
@@ -35,11 +36,11 @@ Do not include firearms or other weapons.
 
 VISUAL STYLE:
 
-Create a polished, photorealistic 1980s supernatural adventure film still with cinematic composition, subtle 35mm grain and a restrained retro colour grade.
+Create a polished, painterly realistic 1980s supernatural adventure illustration with cinematic composition, visible brushwork, textured colour and a restrained retro colour grade.
 Use warm amber and teal lighting in the normal part of the room, contrasted with deep red, cold cyan and unnatural pale light in the corrupted area. Keep the overall image bright and readable enough for display on a large conference screen.
 Clearly illuminate every face and prioritise recognisable people over environmental detail. The image should feel mysterious, adventurous, nostalgic and nerdy rather than bleak or violent.
 Use only original designs. Do not reproduce recognisable characters, monsters, costumes, rooms, props, logos, title typography or compositions from any existing film, television series or game.
 
 FINAL CHECK:
 
-Exactly the original people, in the original order, with recognisable faces and correct eyewear. A homemade 1980s technology clubhouse being overtaken by a supernatural distortion. No additional people, duplicate glasses, distorted faces, malformed hands, extra limbs, professional laboratory, second room behind glass, glowing circular portal, alphabet wall, recognisable monster, weapons, readable text, captions, watermarks or logos.`
+Exactly the original people, NO EXTRA PEOPLE, in the original order, with recognisable faces and correct eyewear. Each person’s hairstyle is an era-appropriate 1980s look, such as a mullet, loose curls, feathered layers, a teased style or a bold side part. A homemade 1980s technology clubhouse being overtaken by a supernatural distortion. No additional people, duplicate glasses, distorted faces, malformed hands, extra limbs, professional laboratory, second room behind glass, glowing circular portal, alphabet wall, recognisable monster, weapons, readable text, captions, watermarks or logos.`

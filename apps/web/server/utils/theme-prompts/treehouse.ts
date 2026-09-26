@@ -48,9 +48,9 @@ Do not add enemies, combat, injuries or destruction. The image should portray a 
 
 VISUAL STYLE:
 
-Use warm cinematic sunlight filtering through the leaves, gentle mist, realistic shadows and restrained magical illumination. Create an inviting palette of emerald green, teal, natural wood and warm gold, with the fireball providing a small orange accent.
+Use warm cinematic sunlight filtering through the leaves, gentle mist and restrained magical illumination. Render dramatic light and shadow with fine-line ink work and heavy cross-hatching. Create an inviting palette of emerald green, teal, natural wood and warm gold, with the fireball providing a small orange accent.
 Preserve natural skin tones and clear, flattering light on every face. Prioritise sharp, recognisable faces over background, clothing and weapon details.
-Create a polished, photorealistic fantasy-adventure team portrait that feels welcoming, heroic, clever and slightly humorous.
+Create a polished, dramatic high-fantasy realism illustration with precise ink linework, richly layered cross-hatching and expressive, recognisable faces. It should feel welcoming, heroic, clever and slightly humorous.
 All clothing, architecture, weapons, magical effects and environmental elements must be original designs. Do not reproduce recognisable characters, costumes, locations, symbols, weapons or props from any existing film, television, book or game franchise.
 
 FINAL CHECK:

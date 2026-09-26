@@ -35,16 +35,29 @@ or changing a configured model:
 
 The current application profiles are:
 
-| Profile ID                  | Leonardo discriminator          | Assigned themes            |
-| --------------------------- | ------------------------------- | -------------------------- |
-| `gpt-image-2-5-sunburst-v1` | `openai/gpt-image-2.5-sunburst` | Every theme except Samurai |
-| `nano-banana-2-lite-v1`     | `nano-banana-2-lite`            | Samurai                    |
+| Profile ID                    | Leonardo discriminator                 | Assigned themes                                                                    |
+| ----------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
+| `gpt-image-2-5-sunburst-v1`   | `openai/gpt-image-2.5-sunburst`        | Every theme except Samurai, Kids on Bikes, Space Cowboys, Treehouse, and Wasteland |
+| `nano-banana-2-lite-v1`       | `nano-banana-2-lite`                   | Samurai and Kids on Bikes                                                          |
+| `nano-banana-dynamic-v3`      | `gemini-2.5-flash-image`               | Space Cowboys, Treehouse, and Wasteland                                            |
+| `nano-banana-dynamic-v2`      | `4a008a65-8d97-44f5-97a0-66c431612614` | None; retained for existing generations                                            |
+| `nano-banana-dynamic-v1`      | `gemini-2.5-flash-image`               | None; retained for existing generations                                            |
+| `nano-banana-illustration-v1` | `gemini-2.5-flash-image`               | None; retained for existing generations                                            |
 
 The Nano Banana profile uses the v2 fields documented in Leonardo's public
-model guide rechecked on 2026-09-25: one `UPLOADED` image reference, 1376 by
+model guide rechecked on 2026-09-25: one `UPLOADED` image reference, 1344 by
 768 dimensions, Dynamic style, one output, and prompt enhancement off. Its
 profile-specific request fields are server-only; the public theme response and
 every browser request remain model-free.
+
+The Space Cowboys and Wasteland profiles use the original Nano Banana request discriminator
+`gemini-2.5-flash-image`, Dynamic style ID
+`111dc692-d470-4eec-b791-3475abac4c46`, and the documented 1344 by 768
+dimensions. Its `UPLOADED` image reference supplies the documented `MID`
+strength. The authenticated `GET /models` catalog was rechecked on 2026-09-25;
+its opaque record ID is `4a008a65-8d97-44f5-97a0-66c431612614`. The prior
+Dynamic and Illustration profiles remain available only for existing durable
+generations.
 
 `ImageGeneration.modelProfileId` snapshots the selected profile when the
 generation is created. A queued, resumed, retried, or reconciled generation

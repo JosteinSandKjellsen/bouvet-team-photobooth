@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { nanoBananaModelProfileId } from '../../server/utils/generation-models'
+import {
+  nanoBananaDynamicV3ModelProfileId,
+  nanoBananaModelProfileId,
+} from '../../server/utils/generation-models'
 
 const { db } = vi.hoisted(() => ({
   db: {
@@ -36,6 +39,23 @@ describe('createGenerationForSource', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           modelProfileId: nanoBananaModelProfileId,
+        }),
+      }),
+    )
+  })
+
+  it('pins the documented Space Cowboys Dynamic profile before enqueuing the generation', async () => {
+    db.sourceImage.findFirst.mockResolvedValue({
+      id: '22222222-2222-4222-8222-222222222222',
+      session: { themeId: 'space-cowboys' },
+    })
+
+    await createGenerationForSource('33333333-3333-4333-8333-333333333333')
+
+    expect(db.imageGeneration.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          modelProfileId: nanoBananaDynamicV3ModelProfileId,
         }),
       }),
     )

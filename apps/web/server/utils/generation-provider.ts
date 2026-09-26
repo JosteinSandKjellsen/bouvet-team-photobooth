@@ -195,6 +195,9 @@ export async function submitGeneration(submission: GenerationSubmission) {
                   id: submission.providerSourceImageId,
                   type: 'UPLOADED',
                 },
+                ...('imageReferenceStrength' in modelProfile
+                  ? { strength: modelProfile.imageReferenceStrength }
+                  : {}),
               },
             ],
           },

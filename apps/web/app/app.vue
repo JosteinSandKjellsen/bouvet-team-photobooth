@@ -8,9 +8,9 @@
     />
     <div class="application-content">
       <header class="masthead">
-        <NuxtLink class="brand" to="/" aria-label="Bouvet Team Photobooth">
+        <a class="brand" href="/" aria-label="Bouvet Team Photobooth">
           <img class="brand-logo" src="/bouvet-logo.svg" alt="" />
-        </NuxtLink>
+        </a>
         <span class="app-name">
           HELLO STAVANGER • TEAM PHOTOBOOTH
           <span class="app-name__indicator" aria-hidden="true" />

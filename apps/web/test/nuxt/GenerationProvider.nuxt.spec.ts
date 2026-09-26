@@ -10,6 +10,7 @@ import {
 import type { GenerationSourceDeletionError } from '../../server/utils/generation-provider'
 import {
   currentGenerationModelProfileId,
+  nanoBananaDynamicV3ModelProfileId,
   nanoBananaModelProfileId,
 } from '../../server/utils/generation-models'
 import { samuraiPrompt } from '../../server/utils/theme-prompts/samurai'
@@ -209,6 +210,54 @@ describe('generation provider', () => {
         quantity: 1,
         style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
         width: 1376,
+      },
+      public: false,
+    })
+  })
+
+  it('submits Space Cowboys with Nano Banana Dynamic parameters', async () => {
+    process.env.GENERATION_PROVIDER = 'leonardo'
+    process.env.LEONARDO_API_KEY = 'test-api-key'
+    const providerFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          generate: { apiCreditCost: 23, generationId: 'provider-id' },
+        }),
+        { headers: { 'Content-Type': 'application/json' }, status: 200 },
+      ),
+    )
+    vi.stubGlobal('fetch', providerFetch)
+
+    await expect(
+      submitGeneration({
+        generationId: 'application-id',
+        modelProfileId: nanoBananaDynamicV3ModelProfileId,
+        providerSourceImageId: 'source-id',
+        themeId: 'space-cowboys',
+      }),
+    ).resolves.toEqual({
+      apiCreditCost: 23,
+      providerGenerationId: 'provider-id',
+    })
+
+    const [, request] = providerFetch.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(request.body as string)).toEqual({
+      model: 'gemini-2.5-flash-image',
+      parameters: {
+        guidances: {
+          image_reference: [
+            {
+              image: { id: 'source-id', type: 'UPLOADED' },
+              strength: 'MID',
+            },
+          ],
+        },
+        height: 768,
+        prompt: spaceCowboysPrompt,
+        prompt_enhance: 'OFF',
+        quantity: 1,
+        style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
+        width: 1344,
       },
       public: false,
     })
