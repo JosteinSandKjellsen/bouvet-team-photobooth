@@ -500,8 +500,8 @@ provider is explicitly configured. Each durable generation snapshots an
 immutable server-only model profile before its job is queued. The current
 `gpt-image-2-5-sunburst-v1` profile uses the
 `openai/gpt-image-2.5-sunburst` discriminator, Dynamic style, prompt
-enhancement off, quantity one, and a 50-credit reservation. Samurai, Kids on
-Bikes, and Life Simulation are mapped to the separate
+enhancement off, quantity one, and a 50-credit reservation. Block World,
+Samurai, Kids on Bikes, and Life Simulation are mapped to the separate
 `nano-banana-2-lite-v1` profile. Red Carpet, Space Cowboys, Treehouse, and
 Wasteland are mapped to the `nano-banana-dynamic-v3` profile, which uses the
 original Nano Banana request discriminator, Dynamic style, 1344 by 768

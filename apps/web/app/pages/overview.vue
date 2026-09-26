@@ -115,6 +115,7 @@ onBeforeUnmount(clearRefreshTimer)
           <ActionButton
             v-if="data.olderCursor"
             as="link"
+            class="overview-navigation__older"
             :to="`/overview?before=${data.olderCursor}`"
             variant="navigation"
           >
@@ -275,6 +276,9 @@ onBeforeUnmount(clearRefreshTimer)
   display: flex;
   justify-content: space-between;
   min-height: var(--control-height);
+}
+.overview-navigation__older {
+  margin-left: auto;
 }
 .overview-error {
   display: grid;

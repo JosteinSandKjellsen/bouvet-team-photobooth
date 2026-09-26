@@ -6,7 +6,7 @@ import {
 } from './generation-models'
 
 export const themeGeneration = {
-  'block-world': { modelProfileId: currentGenerationModelProfileId },
+  'block-world': { modelProfileId: nanoBananaModelProfileId },
   'kids-on-bikes': { modelProfileId: nanoBananaModelProfileId },
   'life-simulation': { modelProfileId: nanoBananaModelProfileId },
   'mech-pilots': { modelProfileId: currentGenerationModelProfileId },

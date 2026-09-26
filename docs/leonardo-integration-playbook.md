@@ -35,14 +35,14 @@ or changing a configured model:
 
 The current application profiles are:
 
-| Profile ID                    | Leonardo discriminator                 | Assigned themes                                                                                                 |
-| ----------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `gpt-image-2-5-sunburst-v1`   | `openai/gpt-image-2.5-sunburst`        | Every theme except Samurai, Kids on Bikes, Life Simulation, Red Carpet, Space Cowboys, Treehouse, and Wasteland |
-| `nano-banana-2-lite-v1`       | `nano-banana-2-lite`                   | Samurai, Kids on Bikes, and Life Simulation                                                                     |
-| `nano-banana-dynamic-v3`      | `gemini-2.5-flash-image`               | Red Carpet, Space Cowboys, Treehouse, and Wasteland                                                             |
-| `nano-banana-dynamic-v2`      | `4a008a65-8d97-44f5-97a0-66c431612614` | None; retained for existing generations                                                                         |
-| `nano-banana-dynamic-v1`      | `gemini-2.5-flash-image`               | None; retained for existing generations                                                                         |
-| `nano-banana-illustration-v1` | `gemini-2.5-flash-image`               | None; retained for existing generations                                                                         |
+| Profile ID                    | Leonardo discriminator                 | Assigned themes                                                                                                              |
+| ----------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `gpt-image-2-5-sunburst-v1`   | `openai/gpt-image-2.5-sunburst`        | Every theme except Block World, Samurai, Kids on Bikes, Life Simulation, Red Carpet, Space Cowboys, Treehouse, and Wasteland |
+| `nano-banana-2-lite-v1`       | `nano-banana-2-lite`                   | Block World, Samurai, Kids on Bikes, and Life Simulation                                                                     |
+| `nano-banana-dynamic-v3`      | `gemini-2.5-flash-image`               | Red Carpet, Space Cowboys, Treehouse, and Wasteland                                                                          |
+| `nano-banana-dynamic-v2`      | `4a008a65-8d97-44f5-97a0-66c431612614` | None; retained for existing generations                                                                                      |
+| `nano-banana-dynamic-v1`      | `gemini-2.5-flash-image`               | None; retained for existing generations                                                                                      |
+| `nano-banana-illustration-v1` | `gemini-2.5-flash-image`               | None; retained for existing generations                                                                                      |
 
 The Nano Banana profile uses the v2 fields documented in Leonardo's public
 model guide rechecked on 2026-09-25: one `UPLOADED` image reference, 1344 by
