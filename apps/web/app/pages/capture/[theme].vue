@@ -943,8 +943,22 @@ img {
   .capture-actions :deep(.app-action:not(.app-action--icon)) {
     flex-basis: auto;
   }
-  .actions :deep(.app-action--icon) {
-    width: 100%;
+  .capture-actions {
+    align-items: stretch;
+    flex-direction: row;
+  }
+  .capture-actions :deep(.app-action:not(.app-action--icon)) {
+    flex: 1 1 auto;
+  }
+  .capture-actions :deep(.app-action--icon) {
+    flex: 0 0 var(--control-height);
+  }
+  .media-frame {
+    aspect-ratio: 16 / 9;
+  }
+  .countdown {
+    width: 88px;
+    font-size: 56px;
   }
   .generation-progress__step {
     font-size: 11px;

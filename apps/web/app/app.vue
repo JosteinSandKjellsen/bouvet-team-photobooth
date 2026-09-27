@@ -142,6 +142,9 @@ button:focus-visible {
     align-items: flex-start;
     flex-direction: column;
   }
+  .app-name {
+    display: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .app-name__indicator::after {
