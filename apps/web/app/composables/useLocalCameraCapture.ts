@@ -144,12 +144,18 @@ export function useLocalCameraCapture() {
 
     state.value = 'requestingPermission'
     try {
+      const prefersPortraitVideo =
+        window.matchMedia?.('(max-width: 480px) and (orientation: portrait)')
+          .matches ?? false
+      const preferredDimensions = prefersPortraitVideo
+        ? { height: 1920, width: 1080 }
+        : { height: 1080, width: 1920 }
       const preferredConstraints: MediaStreamConstraints = {
         audio: false,
         video: {
           facingMode: { ideal: nextFacingMode },
-          height: { ideal: 1080 },
-          width: { ideal: 1920 },
+          height: { ideal: preferredDimensions.height },
+          width: { ideal: preferredDimensions.width },
         },
       }
       try {

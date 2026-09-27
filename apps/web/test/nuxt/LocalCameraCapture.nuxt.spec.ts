@@ -52,6 +52,22 @@ describe('useLocalCameraCapture', () => {
     expect(camera.state.value).toBe('idle')
   })
 
+  it('prefers portrait dimensions on a narrow portrait viewport', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    const camera = useLocalCameraCapture()
+
+    await expect(camera.activate()).resolves.toBe(true)
+
+    expect(getUserMedia).toHaveBeenCalledWith({
+      audio: false,
+      video: {
+        facingMode: { ideal: 'user' },
+        height: { ideal: 1920 },
+        width: { ideal: 1080 },
+      },
+    })
+  })
+
   it('automatically starts only when camera permission is already granted', async () => {
     const query = vi.fn().mockResolvedValue({ state: 'granted' })
     vi.stubGlobal('navigator', {

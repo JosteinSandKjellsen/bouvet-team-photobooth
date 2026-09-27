@@ -26,6 +26,7 @@ const selectedTheme = computed(() =>
 const camera = useLocalCameraCapture()
 const videoElement = ref<HTMLVideoElement | null>(null)
 const videoReady = ref(false)
+const mobileMediaAspectRatio = ref<string | null>(null)
 const locallyApproved = ref(false)
 const recoveringGeneration = ref(false)
 const submissionError = ref(false)
@@ -87,11 +88,13 @@ function startCamera() {
   clearGenerationState()
   locallyApproved.value = false
   videoReady.value = false
+  mobileMediaAspectRatio.value = null
   void camera.activate()
 }
 
 function switchCamera() {
   videoReady.value = false
+  mobileMediaAspectRatio.value = null
   const nextFacingMode =
     camera.facingMode.value === 'user' ? 'environment' : 'user'
   void camera.activate(nextFacingMode)
@@ -110,6 +113,9 @@ function markVideoReady(event: Event) {
     video instanceof HTMLVideoElement &&
     video.videoWidth > 0 &&
     video.videoHeight > 0
+  if (video instanceof HTMLVideoElement && video.videoWidth > 0) {
+    mobileMediaAspectRatio.value = `${video.videoWidth} / ${video.videoHeight}`
+  }
 }
 
 async function captureImage() {
@@ -325,7 +331,13 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="capture-workspace" aria-live="polite">
-        <div v-if="camera.state.value === 'previewing'" class="media-frame">
+        <div
+          v-if="camera.state.value === 'previewing'"
+          class="media-frame"
+          :style="{
+            '--mobile-media-aspect-ratio': mobileMediaAspectRatio ?? undefined,
+          }"
+        >
           <img
             :src="camera.previewUrl.value ?? undefined"
             :alt="t('capture.review.previewAlt')"
@@ -357,6 +369,9 @@ onBeforeUnmount(() => {
             camera.state.value === 'streaming' || countdown.isCountingDown.value
           "
           class="media-frame"
+          :style="{
+            '--mobile-media-aspect-ratio': mobileMediaAspectRatio ?? undefined,
+          }"
         >
           <video
             ref="videoElement"
@@ -954,7 +969,7 @@ img {
     flex: 0 0 var(--control-height);
   }
   .media-frame {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: var(--mobile-media-aspect-ratio, 16 / 9);
   }
   .countdown {
     width: 88px;

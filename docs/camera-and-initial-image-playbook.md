@@ -152,7 +152,10 @@ const constraints: MediaStreamConstraints = {
 
 Treat these as preferences. Retry with `{ video: true, audio: false }` when a
 browser rejects the detailed constraints. Do not identify mobile devices from
-the user-agent string.
+the user-agent string. On a narrow portrait viewport, prefer portrait width and
+height ideals instead. Size the mobile preview from the live video's
+`videoWidth` and `videoHeight`, so the displayed preview and captured frame use
+the same aspect ratio; do not impose a fixed mobile crop.
 
 For camera switching, query `enumerateDevices()` after a camera stream has been
 approved and show a switch control only when at least two `videoinput` devices
