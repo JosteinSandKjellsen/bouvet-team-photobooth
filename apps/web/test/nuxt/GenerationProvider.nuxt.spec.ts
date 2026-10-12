@@ -16,6 +16,8 @@ import {
 } from '../../server/utils/generation-models'
 import { samuraiPrompt } from '../../server/utils/theme-prompts/samurai'
 import { spaceCowboysPrompt } from '../../server/utils/theme-prompts/space-cowboys'
+import { themePrompts } from '../../server/utils/theme-prompts'
+import { groupCompositionRules } from '../../server/utils/theme-prompts/group-composition'
 
 afterEach(() => {
   delete process.env.GENERATION_PROVIDER
@@ -281,7 +283,9 @@ describe('generation provider', () => {
     })
   })
 
-  it('submits Space Cowboys with Nano Banana Dynamic parameters', async () => {
+  it.each(['space-cowboys', 'treehouse', 'wasteland', 'red-carpet'] as const)(
+    'submits %s with source-group rules and unchanged Nano Banana Dynamic parameters',
+    async (themeId) => {
     process.env.GENERATION_PROVIDER = 'leonardo'
     process.env.LEONARDO_API_KEY = 'test-api-key'
     const providerFetch = vi.fn().mockResolvedValue(
@@ -299,7 +303,7 @@ describe('generation provider', () => {
         generationId: 'application-id',
         modelProfileId: nanoBananaDynamicV3ModelProfileId,
         providerSourceImageId: 'source-id',
-        themeId: 'space-cowboys',
+        themeId,
       }),
     ).resolves.toEqual({
       apiCreditCost: 23,
@@ -307,6 +311,9 @@ describe('generation provider', () => {
     })
 
     const [, request] = providerFetch.mock.calls[0] as [string, RequestInit]
+    expect(themePrompts[themeId].startsWith(`${groupCompositionRules}\n\n`)).toBe(
+      true,
+    )
     expect(JSON.parse(request.body as string)).toEqual({
       model: 'gemini-2.5-flash-image',
       parameters: {
@@ -319,14 +326,15 @@ describe('generation provider', () => {
           ],
         },
         height: 768,
-        prompt: spaceCowboysPrompt,
+        prompt: themePrompts[themeId],
         prompt_enhance: 'OFF',
         quantity: 1,
         style_ids: ['111dc692-d470-4eec-b791-3475abac4c46'],
         width: 1344,
       },
       public: false,
-    })
+      },
+    )
   })
 
   it('rejects malformed init-image responses before uploading bytes', async () => {

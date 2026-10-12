@@ -1,6 +1,10 @@
-export const wastelandPrompt = `Transform the uploaded group photograph into a cinematic team portrait set in a radioactive, retrofuturistic post-apocalyptic wasteland.
+import { groupCompositionRules } from './group-composition'
 
-SOURCE IMAGE RULES — HIGHEST PRIORITY:
+export const wastelandPrompt = `${groupCompositionRules}
+
+Transform the uploaded group photograph into a cinematic team portrait set in a radioactive, retrofuturistic post-apocalyptic wasteland.
+
+IDENTITY AND VISIBILITY:
 
 * Treat the uploaded photograph as the definitive reference for every person.
 * Keep exactly the same people and exactly the same number of people.

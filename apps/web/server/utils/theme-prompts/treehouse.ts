@@ -1,6 +1,10 @@
-export const treehousePrompt = `Transform the uploaded group photograph into a cinematic team portrait set in a magnificent fantasy settlement built high among the canopies of enormous ancient trees.
+import { groupCompositionRules } from './group-composition'
 
-SOURCE IMAGE RULES — HIGHEST PRIORITY:
+export const treehousePrompt = `${groupCompositionRules}
+
+Transform the uploaded group photograph into a cinematic team portrait set in a magnificent fantasy settlement built high among the canopies of enormous ancient trees.
+
+IDENTITY AND VISIBILITY:
 
 * Treat the uploaded photograph as the definitive reference for every person.
 * Keep exactly the same people and exactly the same number of people.
@@ -41,7 +45,7 @@ Choose from original woodland-fantasy designs such as:
 * An alchemist holding a compact case of colourful magical potions.
 * A scout carrying an enchanted compass or a pair of short forest blades.
 
-Adapt the selection to the number of people in the photograph. For groups of three or more, include an archer, a sword wielder and a spellcaster with a fireball whenever the composition allows. Additional people may receive other distinct roles.
+Adapt the selection to the number of people in the photograph. For groups of three or more, include an archer, a sword wielder and a spellcaster with a fireball whenever the composition allows. Assign other distinct roles only to any remaining people already present in the source photograph.
 The fireball must hover slightly above the mage’s open palm without touching or burning the hand. It should cast warm, realistic light onto the hand, clothing and nearby surroundings. Keep the flame controlled and compact so it does not obscure any face or body.
 Weapons should be held in confident, heroic poses without active fighting. Swords, bows, bowstrings, staffs, straps and magical effects must not intersect faces, bodies, hands or other people. Hands must hold objects naturally, with correct anatomy and finger placement.
 Do not add enemies, combat, injuries or destruction. The image should portray a capable team preparing for an adventure.

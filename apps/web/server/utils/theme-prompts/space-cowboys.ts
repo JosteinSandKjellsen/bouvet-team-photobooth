@@ -1,6 +1,10 @@
-export const spaceCowboysPrompt = `Transform the uploaded group photograph into a cinematic **neo-western / cyberpunk-western portrait** of a rugged space-frontier crew standing at the open cargo ramp of their landed spacecraft. Blend the silhouette of a frontier outlaw crew with the improvised technology, neon light and layered detail of a cyberpunk world. Keep the image grounded and photorealistic.
+import { groupCompositionRules } from './group-composition'
 
-IDENTITY — HIGHEST PRIORITY:
+export const spaceCowboysPrompt = `${groupCompositionRules}
+
+Transform the uploaded group photograph into a cinematic **neo-western / cyberpunk-western portrait** of a rugged space-frontier crew standing at the open cargo ramp of their landed spacecraft. Blend the silhouette of a frontier outlaw crew with the improvised technology, neon light and layered detail of a cyberpunk world. Keep the image grounded and photorealistic.
+
+IDENTITY:
 
 Keep exactly the same people, in the same left-to-right order, with approximately the same positions and poses. Preserve each person’s recognisable face, age, skin tone, hairstyle, facial hair, body shape, relative height and distinctive features.
 

@@ -91,6 +91,22 @@ The official setup requirements are also easy to miss:
 - A webhook callback URL and callback API key can optionally be configured when
   creating the production API key.
 
+## Group composition prompts
+
+Space Cowboys, Treehouse, Wasteland and Red Carpet prepend the same server-only
+[group composition rules](../apps/web/server/utils/theme-prompts/group-composition.ts).
+These prioritize the source group count, order, positions, poses, camera angle
+and framing. Costumes, roles and props apply only to existing people; omit any
+element that would require another person. Background people, crowds, human
+silhouettes and human-like characters are excluded.
+
+Red Carpet uses flashes from unattended cameras rather than photographer
+silhouettes, and fits its setting into the source framing instead of requesting
+a wider composition. Model profiles and image-reference strength are unchanged.
+Provider request tests verify that all four themes send the shared rules; they
+do not prove that generated images preserve group count. Compare approved
+synthetic sources across group sizes before claiming a quality improvement.
+
 ## Target lifecycle
 
 Treat an image request as a stateful job:
