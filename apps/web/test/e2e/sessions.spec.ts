@@ -519,6 +519,7 @@ test('queues one generation only for the current session approved source', async
 
   const unauthenticatedStatus = await request.get(
     '/api/sessions/current/generation',
+    { headers: { cookie: '' } },
   )
   expect(unauthenticatedStatus.status()).toBe(401)
 

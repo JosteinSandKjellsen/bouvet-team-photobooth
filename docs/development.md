@@ -115,6 +115,11 @@ Run the PostgreSQL-backed HTTP tests with `pnpm test:db`. It refuses a database
 name that does not end in `_test`, applies migrations only to that database,
 builds the production Nitro server, and runs the session API tests.
 
+The development and test databases share the same Compose PostgreSQL service.
+Before stopping it after tests, check `docker compose ps` and whether a local
+development app still needs it. Leave it running for active development; stopping
+it interrupts the app even though its database and Docker volume are preserved.
+
 Stop the local service with `docker compose down`. Its named volume preserves
 local data; remove it only when a clean local database is needed:
 
@@ -244,15 +249,32 @@ with `pnpm deps:update`, inspect release and migration notes for major changes,
 then run `pnpm peers check`, a focused check, and the relevant merge gates.
 The portable update script reads the recursive audit, updates actionable direct
 packages to their latest releases and retains the documented exceptions below.
+It invokes pnpm as a platform command (including native pnpm installations) and
+rejects failed or empty audit output instead of reporting packages as current.
 
-TypeScript `7.0.2` is a current compatibility exception as of 2026-09-21:
-`vue-tsc` fails because TypeScript no longer exports `./lib/tsc`, and the latest
-`@typescript-eslint/parser` accepts TypeScript only below `6.1.0`. The workspace
-therefore uses TypeScript `6.0.3`, the newest compatible stable release observed.
-`@types/node` remains on `24.13.6`, the newest Node 24 type release, because the
-workspace targets Node 24 rather than the registry-latest Node 26 type family.
-These exceptions mean `pnpm deps:check` exits nonzero and reports both packages;
-recheck them whenever the Node, Vue or ESLint toolchain changes.
+Compatibility exceptions were rechecked against registry metadata on 2026-10-12:
+
+- TypeScript `7.0.2` remains excluded: the latest `@typescript-eslint/parser`
+  accepts TypeScript only below `6.1.0`. The earlier `vue-tsc` probe also failed
+  because TypeScript 7 no longer exports `./lib/tsc`. The workspace retains
+  TypeScript `6.0.3`, the newest compatible stable release observed.
+- `@types/node` uses `24.19.2`, the newest Node 24 type release, rather than the
+  registry-latest Node 26 type family.
+- The `prisma` registry `latest` tag points to `8.0.0-rc.22`, not a stable
+  release. Keep the CLI, client and PostgreSQL adapter aligned on stable
+  `7.10.0`; the update script explicitly retains the CLI version.
+- `@netlify/blobs` stays on `10.7.13`, the newest 10.x release. Version `11.1.4`
+  passed typechecking but failed `pnpm peers check`: the latest `unstorage`
+  (`1.17.5`), used by Nitro, accepts Netlify Blobs only through major 10.
+
+These exceptions mean `pnpm deps:check` exits nonzero and reports four packages.
+Recheck them whenever the Node, Vue, ESLint, Prisma or Nitro toolchain changes.
+
+The October refresh includes Nuxt `4.6.1`, Playwright `1.64.0` and dotenv
+`18.0.7`. Nuxt requires Node 24.15.0 or newer on the supported Node 24 line.
+[dotenv 18](https://github.com/motdotla/dotenv/blob/master/CHANGELOG.md)
+removes vault/preload support; this app uses the supported `config()` API in its
+Prisma configuration, not those removed features.
 
 ## Browser Tests And Ports
 

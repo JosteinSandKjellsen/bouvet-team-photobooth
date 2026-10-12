@@ -31,11 +31,11 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm check:harness"
   },
   "devDependencies": {
-    "eslint": "10.11.0",
+    "eslint": "10.12.0",
     "markdownlint-cli2": "0.23.3",
-    "marked": "18.0.13",
+    "marked": "18.1.0",
     "minimatch": "10.2.6",
-    "prettier": "3.9.8",
+    "prettier": "3.9.10",
     "typescript": "6.0.3",
     "yaml": "2.9.1"
   }
