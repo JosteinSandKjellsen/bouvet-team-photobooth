@@ -190,8 +190,11 @@ image first and stack download, URL/copy, QR and other actions below it. QR is
 primarily useful on the kiosk; download/copy should remain easy on phones.
 
 Show the full result without cropping out people; use `contain` for the result
-and print view rather than filling a fixed mockup frame. Preserve image aspect
-ratio. Printing displays the image, not navigation, background art or controls.
+rather than filling a fixed mockup frame. Printing is an intentional exception:
+use centered `cover` to fill the landscape 6 x 4 inch page without white bands,
+preserving aspect ratio while accepting edge cropping. Do not alter the stored
+or downloaded image. Printing displays the image, not navigation, background art
+or controls.
 Printer cancellation/unavailability must leave download and sharing usable.
 
 Generate a real QR with a maintained library, dark modules on white, intact quiet

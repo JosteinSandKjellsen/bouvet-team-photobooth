@@ -770,7 +770,11 @@ test('queues one generation only for the current session approved source', async
     await page.setViewportSize(viewport)
     await expect(page.getByTestId('photo-image')).toHaveCSS(
       'object-fit',
-      'contain',
+      'cover',
+    )
+    await expect(page.getByTestId('photo-image')).toHaveCSS(
+      'object-position',
+      '50% 50%',
     )
     await expect(page.getByTestId('photo-print')).toBeHidden()
     await expect(page.getByTestId('photo-qr-code')).toBeHidden()

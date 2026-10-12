@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     max-height: none;
-    object-fit: contain;
+    object-fit: cover;
     object-position: center;
   }
 }
