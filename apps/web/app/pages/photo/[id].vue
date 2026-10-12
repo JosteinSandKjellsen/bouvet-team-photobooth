@@ -371,23 +371,63 @@ onBeforeUnmount(() => {
   }
 }
 @media print {
+  @page photo {
+    size: 152.4mm 101.6mm;
+    margin: 0;
+  }
+  :global(html:has(.photo-page)) {
+    page: photo;
+    background: white;
+  }
+  :global(body:has(.photo-page)) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+  :global(.application:has(.photo-page)),
+  :global(.application-content:has(.photo-page)),
+  :global(.page-content:has(.photo-page)) {
+    display: block;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
   :global(.masthead),
+  :global(.corner-decoration),
   .intro,
   .share-panel,
   :global(.page-footer) {
     display: none;
   }
   .photo-page {
-    width: 100%;
+    display: block;
+    width: 152.4mm;
+    height: 101.6mm;
+    margin: 0;
     padding: 0;
+    break-inside: avoid;
+  }
+  .photo-workspace {
+    display: block;
+    height: 100%;
   }
   .image-region {
+    width: 100%;
+    height: 100%;
     min-height: 0;
+    aspect-ratio: auto;
+    background: white;
     border: 0;
+    border-radius: 0;
   }
   .image-region img {
     width: 100%;
+    height: 100%;
     max-height: none;
+    object-fit: contain;
+    object-position: center;
   }
 }
 </style>

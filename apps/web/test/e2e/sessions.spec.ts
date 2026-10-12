@@ -761,6 +761,42 @@ test('queues one generation only for the current session approved source', async
   await page.getByTestId('photo-print').click()
   await expect(page.locator('body')).toHaveAttribute('data-printed', 'true')
 
+  await page.emulateMedia({ media: 'print' })
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await expect(page.getByTestId('photo-image')).toHaveCSS(
+      'object-fit',
+      'contain',
+    )
+    await expect(page.getByTestId('photo-print')).toBeHidden()
+    await expect(page.getByTestId('photo-qr-code')).toBeHidden()
+    await expect(page.getByTestId('photo-back-to-themes')).toBeHidden()
+    const bounds = await page.getByTestId('photo-image').boundingBox()
+    expect(bounds).not.toBeNull()
+    expect(bounds?.x).toBe(0)
+    expect(bounds?.y).toBe(0)
+    expect(bounds?.width).toBeCloseTo(576, 1)
+    expect(bounds?.height).toBeCloseTo(384, 1)
+    await page.screenshot({
+      fullPage: true,
+      path: testInfo.outputPath(`photo-print-${viewport.width}.png`),
+    })
+
+    const pdf = await page.pdf({ preferCSSPageSize: true })
+    const pdfContent = pdf.toString('latin1')
+    expect(pdfContent.match(/\/Type \/Page\b/g)).toHaveLength(1)
+    const mediaBox = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(pdfContent)
+    expect(mediaBox).not.toBeNull()
+    expect(Number(mediaBox?.[1])).toBeCloseTo(432, 0)
+    expect(Number(mediaBox?.[2])).toBeCloseTo(288, 0)
+  }
+  await page.emulateMedia({ media: 'screen' })
+  await expect(page.getByTestId('photo-print')).toBeVisible()
+  await expect(page.getByTestId('photo-download')).toBeVisible()
+
   await database.generatedImage.update({
     data: { deleteAfter: new Date('2000-01-01T00:00:00.000Z') },
     where: { publicId: generatedImage.publicId },

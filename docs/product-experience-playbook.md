@@ -113,6 +113,12 @@ branding rights.
 - Kiosk printing opens the normal browser print dialog. Cancellation or an
   unavailable printer must not block other actions; browser code cannot prove a
   physical print succeeded.
+- Photo prints request landscape 6 x 4 inch paper (152.4 x 101.6 mm), with zero
+  CSS page margins and only the complete, centered image. Preserve aspect ratio
+  without cropping; images that are not 3:2 leave white space. Select matching
+  paper and landscape orientation in the printer dialog, disable browser
+  headers/footers where offered, and verify on the target iPad/printer. CSS
+  cannot enforce AirPrint paper selection, borderless support or hardware margins.
 - Return friendly loading, error, missing, and expired states. Public result and
   gallery pages never expose original sources, provider URLs, or private session
   capabilities.
